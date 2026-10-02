@@ -35,6 +35,7 @@ export async function claimUsername(raw:string,displayName?:string){
   const {data,error}=await supabase.rpc('claim_username',{candidate:valid.username,display_name_input:displayName?.trim()||null});
   if(error)return {ok:false as const,error:error.message.includes('function')?'Run the new Supabase account migration first.':error.message};
   if(!data)return {ok:false as const,error:'That username is already taken.'};
+  window.dispatchEvent(new Event('studyflow:profile-updated'));
   return {ok:true as const,username:valid.username};
 }
 

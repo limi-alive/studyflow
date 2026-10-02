@@ -47,7 +47,8 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   const unpaidBlocks = Math.max(0, earnedBlocks - paidBlocks);
   const remainderSeconds = monthlySeconds % milestoneSeconds;
   const progress = remainderSeconds / milestoneSeconds;
-  const nextRewardSeconds = unpaidBlocks > 0 ? 0 : (remainderSeconds === 0 ? milestoneSeconds : milestoneSeconds - remainderSeconds);
+  const nextMilestoneSeconds = remainderSeconds === 0 ? milestoneSeconds : milestoneSeconds - remainderSeconds;
+  const nextRewardSeconds = unpaidBlocks > 0 ? 0 : nextMilestoneSeconds;
   const earnedToman = earnedBlocks * REWARD_TOMAN;
   const paidToman = paidBlocks * REWARD_TOMAN;
   const outstandingToman = unpaidBlocks * REWARD_TOMAN;
@@ -73,6 +74,7 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
     outstandingToman,
     progress,
     nextRewardSeconds,
+    nextMilestoneSeconds,
     markOnePaid: () => setPaidBlocks(paidBlocks + 1),
     undoOnePaid: () => setPaidBlocks(paidBlocks - 1)
   };

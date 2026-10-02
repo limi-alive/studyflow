@@ -1,7 +1,10 @@
-import { BarChart3, BookOpen, CalendarDays, Clock3, Home, Settings, UserRound, History, Plus, Search, Command, Sparkles } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, Clock3, Home, Settings, UserRound, History, Plus, Search, Command, Sparkles, LogIn, LogOut } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SyncBadge } from './SyncBadge';
+import { AuthGate } from './AuthGate';
+import { SidebarRewardCard } from './SidebarRewardCard';
+import { useAuthIdentity } from '../hooks/useAuthIdentity';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
 import { useEffect, useState } from 'react';
@@ -9,6 +12,7 @@ import { useEffect, useState } from 'react';
 export function AppShell() {
   const { userId } = useCurrentUser();
   const settings = useSettings(userId);
+  const identity = useAuthIdentity();
   const navigate = useNavigate();
   const location = useLocation();
   const [quick,setQuick]=useState(false);
@@ -38,17 +42,30 @@ export function AppShell() {
 
   const go=(path:string)=>{setQuick(false);navigate(path);};
   const reduceMotion = Boolean(settings?.reduceMotion);
+  const accountLabel = identity.username || identity.displayName || identity.email || (fa ? 'حساب کاربری' : 'Account');
+  const accountSub = identity.signedIn ? (identity.email ?? (fa ? 'حساب ابری' : 'Cloud account')) : (fa ? 'ورود یا ساخت حساب' : 'Sign in or create account');
+  const openAuth = () => window.dispatchEvent(new Event('studyflow:open-auth'));
 
   return <div className="app-shell">
     <aside className="sidebar studio-sidebar">
       <div className="brand studio-brand"><div className="brand-mark"><Sparkles size={18}/></div><div><strong>StudyFlow</strong><small>focus system</small></div></div>
       <nav className="studio-nav">{desktop.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'} title={label}><span className="nav-icon"><Icon size={19}/></span><span className="nav-label">{label}</span></NavLink>)}</nav>
+
       <div className="sidebar-spacer"/>
+      <SidebarRewardCard userId={userId} calendarType={settings?.calendarType ?? 'gregorian'} onOpenDetails={()=>navigate('/settings')}/>
+
       <div className="sidebar-tools">
         <button className="command-button studio-command" onClick={()=>setQuick(true)}><Command size={17}/><span>{fa?'دسترسی سریع':'Command'}</span><kbd>⌘K</kbd></button>
         <NavLink className="settings-shortcut" to="/settings" title={fa?'تنظیمات':'Settings'}><Settings size={18}/></NavLink>
       </div>
-      <NavLink className="profile-shortcut" to="/profile"><span className="profile-avatar"><UserRound size={17}/></span><span><strong>{fa?'پروفایل':'Profile'}</strong><small>{fa?'حساب و پیشرفت':'Account & progress'}</small></span></NavLink>
+
+      <div className="sidebar-account-wrap">
+        <button className="profile-shortcut sidebar-account-button" type="button" onClick={()=>identity.signedIn?navigate('/profile'):openAuth()}>
+          <span className={`profile-avatar ${identity.signedIn?'signed-in':''}`}>{identity.signedIn?<UserRound size={17}/>:<LogIn size={17}/>}</span>
+          <span className="sidebar-account-copy"><strong>{accountLabel}</strong><small>{accountSub}</small></span>
+        </button>
+        {identity.signedIn&&<button className="sidebar-signout" type="button" title={fa?'خروج':'Sign out'} aria-label={fa?'خروج':'Sign out'} onClick={()=>void identity.signOut()}><LogOut size={16}/></button>}
+      </div>
       <div className="sidebar-foot"><SyncBadge userId={userId}/></div>
     </aside>
 
@@ -60,5 +77,6 @@ export function AppShell() {
     <nav className="bottom-nav">{mobile.map(([to, Icon, label]) => <NavLink className={to==='/timer'?'nav-focus':''} key={to} to={to} end={to === '/'}><span className="nav-icon"><Icon size={21}/></span><small>{label}</small></NavLink>)}</nav>
 
     {quick&&<div className="modal-backdrop" onClick={()=>setQuick(false)}><div className="modal quick-modal" onClick={e=>e.stopPropagation()}><div className="modal-grabber"/><div className="eyebrow">{fa?'دسترسی سریع':'Quick actions'}</div><h2>{fa?'بعدی چیه؟':'What’s next?'}</h2><p className="subtle">{fa?'بدون گشتن بین صفحه‌ها، سریع شروع کن.':'Start fast without digging through menus.'}</p><div className="quick-grid"><button className="quick-action primary" onClick={()=>go('/timer')}><Clock3/><span><strong>{fa?'شروع مطالعه':'Start focus'}</strong><small>{fa?'تایمر را باز کن':'Open the timer'}</small></span></button><button className="quick-action" onClick={()=>go('/planner')}><CalendarDays/><span><strong>{fa?'افزودن کار':'Add task'}</strong><small>{fa?'برای امروز برنامه بریز':'Plan your day'}</small></span></button><button className="quick-action" onClick={()=>go('/subjects')}><BookOpen/><span><strong>{fa?'افزودن درس':'Add subject'}</strong><small>{fa?'ساختار مطالعه':'Organize study'}</small></span></button><button className="quick-action" onClick={()=>go('/search')}><Search/><span><strong>{fa?'جستجو':'Search'}</strong><small>{fa?'هرچیزی را پیدا کن':'Find anything'}</small></span></button></div></div></div>}
+    <AuthGate/>
   </div>;
 }
