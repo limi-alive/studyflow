@@ -32,7 +32,7 @@ export function dailySeries(sessions: StudySession[], days = 7) {
 
 export function currentStreak(sessions: StudySession[]) {
   const days = new Set(sessions.map(s => new Date(s.startTime).toLocaleDateString('en-CA')));
-  const cursor = = new Date();
+  const cursor  = new Date();
   let key = cursor.toLocaleDateString('en-CA');
   if (!days.has(key)) { cursor.setDate(cursor.getDate() - 1); key = cursor.toLocaleDateString('en-CA'); }
   let streak = 0;
