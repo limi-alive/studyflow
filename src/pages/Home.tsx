@@ -1,8 +1,9 @@
-import type { CSSProperties } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUpRight, Flame, Play, Target, Zap, Clock3, CalendarCheck2 } from 'lucide-react';
+import { ArrowUpRight, BookOpen, CalendarCheck2, Flame, Play, Target, Clock3, Zap, Trophy, CheckCircle2 } from 'lucide-react';
 import { Card } from '../components/Card';
+import { TrendChart } from '../components/TrendChart';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
 import { formatAppDate, localText } from '../lib/locale';
@@ -14,56 +15,82 @@ export default function HomePage() {
   const { userId } = useCurrentUser();
   const settings = useSettings(userId);
   const navigate = useNavigate();
-  const sessions = useLiveQuery(() => db.sessions.where('userId').equals(userId).filter(x => !x.deletedAt).toArray(), [userId]) ?? [];
+  const sessionsQuery = useLiveQuery(() => db.sessions.where('userId').equals(userId).filter(x => !x.deletedAt).toArray(), [userId]);
+  const sessions = useMemo(() => sessionsQuery ?? [], [sessionsQuery]);
   const goals = useLiveQuery(() => db.goals.where('userId').equals(userId).filter(x => !x.deletedAt && x.period === 'daily').toArray(), [userId]) ?? [];
   const tasks = useLiveQuery(() => db.tasks.where('userId').equals(userId).filter(x => !x.deletedAt && x.status !== 'completed' && x.status !== 'archived').toArray(), [userId]) ?? [];
+  const subjectsQuery = useLiveQuery(() => db.subjects.where('userId').equals(userId).filter(x => !x.deletedAt && !x.archived).toArray(), [userId]);
+  const subjects = useMemo(() => subjectsQuery ?? [], [subjectsQuery]);
+  const exams = useLiveQuery(() => db.exams.where('userId').equals(userId).filter(x => !x.deletedAt).sortBy('date'), [userId]) ?? [];
   const todayStart = startOfLocalDay().getTime();
   const today = sessions.filter(s => new Date(s.endTime).getTime() >= todayStart);
   const todaySeconds = dailySeries(sessions, 1)[0]?.seconds ?? 0;
   const series = dailySeries(sessions, 7);
+  const previous = dailySeries(sessions.filter(s => new Date(s.startTime).getTime() < todayStart - 6 * 86400000), 7);
   const goalSeconds = ((goals[0]?.target ?? 300) as number) * 60;
-  const progress = Math.min(100, (todaySeconds / goalSeconds) * 100);
+  const progress = Math.min(100, (todaySeconds / Math.max(goalSeconds, 1)) * 100);
   const activeDays = new Set(sessions.map(s=>new Date(s.startTime).toLocaleDateString())).size;
   const allTimeHours = Math.round(totalStudySeconds(sessions)/3600);
   const bestDay = series.reduce((best, item) => item.seconds > best.seconds ? item : best, series[0] ?? {date:'',seconds:0});
+  const subjectTotals = useMemo(() => {
+    const totals = new Map<string, number>();
+    sessions.forEach(session => totals.set(session.subjectId ?? 'none', (totals.get(session.subjectId ?? 'none') ?? 0) + session.studySeconds));
+    return subjects.map(subject => ({...subject, seconds: totals.get(subject.id) ?? 0})).sort((a,b)=>b.seconds-a.seconds).slice(0,3);
+  }, [sessions, subjects]);
+  const chartPoints = series.map((item,index) => ({
+    label: new Date(`${item.date}T12:00:00`).toLocaleDateString(settings?.language==='fa'?'fa-IR':'en-US',{weekday:'short'}),
+    value: item.seconds,
+    compare: previous[index]?.seconds ?? Math.round(item.seconds * .82)
+  }));
+  const nextExam = exams.find(exam => new Date(exam.date).getTime() > Date.now());
+  const examDays = nextExam ? Math.max(0, Math.ceil((new Date(nextExam.date).getTime()-Date.now())/86400000)) : null;
 
-  return <div className="page home-page">
-    <header className="page-header home-header">
-      <div>
-        <div className="eyebrow">{formatAppDate(new Date(), settings, {weekday:'long',month:'long',day:'numeric'})}</div>
-        <h1>{localText(settings,'Good evening.','عصر بخیر.')}</h1>
-        <p className="subtle">{localText(settings,'A calm place to get one meaningful thing done.','یک جای آرام برای انجام دادن یک کار مهم.')}</p>
-      </div>
-      <button className="button soft-button" onClick={()=>navigate('/planner')}><CalendarCheck2 size={18}/>{localText(settings,'Plan today','برنامه امروز')}</button>
+  return <div className="page dashboard-page">
+    <header className="dashboard-topbar">
+      <div><div className="eyebrow">{formatAppDate(new Date(), settings, {weekday:'long',month:'long',day:'numeric'})}</div><h1>{localText(settings,'Dashboard','داشبورد')}</h1></div>
+      <div className="dashboard-top-actions"><span className="live-chip"><span className="status-dot"/> {localText(settings,'Ready to focus','آماده تمرکز')}</span><button className="button primary compact" onClick={()=>navigate('/timer')}><Play size={17}/>{localText(settings,'Start session','شروع جلسه')}</button></div>
     </header>
 
-    <div className="home-bento">
-      <Card className="hero-card bento-hero">
-        <div className="hero-topline"><div><div className="eyebrow">{localText(settings,'Today’s focus','تمرکز امروز')}</div><div className="hero-status"><span className="status-dot"/> {progress >= 100 ? localText(settings,'Goal complete','هدف کامل شد') : localText(settings,'In progress','در حال پیشرفت')}</div></div><span className="hero-chip"><Clock3 size={16}/>{today.length} {localText(settings,'sessions','جلسه')}</span></div>
-        <div className="hero-main">
-          <div><div className="big-number">{formatDuration(todaySeconds)}</div><div className="subtle">{localText(settings,'of','از')} {formatDuration(goalSeconds)} {localText(settings,'daily target','هدف روزانه')}</div></div>
-          <div className="progress-orb" style={{'--progress': `${Math.max(3, progress)}%`} as CSSProperties}><strong>{Math.round(progress)}%</strong><span>{localText(settings,'done','انجام')}</span></div>
+    <div className="dashboard-grid">
+      <section className="dashboard-main-column">
+        <Card className="analytics-hero">
+          <div className="analytics-heading">
+            <div><div className="eyebrow">{localText(settings,'Statistics','آمار')}</div><h2>{localText(settings,'Your focus rhythm','ریتم تمرکز تو')}</h2></div>
+            <div className="range-tabs"><button className="active">Days</button><button onClick={()=>navigate('/stats')}>Weeks</button><button onClick={()=>navigate('/stats')}>Months</button></div>
+          </div>
+          <div className="date-strip">{series.map((item,index)=>{const date=new Date(`${item.date}T12:00:00`);return <div className={`date-chip ${index===series.length-1?'active':''}`} key={item.date}><strong>{date.toLocaleDateString('en-US',{day:'2-digit'})}</strong><span>{date.toLocaleDateString(settings?.language==='fa'?'fa-IR':'en-US',{weekday:'short'})}</span></div>;})}</div>
+          <TrendChart points={chartPoints}/>
+          <div className="chart-legend"><span><i className="legend-solid"/> {localText(settings,'Study time','زمان مطالعه')}</span><span><i className="legend-dashed"/> {localText(settings,'Previous rhythm','ریتم قبلی')}</span></div>
+        </Card>
+
+        <div className="dashboard-subject-row">
+          {subjectTotals.length ? subjectTotals.map((subject,index)=><Card className="subject-summary-card" key={subject.id}>
+            <div className="subject-card-top"><span className="subject-avatar" style={{'--subject-color':subject.color} as CSSProperties}>{subject.emoji || <BookOpen size={18}/>}</span><span className="subject-rank">0{index+1}</span></div>
+            <h3>{subject.name}</h3><strong>{formatDuration(subject.seconds)}</strong><span className="subtle">{localText(settings,'tracked focus','تمرکز ثبت‌شده')}</span>
+            <div className="subject-dots">{Array.from({length:12}).map((_,dot)=><i key={dot} className={dot < Math.min(12, Math.max(2, Math.round(subject.seconds/3600))) ? 'filled':''}/>)}</div>
+          </Card>) : <Card className="subject-summary-card empty-subject"><BookOpen/><h3>{localText(settings,'Your subjects','درس‌های تو')}</h3><p className="subtle">{localText(settings,'Add a subject and your focus mix will appear here.','یک درس اضافه کن تا ترکیب مطالعه اینجا نمایش داده شود.')}</p><button className="button" onClick={()=>navigate('/subjects')}>{localText(settings,'Add subject','افزودن درس')}</button></Card>}
         </div>
-        <div className="progress hero-progress"><div style={{width:`${progress}%`}}/></div>
-        <div className="hero-actions"><button className="button primary hero-start" onClick={() => navigate('/timer')}><Play size={18}/> {localText(settings,'Start focus','شروع تمرکز')}</button><button className="button ghost" onClick={()=>navigate('/history')}>{localText(settings,'View history','سابقه')} <ArrowUpRight size={17}/></button></div>
-      </Card>
+      </section>
 
-      <div className="metric-bento">
-        <Card className="metric-card"><div className="metric-icon"><Target size={18}/></div><div className="metric"><span className="subtle">{localText(settings,'Daily progress','پیشرفت روزانه')}</span><strong>{Math.round(progress)}%</strong><small>{localText(settings,'toward your goal','تا رسیدن به هدف')}</small></div></Card>
-        <Card className="metric-card"><div className="metric-icon warm"><Flame size={18}/></div><div className="metric"><span className="subtle">{localText(settings,'Active days','روزهای فعال')}</span><strong>{activeDays}</strong><small>{localText(settings,'days with focus','روز مطالعه')}</small></div></Card>
-        <Card className="metric-card"><div className="metric-icon cool"><Zap size={18}/></div><div className="metric"><span className="subtle">{localText(settings,'Sessions today','جلسات امروز')}</span><strong>{today.length}</strong><small>{localText(settings,'small wins count','بردهای کوچک مهم‌اند')}</small></div></Card>
-        <Card className="metric-card"><div className="metric-icon neutral"><Clock3 size={18}/></div><div className="metric"><span className="subtle">{localText(settings,'All-time study','کل مطالعه')}</span><strong>{allTimeHours}h</strong><small>{localText(settings,'tracked focus','تمرکز ثبت‌شده')}</small></div></Card>
-      </div>
+      <aside className="dashboard-right-rail">
+        <Card className="today-focus-card">
+          <div className="section-title"><div><div className="eyebrow">{localText(settings,'Today','امروز')}</div><strong>{localText(settings,'Focus target','هدف تمرکز')}</strong></div><Target size={19}/></div>
+          <div className="focus-score"><strong>{formatDuration(todaySeconds)}</strong><span>{localText(settings,'of','از')} {formatDuration(goalSeconds)}</span></div>
+          <div className="progress thick"><div style={{width:`${progress}%`}}/></div>
+          <div className="focus-card-meta"><span><Clock3 size={15}/>{today.length} {localText(settings,'sessions','جلسه')}</span><strong>{Math.round(progress)}%</strong></div>
+        </Card>
 
-      <Card className="bento-tasks">
-        <div className="section-title"><div><div className="eyebrow">{localText(settings,'Next up','بعدی')}</div><strong>{localText(settings,"Today’s tasks",'کارهای امروز')}</strong></div><button className="icon-button" onClick={()=>navigate('/planner')} aria-label="Open planner"><ArrowUpRight size={18}/></button></div>
-        {tasks.length ? <div className="list compact-list">{tasks.slice(0,5).map((t,index)=><div className="list-item" key={t.id}><span className="task-index">{String(index+1).padStart(2,'0')}</span><span className="task-title">{t.title}</span><span className="task-time">{t.estimatedMinutes ? `${t.estimatedMinutes}m` : '—'}</span></div>)}</div> : <div className="empty"><span className="empty-orb">✓</span><strong>{localText(settings,'Clear day','روز خلوت')}</strong><span>{localText(settings,'Add a task when you are ready.','هر وقت آماده بودی یک کار اضافه کن.')}</span></div>}
-      </Card>
+        <Card className="mini-stat-card"><div className="mini-stat-icon purple"><Flame/></div><div><span className="subtle">{localText(settings,'Active days','روزهای فعال')}</span><strong>{activeDays}</strong></div><ArrowUpRight size={18}/></Card>
+        <Card className="mini-stat-card"><div className="mini-stat-icon yellow"><Trophy/></div><div><span className="subtle">{localText(settings,'Best day','بهترین روز')}</span><strong>{bestDay.seconds ? formatDuration(bestDay.seconds) : '—'}</strong></div><ArrowUpRight size={18}/></Card>
+        <Card className="mini-stat-card"><div className="mini-stat-icon green"><Zap/></div><div><span className="subtle">{localText(settings,'All-time','کل زمان')}</span><strong>{allTimeHours}h</strong></div><ArrowUpRight size={18}/></Card>
 
-      <Card className="bento-week">
-        <div className="section-title"><div><div className="eyebrow">{localText(settings,'Rhythm','ریتم')}</div><strong>{localText(settings,'Weekly progress','پیشرفت هفتگی')}</strong></div><div className="week-highlight"><span>{localText(settings,'Best','بهترین')}</span><strong>{bestDay?.seconds ? formatDuration(bestDay.seconds) : '—'}</strong></div></div>
-        <div className="chart-bars polished-bars">{series.map((x,index) => { const max = Math.max(...series.map(v=>v.seconds),1); return <div className="bar-slot" key={x.date}><div className="chart-bar" title={`${x.date}: ${formatDuration(x.seconds)}`} style={{height:`${Math.max(4,x.seconds/max*100)}%`, animationDelay:`${index*45}ms`}}/><small>{new Date(`${x.date}T12:00:00`).toLocaleDateString(settings?.language==='fa'?'fa-IR':'en-US',{weekday:'narrow'})}</small></div>; })}</div>
-      </Card>
+        <Card className="next-up-card">
+          <div className="section-title"><div><div className="eyebrow">{localText(settings,'Next up','بعدی')}</div><strong>{localText(settings,'Today’s queue','صف امروز')}</strong></div><button className="icon-button" onClick={()=>navigate('/planner')}><CalendarCheck2 size={17}/></button></div>
+          <div className="dashboard-task-list">{tasks.length ? tasks.slice(0,4).map((task,index)=><div className="dashboard-task" key={task.id}><span className="task-order">{String(index+1).padStart(2,'0')}</span><div><strong>{task.title}</strong><small>{task.estimatedMinutes ? `${task.estimatedMinutes} min` : localText(settings,'Flexible','شناور')}</small></div><CheckCircle2 size={17}/></div>) : <div className="empty small"><strong>{localText(settings,'Nothing queued','کاری در صف نیست')}</strong><span>{localText(settings,'Plan one small win.','یک برد کوچک برنامه‌ریزی کن.')}</span></div>}</div>
+        </Card>
+
+        {nextExam && <Card className="exam-gradient-card"><div><span className="eyebrow">{localText(settings,'Upcoming exam','امتحان پیش رو')}</span><h3>{nextExam.name}</h3><p>{examDays} {localText(settings,'days left','روز مانده')}</p></div><ArrowUpRight/></Card>}
+      </aside>
     </div>
   </div>;
 }

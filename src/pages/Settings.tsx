@@ -7,6 +7,7 @@ import { Card } from '../components/Card';
 import type { Exam, Goal, StudySession, StudyTask, Subject, Topic, UserSettings } from '../types';
 
 const themes=[
+  {id:'studio',name:'Studio Noir',tag:'Dashboard',colors:['#07070a','#9a63ff','#f5cf52']},
   {id:'plush',name:'Plush Toy',tag:'Cute',colors:['#fff2f7','#f28ab5','#8ad5cf']},
   {id:'jelly',name:'Jelly Pop',tag:'Expressive',colors:['#fff5e9','#ff7f96','#7a8cff']},
   {id:'matcha',name:'Matcha Milk',tag:'Calm',colors:['#f6f4e8','#89a77a','#d5b98f']},
