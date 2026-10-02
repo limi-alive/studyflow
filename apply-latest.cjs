@@ -18,7 +18,7 @@ const stylesLine = "import './styles.css';";
 if (main.includes(stylesLine)) main = main.replace(stylesLine, `${stylesLine}\n${mobileImport}`);
 else main = `${mobileImport}\n${main}`;
 fs.writeFileSync(mainPath, main);
-console.log('v12.3 mobile stylesheet is wired after styles.css.');
+console.log('v12.4 mobile stylesheet is wired after styles.css.');
 
 const workflowsDir = path.join(root, '.github', 'workflows');
 if (!fs.existsSync(workflowsDir)) {
@@ -65,4 +65,4 @@ for (const file of targets) {
   console.log(`Supabase production env verified in ${path.relative(root, file)}.`);
 }
 
-console.log('StudyFlow v12.3 phone-fit configuration complete.');
+console.log('StudyFlow v12.4 phone UX configuration complete.');

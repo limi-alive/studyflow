@@ -176,7 +176,7 @@ export default function TimerPage() {
       <div className="focus-live-tools">
         <button className={`focus-tool ${zen?'active':''}`} onClick={()=>setZen(value=>!value)} title="Zen mode (Z)">{zen?<Minimize2 size={15}/>:<Maximize2 size={15}/>}<span>Zen</span></button>
         <div className="distraction-wrap"><button className={`focus-tool ${distractions?'warn':''}`} onClick={()=>setDistractionOpen(value=>!value)}><AlertTriangle size={15}/><span>Distracted {distractions ? `· ${distractions}` : ''}</span></button>{distractionOpen&&<div className="distraction-menu"><strong>What pulled you away?</strong><div>{distractionReasons.map(reason=><button key={reason} onClick={()=>logDistraction(reason)}>{reason}</button>)}</div></div>}</div>
-        <span className="focus-score-live"><Shield size={14}/> Avg {focusProgress.averageScore || '—'}</span>
+        <span className="focus-score-live"><Shield size={14}/> Score {focusProgress.averageScore || '—'}</span>
       </div>
     </div>}
 
