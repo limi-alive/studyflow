@@ -4,13 +4,14 @@ import { Archive, Plus } from 'lucide-react';
 import { Card } from '../components/Card';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { db, nowIso } from '../lib/db';
+import type { Topic } from '../types';
 
 export default function SubjectsPage(){
  const {userId}=useCurrentUser();
  const subjectRows=useLiveQuery(()=>db.subjects.where('userId').equals(userId).filter(x=>!x.deletedAt).toArray(),[userId]);
-const subjects=useMemo(()=>subjectRows??[],[subjectRows]);
+ const subjects=useMemo(()=>subjectRows??[],[subjectRows]);
  const [name,setName]=useState(''); const [color,setColor]=useState('#8a6cff'); const [selected,setSelected]=useState('');
- const topics=useLiveQuery(()=>selected?db.topics.where('subjectId').equals(selected).filter(x=>!x.deletedAt).toArray():Promise.resolve([]),[selected])??[];
+ const topics=useLiveQuery<Topic[]>(()=>selected?db.topics.where('subjectId').equals(selected).filter(x=>!x.deletedAt).toArray():Promise.resolve([] as Topic[]),[selected])??[];
  const [topicName,setTopicName]=useState(''); const [kind,setKind]=useState<'chapter'|'topic'>('chapter'); const [parentId,setParentId]=useState('');
  useEffect(()=>{ if(!selected&&subjects[0]) setSelected(subjects[0].id); },[subjects,selected]);
  const add=async(e:FormEvent)=>{e.preventDefault();if(!name.trim())return;const now=nowIso();const id=crypto.randomUUID();await db.subjects.add({id,userId,name:name.trim(),color,priority:1,archived:false,createdAt:now,updatedAt:now,syncStatus:'pending'});setName('');setSelected(id);};

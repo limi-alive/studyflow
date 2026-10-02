@@ -62,7 +62,12 @@ export async function ensureSettings(userId: string) {
 
 async function reassignTable<T extends BaseRecord>(table: Table<T, string>, oldUserId: string, newUserId: string) {
   const rows = await table.where('userId').equals(oldUserId).toArray();
-  for (const row of rows) await table.update(row.id, { userId: newUserId, updatedAt: nowIso(), syncStatus: 'pending' } as Partial<T>);
+  for (const row of rows) {
+    row.userId = newUserId;
+    row.updatedAt = nowIso();
+    row.syncStatus = 'pending';
+    await table.put(row);
+  }
 }
 
 export async function migrateOfflineDataToUser(oldUserId: string, newUserId: string) {

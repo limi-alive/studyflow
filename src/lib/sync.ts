@@ -14,8 +14,8 @@ async function syncTable<T extends BaseRecord>(cloudName: string, table: Table<T
   const dirty = await table.where('userId').equals(userId).filter(r => r.syncStatus !== 'synced').toArray();
   for (const row of dirty) {
     const { error } = await supabase.from(cloudName).upsert(toCloud(row as unknown as Record<string, unknown>), { onConflict: 'id' });
-    if (error) { await table.update(row.id, { syncStatus: 'failed' } as Partial<T>); return { ok:false as const,count,error:error.message }; }
-    await table.update(row.id, { syncStatus: 'synced' } as Partial<T>); count++;
+    if (error) { row.syncStatus = 'failed'; await table.put(row); return { ok:false as const,count,error:error.message }; }
+    row.syncStatus = 'synced'; await table.put(row); count++;
   }
   const { data, error } = await supabase.from(cloudName).select('*').eq('user_id', userId);
   if (error) return { ok:false as const,count,error:error.message };

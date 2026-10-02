@@ -13,7 +13,7 @@ export default function TimerPage() {
   const settings = useSettings(userId);
   const notified = useRef<string | null>(null);
   const subjectRows = useLiveQuery(() => db.subjects.where('userId').equals(userId).filter(x=>!x.archived&&!x.deletedAt).toArray(), [userId]);
-const subjects = useMemo(() => subjectRows ?? [], [subjectRows]);
+  const subjects = useMemo(() => subjectRows ?? [], [subjectRows]);
   const { active, start, pause, resume, addTime, restart, clear } = useTimerStore();
   const [tick, setTick] = useState(Date.now());
   const [mode, setMode] = useState<TimerType>('stopwatch');
