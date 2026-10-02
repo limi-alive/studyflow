@@ -7,6 +7,7 @@ import { db, getDeviceId, nowIso } from '../lib/db';
 import { useTimerStore } from '../stores/timerStore';
 import type { TimerType } from '../types';
 import { formatDuration, timerElapsedSeconds } from '../utils/time';
+import { FocusBuddy } from '../components/FocusBuddy';
 
 export default function TimerPage() {
   const { userId } = useCurrentUser();
@@ -19,6 +20,7 @@ export default function TimerPage() {
   const [mode, setMode] = useState<TimerType>('stopwatch');
   const [subjectId, setSubjectId] = useState<string>('');
   const [duration, setDuration] = useState(25);
+  const [startBurst, setStartBurst] = useState(false);
 
   useEffect(() => { const id = window.setInterval(()=>setTick(Date.now()), 500); return ()=>clearInterval(id); }, []);
   useEffect(() => { if (mode === 'pomodoro' && settings) setDuration(settings.pomodoroFocus); }, [mode, settings]);
@@ -32,7 +34,12 @@ export default function TimerPage() {
   }, [active, elapsed, settings]);
   const selected = useMemo(()=>subjects.find(s=>s.id===(active?.subjectId ?? subjectId)),[subjects,active,subjectId]);
 
-  const begin = () => { if (settings?.haptics && 'vibrate' in navigator) navigator.vibrate(35); start({ userId, subjectId: subjectId || null, timerType: mode, durationSeconds: mode==='stopwatch'||mode==='deep-focus' ? null : duration*60 }); };
+  const begin = () => {
+    if (settings?.haptics && 'vibrate' in navigator) navigator.vibrate([30, 40, 30]);
+    setStartBurst(true);
+    window.setTimeout(() => setStartBurst(false), 1250);
+    start({ userId, subjectId: subjectId || null, timerType: mode, durationSeconds: mode==='stopwatch'||mode==='deep-focus' ? null : duration*60 });
+  };
   const finish = async () => {
     if (!active) return;
     const end = nowIso();
@@ -47,8 +54,12 @@ export default function TimerPage() {
     clear();
   };
 
-  return <div className="page timer-stage">
+  const completed = Boolean(active?.durationSeconds && elapsed >= active.durationSeconds);
+  const buddyState = completed ? 'celebrate' : active?.state === 'running' ? 'running' : active?.state === 'paused' ? 'paused' : 'idle';
+
+  return <div className={`page timer-stage ${active ? 'timer-active' : ''} ${startBurst ? 'timer-start-burst' : ''}`}>
     <div className="eyebrow">{active ? selected?.name ?? 'Focus session' : 'Choose a mode'}</div>
+    <FocusBuddy state={buddyState} intro={startBurst} subject={selected?.name}/>
     {!active && <>
       <div className="pill-row">{(['stopwatch','countdown','pomodoro','deep-focus'] as TimerType[]).map(m=><button key={m} className={`pill ${mode===m?'active':''}`} onClick={()=>setMode(m)}>{m.replace('-',' ')}</button>)}</div>
       <div className="form-grid" style={{width:'min(620px,100%)'}}>
