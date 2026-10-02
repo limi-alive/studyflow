@@ -5,7 +5,7 @@ import { db, nowIso } from '../lib/db';
 import { Card } from '../components/Card';
 import type { Exam, Goal, StudySession, StudyTask, Subject, Topic, UserSettings } from '../types';
 
-const themes=[['liquid','Liquid'],['chrome','Chrome'],['pink-chrome','Pink Chrome'],['dark-hero','Dark Hero'],['amoled','AMOLED'],['aurora','Aurora'],['cyber','Cyber'],['cozy','Cozy Study'],['sakura','Sakura'],['minimal','Minimal'],['space','Space'],['forest','Forest']];
+const themes=[['plush','Plush Toy'],['liquid','Liquid'],['chrome','Chrome'],['pink-chrome','Pink Chrome'],['dark-hero','Dark Hero'],['amoled','AMOLED'],['aurora','Aurora'],['cyber','Cyber'],['cozy','Cozy Study'],['sakura','Sakura'],['minimal','Minimal'],['space','Space'],['forest','Forest']];
 type Backup = {subjects?:Subject[];topics?:Topic[];tasks?:StudyTask[];sessions?:StudySession[];goals?:Goal[];exams?:Exam[];settings?:UserSettings};
 
 export default function SettingsPage(){
