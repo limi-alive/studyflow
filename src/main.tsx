@@ -7,6 +7,7 @@ import './styles.css';
 import './companion.css';
 import './focus-v11.css';
 import './auth-reward-v12.css';
+import './mobile-final-v12.css';
 
 import './theme-responsive.css';
 
