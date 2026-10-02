@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
 
-export type FocusCompanionId = 'mochi' | 'bunni' | 'moss' | 'orbit';
+export type FocusCompanionId = 'dash' | 'teddy' | 'avatar' | 'star';
 export type CompanionMotion = 'calm' | 'balanced' | 'lively';
 
-const VALID_COMPANIONS: FocusCompanionId[] = ['mochi', 'bunni', 'moss', 'orbit'];
+const VALID_COMPANIONS: FocusCompanionId[] = ['dash', 'teddy', 'avatar', 'star'];
 const VALID_MOTION: CompanionMotion[] = ['calm', 'balanced', 'lively'];
+const LEGACY_COMPANIONS = new Set(['mochi', 'bunni', 'moss', 'orbit']);
 
 function companionKey(userId: string) { return `studyflow.companion.${userId}`; }
 function motionKey(userId: string) { return `studyflow.companionMotion.${userId}`; }
 
 function readCompanion(userId: string): FocusCompanionId {
-  const value = localStorage.getItem(companionKey(userId)) as FocusCompanionId | null;
-  return value && VALID_COMPANIONS.includes(value) ? value : 'bunni';
+  const raw = localStorage.getItem(companionKey(userId));
+  if (raw && VALID_COMPANIONS.includes(raw as FocusCompanionId)) return raw as FocusCompanionId;
+  if (raw && LEGACY_COMPANIONS.has(raw)) localStorage.setItem(companionKey(userId), 'dash');
+  return 'dash';
 }
 
 function readMotion(userId: string): CompanionMotion {
