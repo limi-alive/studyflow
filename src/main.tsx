@@ -5,6 +5,7 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import './styles.css';
 import './mobile-final-v12.css';
+
 import './companion.css';
 import './focus-v11.css';
 import './auth-reward-v12.css';

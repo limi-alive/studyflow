@@ -15,13 +15,10 @@ main = main.split(mobileImport).join('');
 main = main.split(mobileImportDouble).join('');
 main = main.replace(/\n{3,}/g, '\n\n');
 const stylesLine = "import './styles.css';";
-if (main.includes(stylesLine)) {
-  main = main.replace(stylesLine, `${stylesLine}\n${mobileImport}`);
-} else {
-  main = `${mobileImport}\n${main}`;
-}
+if (main.includes(stylesLine)) main = main.replace(stylesLine, `${stylesLine}\n${mobileImport}`);
+else main = `${mobileImport}\n${main}`;
 fs.writeFileSync(mainPath, main);
-console.log('v12.2 mobile stylesheet is wired after styles.css.');
+console.log('v12.3 mobile stylesheet is wired after styles.css.');
 
 const workflowsDir = path.join(root, '.github', 'workflows');
 if (!fs.existsSync(workflowsDir)) {
@@ -32,7 +29,6 @@ if (!fs.existsSync(workflowsDir)) {
 const workflowFiles = fs.readdirSync(workflowsDir)
   .filter((name) => /\.ya?ml$/i.test(name))
   .map((name) => path.join(workflowsDir, name));
-
 const targets = workflowFiles.filter((file) => /npm\s+(?:run\s+)?build|vite\s+build|npm\.cmd\s+run\s+build/i.test(fs.readFileSync(file, 'utf8')));
 if (!targets.length) {
   console.error('ERROR: No GitHub Actions workflow containing a production build step was found.');
@@ -45,12 +41,10 @@ function injectWorkflowEnv(source) {
   const hasUrl = /VITE_SUPABASE_URL\s*:/.test(source);
   const hasKey = /VITE_SUPABASE_ANON_KEY\s*:/.test(source);
   if (hasUrl && hasKey) return source;
-
   const jobsMatch = source.match(/^jobs:\s*$/m);
   if (!jobsMatch || jobsMatch.index == null) throw new Error('Workflow has no top-level jobs: block.');
   const beforeJobs = source.slice(0, jobsMatch.index);
   const topEnv = beforeJobs.match(/^env:\s*$/m);
-
   if (topEnv && topEnv.index != null) {
     const insertAt = topEnv.index + topEnv[0].length;
     const additions = [];
@@ -58,7 +52,6 @@ function injectWorkflowEnv(source) {
     if (!hasKey) additions.push(`  VITE_SUPABASE_ANON_KEY: ${keyRef}`);
     return source.slice(0, insertAt) + '\n' + additions.join('\n') + source.slice(insertAt);
   }
-
   const lines = ['env:'];
   if (!hasUrl) lines.push(`  VITE_SUPABASE_URL: ${urlRef}`);
   if (!hasKey) lines.push(`  VITE_SUPABASE_ANON_KEY: ${keyRef}`);
@@ -72,4 +65,4 @@ for (const file of targets) {
   console.log(`Supabase production env verified in ${path.relative(root, file)}.`);
 }
 
-console.log('StudyFlow v12.2 mobile/dashboard configuration complete.');
+console.log('StudyFlow v12.3 phone-fit configuration complete.');
