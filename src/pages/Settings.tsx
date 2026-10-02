@@ -1,4 +1,4 @@
-import { ChangeEvent, useRef, useState } from 'react';
+import { useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
 import { Check, Download, Upload, Bell, Palette, TimerReset, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
@@ -44,16 +44,16 @@ export default function SettingsPage(){
   <header className="page-header"><div><div className="eyebrow">Make it yours</div><h1>Settings</h1><p className="subtle">Personalize the mood without sacrificing focus or readability.</p></div></header>
 
   <Card className="companion-settings-panel">
-    <div className="section-title"><div><div className="eyebrow">Focus companion</div><strong className="section-heading"><Sparkles size={19}/> Premium companion library</strong></div><span className="selection-note">{companionMeta.find(item=>item.id===companion)?.name}</span></div>
-    <p className="subtle companion-settings-copy">Three higher-quality interactive companions selected from reusable Rive community work. Chrome is the default. The preview reacts to focus state and pointer input when the original asset supports it.</p>
-    {(()=>{const selected=companionMeta.find(item=>item.id===companion)??companionMeta[0];return <div className="rive-showcase">
+    <div className="section-title"><div><div className="eyebrow">Focus companion</div><strong className="section-heading"><Sparkles size={19}/> Character animation studio</strong></div><span className="selection-note">{companionMeta.find(item=>item.id===companion)?.name}</span></div>
+    <p className="subtle companion-settings-copy">Pick the exact character style you want beside the timer. Each one has separate idle, focusing, paused and session-complete motion.</p>
+    {(()=>{const selected=companionMeta.find(item=>item.id===companion)??companionMeta[0];return <div className="character-showcase" style={{'--companion-accent':selected.accent} as CSSProperties}>
       <FocusCompanion variant={selected.id} state="running" motion={motion} preview/>
-      <div className="rive-showcase-copy"><span className="rive-license">{selected.license} · Rive Community</span><h3>{selected.emoji} {selected.name}</h3><p>{selected.subtitle}. {selected.vibe}. StudyFlow automatically maps available Rive state-machine inputs to focus, pause and completion states.</p><a className="rive-source-link" href={selected.sourceUrl} target="_blank" rel="noreferrer">View original by {selected.author} ↗</a></div>
+      <div className="character-showcase-copy"><span className="character-mode-note">Live vector character · StudyFlow animation rig</span><h3>{selected.emoji} {selected.name}</h3><p>{selected.subtitle}. {selected.vibe}. The timer automatically switches the character between idle, focus, pause and celebration states.</p></div>
     </div>})()}
     <div className="companion-picker">{companionMeta.map(item=><button type="button" key={item.id} className={`companion-option ${companion===item.id?'selected':''}`} onClick={()=>setCompanion(item.id)} aria-pressed={companion===item.id}>
       <span className="companion-option-emoji">{item.emoji}</span><span className="companion-option-copy"><strong>{item.name}</strong><small>{item.subtitle}</small></span>{companion===item.id&&<span className="companion-selected"><Check size={14}/></span>}
     </button>)}</div>
-    <div className="motion-settings"><div><strong>Animation energy</strong><small>Controls StudyFlow's surrounding motion. Reduce Motion still overrides all decorative movement.</small></div><div className="motion-segments">{motionOptions.map(option=><button type="button" key={option.id} className={motion===option.id?'active':''} onClick={()=>setMotion(option.id)}><strong>{option.label}</strong><small>{option.hint}</small></button>)}</div></div>
+    <div className="motion-settings"><div><strong>Animation energy</strong><small>Calm keeps movement subtle, while Lively increases bounce, hover and chase distance. Reduce Motion still overrides decorative movement.</small></div><div className="motion-segments">{motionOptions.map(option=><button type="button" key={option.id} className={motion===option.id?'active':''} onClick={()=>setMotion(option.id)}><strong>{option.label}</strong><small>{option.hint}</small></button>)}</div></div>
   </Card>
 
   <Card className="theme-panel">
