@@ -1,53 +1,65 @@
+import { useEffect, useId, useRef, useState } from 'react';
+import { axisTickIndices, chartX, finiteChartValue } from '../utils/chartLayout';
+
 export type TrendPoint = { label: string; value: number; compare?: number };
 
-type Props = {
-  points: TrendPoint[];
-  height?: number;
-  compact?: boolean;
-};
+type Props = { points: TrendPoint[]; height?: number; compact?: boolean };
 
-function toPolyline(values: number[], width: number, height: number, padX: number, padY: number, max: number) {
-  if (!values.length) return '';
-  const usableW = width - padX * 2;
-  const usableH = height - padY * 2;
-  return values.map((value, index) => {
-    const x = padX + (values.length === 1 ? usableW / 2 : (index / (values.length - 1)) * usableW);
-    const y = padY + usableH - (value / Math.max(max, 1)) * usableH;
-    return `${x.toFixed(2)},${y.toFixed(2)}`;
-  }).join(' ');
-}
-
+/** The axis uses the SAME x-coordinates as the data, not a separate flex row. */
 export function TrendChart({ points, height = 270, compact = false }: Props) {
-  const width = 900;
-  const padX = compact ? 18 : 34;
-  const padY = compact ? 18 : 28;
-  const values = points.map(point => point.value);
-  const compare = points.map(point => point.compare ?? 0);
-  const max = Math.max(...values, ...compare, 1);
-  const line = toPolyline(values, width, height, padX, padY, max);
-  const compareLine = toPolyline(compare, width, height, padX, padY, max);
-  const area = line ? `${padX},${height-padY} ${line} ${width-padX},${height-padY}` : '';
-  const yTicks = [0.25, 0.5, 0.75, 1];
+  const root = useRef<HTMLDivElement>(null);
+  const id = useId().replace(/:/g, '');
+  const [width, setWidth] = useState(640);
 
-  return <div className={`trend-chart ${compact ? 'compact' : ''}`}>
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Study time trend chart" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--accent)" stopOpacity=".42"/>
-          <stop offset="68%" stopColor="var(--accent)" stopOpacity=".09"/>
-          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0"/>
-        </linearGradient>
-        <filter id="trendGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      {yTicks.map(tick => <line key={tick} x1={padX} x2={width-padX} y1={padY + (height-padY*2)*(1-tick)} y2={padY + (height-padY*2)*(1-tick)} className="trend-gridline"/>)}
-      {area && <polygon points={area} fill="url(#trendFill)"/>}
-      {compareLine && <polyline points={compareLine} className="trend-compare" fill="none"/>}
-      {line && <polyline points={line} className="trend-line" fill="none" filter="url(#trendGlow)"/>}
-      {points.map((point, index) => {
-        const [x,y] = line.split(' ')[index]?.split(',').map(Number) ?? [0,0];
-        return <circle key={`${point.label}-${index}`} cx={x} cy={y} r={compact ? 3.5 : 4.5} className="trend-dot"><title>{point.label}: {Math.round(point.value/60)} min</title></circle>;
-      })}
-    </svg>
-    {!compact && <div className="trend-axis">{points.map((point,index) => <span key={`${point.label}-${index}`}>{point.label}</span>)}</div>}
+  useEffect(() => {
+    const node = root.current;
+    if (!node) return;
+    const measure = () => setWidth(Math.max(160, Math.round(node.getBoundingClientRect().width)));
+    measure();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', measure);
+      return () => window.removeEventListener('resize', measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const plotHeight = compact ? 128 : width < 540 ? 176 : height;
+  const insetY = 20;
+  const baseline = plotHeight - insetY;
+  const values = points.map(point => finiteChartValue(point.value));
+  const comparisons = points.map(point => finiteChartValue(point.compare));
+  const hasCompare = points.some(point => typeof point.compare === 'number');
+  const maximum = Math.max(60, ...values, ...comparisons);
+  const ticks = axisTickIndices(points.length, width);
+  const y = (value: number) => baseline - value / maximum * (plotHeight - insetY * 2);
+  const line = values.map((value, i) => `${chartX(i, points.length, width)},${y(value)}`).join(' ');
+  const compareLine = comparisons.map((value, i) => `${chartX(i, points.length, width)},${y(value)}`).join(' ');
+  const firstX = chartX(0, points.length, width);
+  const lastX = chartX(Math.max(0, points.length - 1), points.length, width);
+  const area = `${firstX},${baseline} ${line} ${lastX},${baseline}`;
+  const empty = values.every(value => value === 0);
+  const labelWidth = ticks.length > 1 ? Math.min(84, (width - 56) / (ticks.length - 1) - 10) : 100;
+
+  return <div ref={root} className={`trend-chart sf-trend${compact ? ' compact' : ''}`}>
+    <div className="sf-trend__plot" style={{ height: plotHeight }}>
+      <svg className="sf-trend__svg" preserveAspectRatio="none" viewBox={`0 0 ${width} ${plotHeight}`} width={width} height={plotHeight} role="img" aria-labelledby={`${id}-title`}>
+        <title id={`${id}-title`}>Study time by date. {empty ? 'No study time in this period.' : `${points.length} data points.`}</title>
+        <defs><linearGradient id={`${id}-fill`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="var(--accent)" stopOpacity=".28"/>
+          <stop offset="100%" stopColor="var(--accent)" stopOpacity=".015"/>
+        </linearGradient></defs>
+        {[0, .25, .5, .75, 1].map(tick => <line key={tick} x1={28} x2={width - 28} y1={y(tick * maximum)} y2={y(tick * maximum)} className="sf-trend__grid"/>) }
+        {points.length > 1 && <polygon points={area} fill={`url(#${id}-fill)`}/>}
+        {hasCompare && points.length > 1 && <polyline points={compareLine} className="sf-trend__compare"/>}
+        {points.length > 1 && <polyline points={line} className="sf-trend__line"/>}
+        {points.map((point, index) => (points.length <= 14 || ticks.includes(index)) && <circle key={index} cx={chartX(index, points.length, width)} cy={y(values[index])} r="3" className="sf-trend__dot"><title>{point.label}: {Math.round(values[index] / 60)} min</title></circle>)}
+      </svg>
+      {empty && !compact && <span className="sf-trend__empty">Your study sessions will appear here.</span>}
+    </div>
+    {!compact && <div className="sf-trend__axis" aria-hidden="true">
+      {ticks.map(index => <span key={index} title={points[index].label} data-point-index={index} style={{ left: `${chartX(index, points.length, width) / width * 100}%`, maxWidth: labelWidth }}>{points[index].label}</span>)}
+    </div>}
   </div>;
 }

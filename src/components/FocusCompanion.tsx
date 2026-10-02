@@ -35,6 +35,7 @@ export function FocusCompanion({variant,state,motion='balanced',intro=false,subj
       : <KuromiCompanion state={state} motion={motion} preview={preview}/>;
 
   const setPointerVars = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduce-motion')) return;
     const root = rootRef.current;
     if (!root) return;
     const box = root.getBoundingClientRect();

@@ -160,7 +160,9 @@ export default function TimerPage() {
       <div><span className="hud-icon coins"><Coins size={15}/></span><span><small>Coins</small><strong>{focusProgress.coins}</strong></span></div>
     </div>}
 
-    <FocusCompanion variant={companion} state={companionState} motion={motion} intro={startBurst} subject={selected?.name} level={focusProgress.level}/>
+    <div className="focus-visual">
+      <FocusCompanion variant={companion} state={companionState} motion={motion} intro={startBurst} subject={selected?.name} level={focusProgress.level}/>
+    </div>
 
     {!active && <div className="timer-setup">
       <div className="mode-picker">{modeMeta.map(({id,label,hint,icon:Icon})=><button key={id} className={`mode-card ${mode===id?'active':''}`} onClick={()=>setMode(id)}><span className="mode-icon"><Icon size={20}/></span><span><strong>{label}</strong><small>{hint}</small></span></button>)}</div>
@@ -181,16 +183,20 @@ export default function TimerPage() {
     </div>}
 
     <div className="timer-core">
-      <div className="timer-display">{formatDuration(display)}</div>
+      <div className="timer-display" role="timer" aria-live="off" aria-label="Study timer" dir="ltr">{formatDuration(display)}</div>
       {active?.durationSeconds ? <div className="progress timer-progress"><div style={{width:`${Math.min(100, elapsed/active.durationSeconds*100)}%`}}/></div> : <div className="timer-tickline"><span/><span/><span/><span/><span/></div>}
       <div className="timer-actions">
+        <div className="timer-main-actions">
         {!active && <button className="button primary focus-launch" onClick={begin}><Play/> Start focus</button>}
         {active?.state==='running' && <button className="button pause-button" onClick={pause}><Pause/> Pause</button>}
         {active?.state==='paused' && <button className="button primary" onClick={resume}><Play/> Resume</button>}
         {active && <button className="button" onClick={()=>void finish()}><Square/> Finish</button>}
+        </div>
+        {active && <div className="timer-secondary-actions">
         {active?.durationSeconds && <button className="button ghost" onClick={()=>addTime(300)}>+5 min</button>}
         {active && <button className="icon-button" onClick={restartSession} aria-label="Restart"><RotateCcw size={18}/></button>}
         {active && <button className="button ghost quiet-danger" onClick={discard}>Discard</button>}
+        </div>}
       </div>
       {active && preferences.showShortcutHints && <div className="focus-shortcuts"><Keyboard size={13}/><span><kbd>Space</kbd> pause / resume</span><span><kbd>Z</kbd> zen mode</span></div>}
     </div>

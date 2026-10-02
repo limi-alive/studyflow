@@ -58,6 +58,10 @@ export function AppShell() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [routePath]);
+
   const go = (path: string) => { setQuick(false); navigate(path); };
   const reduceMotion = Boolean(settings?.reduceMotion);
   const accountLabel = identity.username || identity.displayName || identity.email || (fa ? 'حساب کاربری' : 'Account');
@@ -65,7 +69,7 @@ export function AppShell() {
   const openAuth = () => window.dispatchEvent(new Event('studyflow:open-auth'));
   const rewardCalendar = settings?.calendarType ?? 'gregorian';
 
-  return <div className="app-shell" data-route={routeKey}>
+  return <div className="app-shell" data-route={routeKey} data-ui-build="12.5">
     <aside className="sidebar studio-sidebar">
       <div className="brand studio-brand"><div className="brand-mark"><Sparkles size={18}/></div><div><strong>StudyFlow</strong><small>focus system</small></div></div>
       <nav className="studio-nav">{desktop.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'} title={label}><span className="nav-icon"><Icon size={19}/></span><span className="nav-label">{label}</span></NavLink>)}</nav>
@@ -94,6 +98,7 @@ export function AppShell() {
         <span><strong>StudyFlow</strong><small>{routeLabel[routeKey] ?? 'Focus system'}</small></span>
       </button>
       <div className="mobile-appbar-actions">
+        {routeKey !== 'timer' && <button type="button" aria-label="Quick actions" onClick={() => setQuick(true)}><Plus size={18}/></button>}
         <button type="button" aria-label={identity.signedIn ? 'Open profile' : 'Sign in'} onClick={() => identity.signedIn ? navigate('/profile') : openAuth()}>{identity.signedIn ? <UserRound size={18}/> : <LogIn size={18}/>}</button>
         <button type="button" aria-label="Open settings" onClick={() => navigate('/settings')}><Settings size={18}/></button>
       </div>
@@ -107,7 +112,7 @@ export function AppShell() {
     </main>
 
     {routeKey !== 'timer' && routeKey !== 'stats' && <button className="fab" onClick={() => setQuick(true)} aria-label={fa ? 'افزودن سریع' : 'Quick add'}><Plus size={22}/></button>}
-    <nav className="bottom-nav">{mobile.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'}><span className="nav-icon"><Icon size={21}/></span><small>{label}</small></NavLink>)}</nav>
+    <nav className="bottom-nav" aria-label="Main navigation">{mobile.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'}><span className="nav-icon"><Icon size={21}/></span><small>{label}</small></NavLink>)}</nav>
 
     {quick && <div className="modal-backdrop" onClick={() => setQuick(false)}><div className="modal quick-modal" onClick={event => event.stopPropagation()}><div className="modal-grabber"/><div className="eyebrow">{fa ? 'دسترسی سریع' : 'Quick actions'}</div><h2>{fa ? 'بعدی چیه؟' : 'What’s next?'}</h2><p className="subtle">{fa ? 'بدون گشتن بین صفحه‌ها، سریع شروع کن.' : 'Start fast without digging through menus.'}</p><div className="quick-grid"><button className="quick-action primary" onClick={() => go('/timer')}><Clock3/><span><strong>{fa ? 'شروع مطالعه' : 'Start focus'}</strong><small>{fa ? 'تایمر را باز کن' : 'Open the timer'}</small></span></button><button className="quick-action" onClick={() => go('/planner')}><CalendarDays/><span><strong>{fa ? 'افزودن کار' : 'Add task'}</strong><small>{fa ? 'برای امروز برنامه بریز' : 'Plan your day'}</small></span></button><button className="quick-action" onClick={() => go('/subjects')}><BookOpen/><span><strong>{fa ? 'افزودن درس' : 'Add subject'}</strong><small>{fa ? 'ساختار مطالعه' : 'Organize study'}</small></span></button><button className="quick-action" onClick={() => go('/search')}><Search/><span><strong>{fa ? 'جستجو' : 'Search'}</strong><small>{fa ? 'هرچیزی را پیدا کن' : 'Find anything'}</small></span></button></div></div></div>}
     <AuthGate/>

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { AtSign, CheckCircle2, Eye, EyeOff, KeyRound, LoaderCircle, LockKeyhole, Mail, ShieldCheck, Sparkles, UserPlus, X } from 'lucide-react';
 import { claimUsername, validateUsername, usernameAvailable } from '../lib/accountSecurity';
 import { cloudEnabled, supabase } from '../lib/supabase';
@@ -23,6 +24,7 @@ function authErrorMessage(message: string) {
 }
 
 export function AuthGate() {
+  const dialogRef = useRef<HTMLDivElement>(null);
   const identity = useAuthIdentity();
   const [mode, setMode] = useState<Mode>('signin');
   const [manualOpen, setManualOpen] = useState(false);
@@ -77,6 +79,54 @@ export function AuthGate() {
       setStatus('');
     }
   }, [identity.signedIn, mode]);
+
+  // Keep the account sheet outside transformed route containers. Its own
+  // scroll area follows the visual viewport when a mobile keyboard opens.
+  useEffect(() => {
+    if (!shouldOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const returnFocus = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = 'hidden';
+    const viewport = window.visualViewport;
+    const updateViewport = () => {
+      const node = dialogRef.current;
+      if (!node) return;
+      node.style.setProperty('--sf-auth-height', `${viewport?.height ?? window.innerHeight}px`);
+      node.style.setProperty('--sf-auth-top', `${viewport?.offsetTop ?? 0}px`);
+    };
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && manualOpen && mode !== 'new-password') {
+        setManualOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const nodes = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], [tabindex="0"]'
+      ) ?? []).filter(node => node.getClientRects().length > 0);
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    updateViewport();
+    dialogRef.current?.focus({ preventScroll: true });
+    viewport?.addEventListener('resize', updateViewport);
+    viewport?.addEventListener('scroll', updateViewport);
+    window.addEventListener('resize', updateViewport);
+    document.addEventListener('keydown', trapFocus);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      viewport?.removeEventListener('resize', updateViewport);
+      viewport?.removeEventListener('scroll', updateViewport);
+      window.removeEventListener('resize', updateViewport);
+      document.removeEventListener('keydown', trapFocus);
+      if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+    };
+  }, [shouldOpen, manualOpen, mode]);
 
   const continueOffline = () => {
     localStorage.setItem(OFFLINE_KEY, '1');
@@ -179,7 +229,7 @@ export function AuthGate() {
 
   if (!shouldOpen) return null;
 
-  return <div className="auth-gate-backdrop" role="dialog" aria-modal="true" aria-label="StudyFlow account">
+  return createPortal(<div ref={dialogRef} tabIndex={-1} className="auth-gate-backdrop" role="dialog" aria-modal="true" aria-label="StudyFlow account">
     <div className="auth-gate-shell">
       <section className="auth-gate-brand-panel">
         <div className="auth-gate-orb auth-gate-orb-one" aria-hidden="true"/>
@@ -205,7 +255,7 @@ export function AuthGate() {
           <div className="auth-form-heading"><span className="auth-form-icon"><LockKeyhole size={19}/></span><div><small>WELCOME BACK</small><h2>Sign in</h2></div></div>
           <form className="auth-form" onSubmit={signIn}>
             <label><span>Email</span><div className="auth-input-wrap"><Mail size={16}/><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required/></div></label>
-            <label><span>Password</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" autoComplete="current-password" required/><button type="button" onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
+            <label><span>Password</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" autoComplete="current-password" required/><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
             <button className="auth-primary-button" disabled={busy || !canUseCloud}>{busy ? <LoaderCircle className="spin" size={17}/> : <LockKeyhole size={17}/>} Sign in</button>
           </form>
           <button className="auth-text-button" type="button" onClick={() => { setMode('forgot'); setStatus(''); setSuccess(''); }}>Forgot password?</button>
@@ -218,7 +268,7 @@ export function AuthGate() {
           <form className="auth-form" onSubmit={signUp}>
             <label><span>Username</span><div className={`auth-input-wrap username ${usernameState}`}><AtSign size={16}/><input value={username} onChange={e => { setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')); setUsernameState('idle'); }} maxLength={24} placeholder="your_username" autoComplete="username" required/><button type="button" className="username-check-button" onClick={() => void checkUsername()}>{usernameState === 'checking' ? <LoaderCircle className="spin" size={15}/> : usernameState === 'available' ? <CheckCircle2 size={15}/> : 'Check'}</button></div><small className="auth-field-note">3–24 characters · letters, numbers and underscore</small></label>
             <label><span>Email</span><div className="auth-input-wrap"><Mail size={16}/><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required/></div></label>
-            <label><span>Password</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="8+ characters" autoComplete="new-password" required/><button type="button" onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
+            <label><span>Password</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="8+ characters" autoComplete="new-password" required/><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
             <label><span>Confirm password</span><div className="auth-input-wrap"><ShieldCheck size={16}/><input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat password" autoComplete="new-password" required/></div></label>
             <button className="auth-primary-button" disabled={busy || !canUseCloud}>{busy ? <LoaderCircle className="spin" size={17}/> : <UserPlus size={17}/>} Create private account</button>
           </form>
@@ -250,5 +300,5 @@ export function AuthGate() {
         {mode !== 'new-password' && <button className="auth-offline-button" type="button" onClick={continueOffline}>Continue offline <span>Local data stays on this device</span></button>}
       </section>
     </div>
-  </div>;
+  </div>, document.body);
 }
