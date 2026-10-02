@@ -4,7 +4,7 @@ import { useCurrentUser } from '../hooks/useCurrentUser';
 import { db, ensureSettings, nowIso } from '../lib/db';
 import { Card } from '../components/Card';
 
-const themeOptions=['plush','liquid','chrome','pink-chrome','dark-hero','amoled','aurora','cyber','cozy','sakura','minimal','space','forest'];
+const themeOptions=['plush','jelly','matcha','lavender','ocean-glass','liquid','chrome','pink-chrome','dark-hero','amoled','aurora','cyber','cozy','sakura','minimal','space','forest'];
 export default function OnboardingPage(){
  const {userId}=useCurrentUser();const nav=useNavigate();const [step,setStep]=useState(1);const [purpose,setPurpose]=useState('University');const [subjects,setSubjects]=useState('');const [goal,setGoal]=useState(180);const [theme,setTheme]=useState('plush');
  const finish=async()=>{const now=nowIso();for(const name of subjects.split(',').map(x=>x.trim()).filter(Boolean)){await db.subjects.put({id:crypto.randomUUID(),userId,name,color:'#8a6cff',priority:1,archived:false,createdAt:now,updatedAt:now,syncStatus:'pending'});}await db.goals.add({id:crypto.randomUUID(),userId,type:'daily_time',target:goal,period:'daily',createdAt:now,updatedAt:now,syncStatus:'pending'});await ensureSettings(userId);await db.settings.update(userId,{themeId:theme,updatedAt:now});localStorage.setItem('studyflow.onboarded','1');localStorage.setItem('studyflow.studyPurpose',purpose);nav('/');};
