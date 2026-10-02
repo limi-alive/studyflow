@@ -5,7 +5,7 @@ import { useMonthlyReward } from '../hooks/useMonthlyReward';
 import { useStudyReview } from '../hooks/useStudyReview';
 import { formatDuration } from '../utils/time';
 
-function toman(value:number){return `${new Intl.NumberFormat('fa-IR').format(value)} تومان`;}
+function toman(value:number){return `${new Intl.NumberFormat('en-US').format(value)} Toman`;}
 
 type Props={userId:string;calendarType:'gregorian'|'jalali'};
 
@@ -22,7 +22,7 @@ export function ProgressHub({userId,calendarType}:Props){
       <div className="reward-card-head"><div><div className="eyebrow">Monthly reward</div><h3><Banknote size={20}/> Study pays off</h3></div><span className="reward-month">{reward.monthLabel}</span></div>
       <div className="reward-main">
         <div className="reward-ring"><svg viewBox="0 0 110 110"><circle cx="55" cy="55" r="46" className="reward-ring-track"/><circle cx="55" cy="55" r="46" className="reward-ring-value" strokeDasharray={`${dash} ${circumference-dash}`}/></svg><div><strong>{reward.monthlyHours.toFixed(1)}h</strong><span>/ {reward.hoursPerReward}h</span></div></div>
-        <div className="reward-copy"><span className="reward-rule"><Gift size={16}/> هر ۲۸ ساعت = ۵,۰۰۰,۰۰۰ تومان</span><strong>{toman(reward.earnedToman)}</strong><small>{reward.earnedBlocks ? `${reward.earnedBlocks} reward block${reward.earnedBlocks===1?'':'s'} unlocked this month` : `${nextHours.toFixed(1)}h to the first reward`}</small></div>
+        <div className="reward-copy"><span className="reward-rule"><Gift size={16}/> Every 28 hours = 5,000,000 Toman</span><strong>{toman(reward.earnedToman)}</strong><small>{reward.earnedBlocks ? `${reward.earnedBlocks} reward block${reward.earnedBlocks===1?'':'s'} unlocked this month` : `${nextHours.toFixed(1)}h to the first reward`}</small></div>
       </div>
       <div className="reward-ledger">
         <div><span>Earned</span><strong>{toman(reward.earnedToman)}</strong></div><div><span>Marked paid</span><strong>{toman(reward.paidToman)}</strong></div><div><span>Outstanding</span><strong>{toman(reward.outstandingToman)}</strong></div>

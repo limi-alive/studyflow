@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { SyncBadge } from './SyncBadge';
 import { AuthGate } from './AuthGate';
 import { SidebarRewardCard } from './SidebarRewardCard';
+import { DashboardRewardCard } from './DashboardRewardCard';
 import { useAuthIdentity } from '../hooks/useAuthIdentity';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
@@ -45,6 +46,7 @@ export function AppShell() {
   const accountLabel = identity.username || identity.displayName || identity.email || (fa ? 'حساب کاربری' : 'Account');
   const accountSub = identity.signedIn ? (identity.email ?? (fa ? 'حساب ابری' : 'Cloud account')) : (fa ? 'ورود یا ساخت حساب' : 'Sign in or create account');
   const openAuth = () => window.dispatchEvent(new Event('studyflow:open-auth'));
+  const rewardCalendar = settings?.calendarType ?? 'gregorian';
 
   return <div className="app-shell">
     <aside className="sidebar studio-sidebar">
@@ -52,7 +54,7 @@ export function AppShell() {
       <nav className="studio-nav">{desktop.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'} title={label}><span className="nav-icon"><Icon size={19}/></span><span className="nav-label">{label}</span></NavLink>)}</nav>
 
       <div className="sidebar-spacer"/>
-      <SidebarRewardCard userId={userId} calendarType={settings?.calendarType ?? 'gregorian'} onOpenDetails={()=>navigate('/settings')}/>
+      <SidebarRewardCard userId={userId} calendarType={rewardCalendar} onOpenDetails={()=>navigate('/settings')}/>
 
       <div className="sidebar-tools">
         <button className="command-button studio-command" onClick={()=>setQuick(true)}><Command size={17}/><span>{fa?'دسترسی سریع':'Command'}</span><kbd>⌘K</kbd></button>
@@ -69,8 +71,22 @@ export function AppShell() {
       <div className="sidebar-foot"><SyncBadge userId={userId}/></div>
     </aside>
 
+    <header className="mobile-appbar">
+      <button className="mobile-appbar-brand" type="button" onClick={()=>navigate('/')} aria-label="Go to dashboard">
+        <span className="mobile-appbar-mark"><Sparkles size={16}/></span>
+        <span><strong>StudyFlow</strong><small>{location.pathname==='/'?'Dashboard':'Focus system'}</small></span>
+      </button>
+      <div className="mobile-appbar-actions">
+        <button type="button" aria-label={identity.signedIn?'Open profile':'Sign in'} onClick={()=>identity.signedIn?navigate('/profile'):openAuth()}>{identity.signedIn?<UserRound size={18}/>:<LogIn size={18}/>}</button>
+        <button type="button" aria-label="Open settings" onClick={()=>navigate('/settings')}><Settings size={18}/></button>
+      </div>
+    </header>
+
     <main className="main studio-main">
-      <AnimatePresence mode="wait" initial={false}><motion.div key={location.pathname} className="route-frame" initial={reduceMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -4 }} transition={{ duration: reduceMotion ? 0 : .2, ease: [0.22, 1, 0.36, 1] }}><Outlet/></motion.div></AnimatePresence>
+      <AnimatePresence mode="wait" initial={false}><motion.div key={location.pathname} className="route-frame" initial={reduceMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -4 }} transition={{ duration: reduceMotion ? 0 : .2, ease: [0.22, 1, 0.36, 1] }}>
+        {location.pathname==='/'&&<div className="dashboard-reward-mobile-host"><DashboardRewardCard userId={userId} calendarType={rewardCalendar} onOpenDetails={()=>navigate('/settings')}/></div>}
+        <Outlet/>
+      </motion.div></AnimatePresence>
     </main>
 
     <button className="fab" onClick={() => setQuick(true)} aria-label={fa?'افزودن سریع':'Quick add'}><Plus size={23}/></button>

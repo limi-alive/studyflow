@@ -9,23 +9,19 @@ if (!fs.existsSync(mainPath)) {
 }
 
 let main = fs.readFileSync(mainPath, 'utf8');
-const imports = [
-  "import './companion.css';",
-  "import './focus-v11.css';",
-  "import './auth-reward-v12.css';",
-  "import './mobile-final-v12.css';",
-];
-for (const line of imports) {
-  main = main.split(line).join('');
-  main = main.split(line.replaceAll("'", '"')).join('');
-}
+const mobileImport = "import './mobile-final-v12.css';";
+const mobileImportDouble = 'import "./mobile-final-v12.css";';
+main = main.split(mobileImport).join('');
+main = main.split(mobileImportDouble).join('');
 main = main.replace(/\n{3,}/g, '\n\n');
 const stylesLine = "import './styles.css';";
-const block = [stylesLine, ...imports].join('\n');
-if (main.includes(stylesLine)) main = main.replace(stylesLine, block);
-else main = `${imports.join('\n')}\n${main}`;
+if (main.includes(stylesLine)) {
+  main = main.replace(stylesLine, `${stylesLine}\n${mobileImport}`);
+} else {
+  main = `${mobileImport}\n${main}`;
+}
 fs.writeFileSync(mainPath, main);
-console.log('Mobile polish styles are wired.');
+console.log('v12.2 mobile stylesheet is wired after styles.css.');
 
 const workflowsDir = path.join(root, '.github', 'workflows');
 if (!fs.existsSync(workflowsDir)) {
@@ -73,7 +69,7 @@ for (const file of targets) {
   const original = fs.readFileSync(file, 'utf8');
   const updated = injectWorkflowEnv(original);
   fs.writeFileSync(file, updated);
-  console.log(`Supabase production env wired into ${path.relative(root, file)}.`);
+  console.log(`Supabase production env verified in ${path.relative(root, file)}.`);
 }
 
-console.log('StudyFlow v12.1 production configuration complete.');
+console.log('StudyFlow v12.2 mobile/dashboard configuration complete.');

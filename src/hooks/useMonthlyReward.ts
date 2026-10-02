@@ -15,7 +15,7 @@ function readLedger(userId: string): RewardLedger {
 }
 
 function monthKey(date: Date, calendarType: 'gregorian' | 'jalali') {
-  const locale = calendarType === 'jalali' ? 'fa-IR-u-ca-persian-nu-latn' : 'en-CA';
+  const locale = calendarType === 'jalali' ? 'en-US-u-ca-persian-nu-latn' : 'en-CA';
   const parts = new Intl.DateTimeFormat(locale, { year: 'numeric', month: '2-digit' }).formatToParts(date);
   const year = parts.find(part => part.type === 'year')?.value ?? String(date.getFullYear());
   const month = parts.find(part => part.type === 'month')?.value ?? String(date.getMonth() + 1).padStart(2, '0');
@@ -23,7 +23,7 @@ function monthKey(date: Date, calendarType: 'gregorian' | 'jalali') {
 }
 
 function monthLabel(date: Date, calendarType: 'gregorian' | 'jalali') {
-  const locale = calendarType === 'jalali' ? 'fa-IR-u-ca-persian' : 'en-US';
+  const locale = calendarType === 'jalali' ? 'en-US-u-ca-persian-nu-latn' : 'en-US';
   return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long' }).format(date);
 }
 
