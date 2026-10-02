@@ -3,11 +3,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Brain, Hourglass, Pause, Play, RotateCcw, Sparkles, Square, TimerReset } from 'lucide-react';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
+import { useCompanionPreferences } from '../hooks/useCompanionPreferences';
 import { db, getDeviceId, nowIso } from '../lib/db';
 import { useTimerStore } from '../stores/timerStore';
 import type { TimerType } from '../types';
 import { formatDuration, timerElapsedSeconds } from '../utils/time';
-import { FocusBuddy } from '../components/FocusBuddy';
+import { FocusCompanion } from '../components/FocusCompanion';
 
 const modeMeta: Array<{id:TimerType;label:string;hint:string;icon:typeof TimerReset}> = [
   {id:'stopwatch',label:'Stopwatch',hint:'Open-ended focus',icon:TimerReset},
@@ -19,6 +20,7 @@ const modeMeta: Array<{id:TimerType;label:string;hint:string;icon:typeof TimerRe
 export default function TimerPage() {
   const { userId } = useCurrentUser();
   const settings = useSettings(userId);
+  const { companion, motion } = useCompanionPreferences(userId);
   const notified = useRef<string | null>(null);
   const subjectRows = useLiveQuery(() => db.subjects.where('userId').equals(userId).filter(x=>!x.archived&&!x.deletedAt).toArray(), [userId]);
   const subjects = useMemo(() => subjectRows ?? [], [subjectRows]);
@@ -62,13 +64,13 @@ export default function TimerPage() {
   };
 
   const completed = Boolean(active?.durationSeconds && elapsed >= active.durationSeconds);
-  const buddyState = completed ? 'celebrate' : active?.state === 'running' ? 'running' : active?.state === 'paused' ? 'paused' : 'idle';
+  const companionState = completed ? 'celebrate' : active?.state === 'running' ? 'running' : active?.state === 'paused' ? 'paused' : 'idle';
   const activeMode = active?.timerType ?? mode;
 
   return <div className={`page timer-stage mode-${activeMode} ${active ? 'timer-active' : ''} ${startBurst ? 'timer-start-burst' : ''}`}>
     <div className="timer-backdrop-orb timer-orb-one"/><div className="timer-backdrop-orb timer-orb-two"/>
-    <div className="timer-heading"><div className="eyebrow">{active ? selected?.name ?? 'Focus session' : 'Focus studio'}</div><span className={`focus-state ${buddyState}`}>{completed?'Complete':active?.state==='paused'?'Paused':active?'Focusing':'Ready'}</span></div>
-    <FocusBuddy state={buddyState} intro={startBurst} subject={selected?.name}/>
+    <div className="timer-heading"><div className="eyebrow">{active ? selected?.name ?? 'Focus session' : 'Focus studio'}</div><span className={`focus-state ${companionState}`}>{completed?'Complete':active?.state==='paused'?'Paused':active?'Focusing':'Ready'}</span></div>
+    <FocusCompanion variant={companion} state={companionState} motion={motion} intro={startBurst} subject={selected?.name}/>
 
     {!active && <div className="timer-setup">
       <div className="mode-picker">{modeMeta.map(({id,label,hint,icon:Icon})=><button key={id} className={`mode-card ${mode===id?'active':''}`} onClick={()=>setMode(id)}><span className="mode-icon"><Icon size={20}/></span><span><strong>{label}</strong><small>{hint}</small></span></button>)}</div>
