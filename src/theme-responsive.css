@@ -1,0 +1,160 @@
+/* StudyFlow v5.2 — theme-aware dashboard + layout repair.
+   Loaded after styles.css and companion.css so dashboard surfaces follow the selected theme. */
+
+/* Sidebar utility row: Settings no longer overlaps Command. */
+.sidebar-tools {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 38px;
+  gap:7px;
+  align-items:stretch;
+  margin-top:8px;
+}
+.sidebar-tools .studio-command { margin:0; min-width:0; width:100%; }
+.settings-shortcut {
+  position:static!important;
+  inset:auto!important;
+  width:38px!important;
+  height:38px!important;
+  margin:0!important;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--muted);
+  border-radius:12px;
+  display:grid!important;
+  place-items:center;
+  transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s var(--ease-spring);
+}
+.settings-shortcut:hover,.settings-shortcut.active { color:var(--text);border-color:var(--border-strong);background:var(--surface2);transform:translateY(-1px); }
+.profile-shortcut { margin-top:7px!important; }
+.studio-sidebar .sidebar-foot { display:block!important; padding:7px 1px 0!important; }
+
+/* Perfectly centered floating + button. */
+.fab {
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  line-height:1!important;
+}
+.fab svg { display:block!important; margin:0!important; transform:none!important; }
+
+/* Dashboard surfaces must inherit theme tokens instead of staying black. */
+.analytics-hero,
+.stats-chart-card,
+.timer-core {
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--surface) 97%,var(--bg)),
+    color-mix(in srgb,var(--surface) 84%,var(--bg2)))!important;
+  border-color:var(--border)!important;
+}
+.today-focus-card {
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--surface) 96%,var(--bg)),
+    color-mix(in srgb,var(--surface2) 82%,var(--bg)))!important;
+}
+.studio-sidebar {
+  background:color-mix(in srgb,var(--glass) 92%,transparent)!important;
+  border-color:var(--glass-border)!important;
+}
+.studio-nav a.active {
+  background:color-mix(in srgb,var(--accent) 14%,var(--surface))!important;
+  color:var(--text)!important;
+}
+.studio-brand .brand-mark,
+.button.primary,
+.fab {
+  background:linear-gradient(135deg,var(--accent),var(--accent2))!important;
+}
+.date-chip {
+  background:color-mix(in srgb,var(--surface) 92%,var(--bg))!important;
+  border-color:var(--border)!important;
+  color:var(--text)!important;
+}
+.date-chip.active {
+  background:linear-gradient(135deg,
+    color-mix(in srgb,var(--accent) 72%,white),
+    color-mix(in srgb,var(--accent2) 52%,var(--accent)))!important;
+  color:color-mix(in srgb,var(--text) 18%,black)!important;
+  border-color:transparent!important;
+}
+.date-chip.active span { color:currentColor!important; opacity:.62; }
+.trend-gridline { stroke:color-mix(in srgb,var(--text) 7%,transparent)!important; }
+.trend-line { stroke:var(--accent)!important; }
+.trend-compare { stroke:var(--accent2)!important; }
+.trend-dot { fill:var(--surface)!important; stroke:var(--accent)!important; }
+.subject-summary-card,
+.mini-stat-card,
+.next-up-card,
+.insight-card,
+.subject-breakdown-card,
+.settings-card,
+.theme-panel {
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--surface) 96%,transparent),
+    color-mix(in srgb,var(--surface2) 82%,transparent))!important;
+  color:var(--text)!important;
+  border-color:var(--border)!important;
+}
+.subject-summary-card::after {
+  background:color-mix(in srgb,var(--accent) 12%,transparent)!important;
+}
+.dashboard-task { background:color-mix(in srgb,var(--surface2) 54%,transparent)!important; }
+.dashboard-task:hover { background:color-mix(in srgb,var(--surface2) 78%,transparent)!important; }
+.range-tabs-large,
+.range-tabs button.active,
+.live-chip,
+.focus-state,
+.mode-card,
+.timer-core,
+.profile-shortcut,
+.command-button {
+  border-color:var(--border)!important;
+}
+.range-tabs button.active { background:var(--surface2)!important; color:var(--text)!important; }
+.exam-gradient-card {
+  background:linear-gradient(135deg,
+    color-mix(in srgb,var(--accent) 92%,white),
+    color-mix(in srgb,var(--accent) 55%,var(--accent2)) 58%,
+    color-mix(in srgb,var(--accent2) 82%,white))!important;
+  color:color-mix(in srgb,var(--text) 16%,black)!important;
+}
+.exam-gradient-card .eyebrow { color:currentColor!important; opacity:.64; }
+.timer-backdrop-orb { opacity:.10!important; }
+.timer-orb-one { background:var(--accent)!important; }
+.timer-orb-two { background:var(--accent2)!important; }
+
+/* Light themes need soft elevation instead of a permanently black dashboard. */
+:root[data-theme="plush"] .analytics-hero,
+:root[data-theme="jelly"] .analytics-hero,
+:root[data-theme="matcha"] .analytics-hero,
+:root[data-theme="lavender"] .analytics-hero,
+:root[data-theme="sakura"] .analytics-hero,
+:root[data-theme="minimal"] .analytics-hero,
+:root[data-theme="chrome"] .analytics-hero,
+:root[data-theme="pink-chrome"] .analytics-hero,
+:root[data-theme="plush"] .timer-core,
+:root[data-theme="jelly"] .timer-core,
+:root[data-theme="matcha"] .timer-core,
+:root[data-theme="lavender"] .timer-core,
+:root[data-theme="sakura"] .timer-core,
+:root[data-theme="minimal"] .timer-core,
+:root[data-theme="chrome"] .timer-core,
+:root[data-theme="pink-chrome"] .timer-core {
+  box-shadow:0 18px 50px color-mix(in srgb,var(--text) 8%,transparent)!important;
+}
+
+/* Companion scene: smaller, cleaner, and theme aware. */
+.focus-companion { margin-block:-4px 0; }
+.companion-glow {
+  background:radial-gradient(circle,color-mix(in srgb,var(--accent) 16%,transparent),transparent 68%)!important;
+}
+.companion-caption { color:var(--muted)!important; }
+.companion-status-dot { background:var(--accent2)!important; }
+.companion-preview-stage {
+  background:radial-gradient(circle at 50% 82%,color-mix(in srgb,var(--accent) 11%,transparent),transparent 60%),var(--surface)!important;
+  border:1px solid var(--border);
+}
+
+@media(max-width:820px){
+  .sidebar-tools{display:none}
+  .fab{right:16px!important;bottom:82px!important}
+}
