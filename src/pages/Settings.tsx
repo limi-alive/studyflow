@@ -1,8 +1,10 @@
 import { useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
-import { Check, Download, Upload, Bell, Palette, TimerReset, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Check, Coins, Download, Flame, Gauge, Keyboard, Shield, Sparkles, Target, TimerReset, Trophy, Upload, Bell, Palette, SlidersHorizontal } from 'lucide-react';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
 import { useCompanionPreferences, type CompanionMotion } from '../hooks/useCompanionPreferences';
+import { useFocusProgress } from '../hooks/useFocusProgress';
+import { useFocusSystemPreferences } from '../hooks/useFocusSystemPreferences';
 import { db, nowIso } from '../lib/db';
 import { Card } from '../components/Card';
 import { FocusCompanion, type CompanionState } from '../components/FocusCompanion';
@@ -32,7 +34,7 @@ const themes=[
 type Backup = {subjects?:Subject[];topics?:Topic[];tasks?:StudyTask[];sessions?:StudySession[];goals?:Goal[];exams?:Exam[];settings?:UserSettings};
 
 export default function SettingsPage(){
- const {userId}=useCurrentUser(); const s=useSettings(userId); const {companion,motion,setCompanion,setMotion}=useCompanionPreferences(userId); const fileRef=useRef<HTMLInputElement>(null); const [message,setMessage]=useState(''); const [previewState,setPreviewState]=useState<CompanionState>('running'); if(!s)return <div className="page">Loading…</div>;
+ const {userId}=useCurrentUser(); const s=useSettings(userId); const {companion,motion,setCompanion,setMotion}=useCompanionPreferences(userId); const focusProgress=useFocusProgress(userId); const {preferences:focusPrefs,patchPreferences}=useFocusSystemPreferences(userId); const fileRef=useRef<HTMLInputElement>(null); const [message,setMessage]=useState(''); const [previewState,setPreviewState]=useState<CompanionState>('running'); if(!s)return <div className="page">Loading…</div>;
  const patch=async(p:Partial<UserSettings>)=>{await db.settings.update(userId,{...p,updatedAt:nowIso()});};
  const exportJson=async()=>{const payload={subjects:await db.subjects.where('userId').equals(userId).toArray(),topics:await db.topics.where('userId').equals(userId).toArray(),tasks:await db.tasks.where('userId').equals(userId).toArray(),sessions:await db.sessions.where('userId').equals(userId).toArray(),goals:await db.goals.where('userId').equals(userId).toArray(),exams:await db.exams.where('userId').equals(userId).toArray(),settings:s};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='studyflow-backup.json';a.click();URL.revokeObjectURL(a.href);};
  const exportCsv=async()=>{const sessions=await db.sessions.where('userId').equals(userId).toArray();const esc=(v:unknown)=>`"${String(v??'').replaceAll('"','""')}"`;const csv=['id,start_time,end_time,study_seconds,timer_type,subject_id',...sessions.map(x=>[x.id,x.startTime,x.endTime,x.studySeconds,x.timerType,x.subjectId??''].map(esc).join(','))].join('\n');const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='studyflow-sessions.csv';a.click();URL.revokeObjectURL(a.href);};
@@ -47,7 +49,7 @@ export default function SettingsPage(){
     <div className="section-title"><div><div className="eyebrow">Focus companion</div><strong className="section-heading"><Sparkles size={19}/> Character animation studio</strong></div><span className="selection-note">{companionMeta.find(item=>item.id===companion)?.name}</span></div>
     <p className="subtle companion-settings-copy">Pick the exact character style you want beside the timer. Each one has separate idle, focusing, paused and session-complete motion.</p>
     {(()=>{const selected=companionMeta.find(item=>item.id===companion)??companionMeta[0];return <div className="character-showcase" style={{'--companion-accent':selected.accent} as CSSProperties}>
-      <FocusCompanion variant={selected.id} state={previewState} motion={motion} preview/>
+      <FocusCompanion variant={selected.id} state={previewState} motion={motion} preview level={focusProgress.level}/>
       <div className="character-showcase-copy">
         <span className="character-mode-note">Live vector character · reactive StudyFlow animation rig</span>
         <h3>{selected.emoji} {selected.name}</h3>
@@ -62,6 +64,23 @@ export default function SettingsPage(){
       <span className="companion-option-emoji">{item.emoji}</span><span className="companion-option-copy"><strong>{item.name}</strong><small>{item.subtitle}</small></span>{companion===item.id&&<span className="companion-selected"><Check size={14}/></span>}
     </button>)}</div>
     <div className="motion-settings"><div><strong>Animation energy</strong><small>Calm keeps movement subtle, while Lively increases bounce, hover and chase distance. Reduce Motion still overrides decorative movement.</small></div><div className="motion-segments">{motionOptions.map(option=><button type="button" key={option.id} className={motion===option.id?'active':''} onClick={()=>setMotion(option.id)}><strong>{option.label}</strong><small>{option.hint}</small></button>)}</div></div>
+  </Card>
+
+  <Card className="focus-system-settings">
+    <div className="section-title"><div><div className="eyebrow">Focus system</div><strong className="section-heading"><Gauge size={19}/> Progress, reflection & flow</strong></div><span className="selection-note">Level {focusProgress.level}</span></div>
+    <div className="focus-system-overview">
+      <div className="focus-level-card"><span className="focus-system-icon"><Trophy size={18}/></span><div><small>Companion level</small><strong>Level {focusProgress.level}</strong><span>{focusProgress.xp} XP · {focusProgress.xpToNextLevel} to next</span></div><i><b style={{width:`${focusProgress.levelProgress*100}%`}}/></i></div>
+      <div className="focus-system-stat"><span><Flame size={17}/></span><div><small>Current streak</small><strong>{focusProgress.streak} days</strong></div></div>
+      <div className="focus-system-stat"><span><Shield size={17}/></span><div><small>Average focus score</small><strong>{focusProgress.averageScore || '—'}{focusProgress.averageScore ? '/100' : ''}</strong></div></div>
+      <div className="focus-system-stat"><span><Coins size={17}/></span><div><small>Study coins</small><strong>{focusProgress.coins}</strong></div></div>
+    </div>
+    <div className="focus-system-toggles">
+      <label className="switch-row"><span><strong>Session summary</strong><small>Show Focus Score, XP and reflection after finishing.</small></span><input type="checkbox" checked={focusPrefs.showSessionSummary} onChange={e=>patchPreferences({showSessionSummary:e.target.checked})}/></label>
+      <label className="switch-row"><span><strong>Auto Zen mode</strong><small>Quiet the navigation automatically when focus starts.</small></span><input type="checkbox" checked={focusPrefs.autoZen} onChange={e=>patchPreferences({autoZen:e.target.checked})}/></label>
+      <label className="switch-row"><span><strong>Session intention</strong><small>Ask for one clear outcome before each session.</small></span><input type="checkbox" checked={focusPrefs.promptIntent} onChange={e=>patchPreferences({promptIntent:e.target.checked})}/></label>
+      <label className="switch-row"><span><strong>Shortcut hints</strong><small><Keyboard size={13}/> Show Space and Z controls below the timer.</small></span><input type="checkbox" checked={focusPrefs.showShortcutHints} onChange={e=>patchPreferences({showShortcutHints:e.target.checked})}/></label>
+    </div>
+    <div className="focus-system-note"><Target size={15}/><span>Focus Score uses completion, pause time, distractions, duration and consistency — matching the StudyFlow product model.</span></div>
   </Card>
 
   <Card className="theme-panel">

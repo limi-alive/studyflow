@@ -14,9 +14,10 @@ type Props = {
   intro?: boolean;
   subject?: string;
   preview?: boolean;
+  level?: number;
 };
 
-export function FocusCompanion({variant,state,motion='balanced',intro=false,subject,preview=false}:Props){
+export function FocusCompanion({variant,state,motion='balanced',intro=false,subject,preview=false,level=1}:Props){
   const rootRef = useRef<HTMLDivElement>(null);
   const meta = companionMeta.find(item=>item.id===variant) ?? companionMeta[0];
   const caption = state==='running'
@@ -77,6 +78,6 @@ export function FocusCompanion({variant,state,motion='balanced',intro=false,subj
     <div className="companion-orbit orbit-two" aria-hidden="true"/>
     <div className="companion-floor-shadow" aria-hidden="true"/>
     {scene}
-    {!preview && <div className="companion-caption exact-caption"><span className="companion-status-dot"/>{caption}</div>}
+    {!preview && <div className="companion-caption-row"><div className="companion-caption exact-caption"><span className="companion-status-dot"/>{caption}</div><span className="companion-level-pill">Lv. {level}</span></div>}
   </div>;
 }
