@@ -5,7 +5,7 @@ import { useSettings } from '../hooks/useSettings';
 import { useCompanionPreferences, type CompanionMotion } from '../hooks/useCompanionPreferences';
 import { db, nowIso } from '../lib/db';
 import { Card } from '../components/Card';
-import { FocusCompanion } from '../components/FocusCompanion';
+import { FocusCompanion, type CompanionState } from '../components/FocusCompanion';
 import { companionMeta } from '../components/companionMeta';
 import type { Exam, Goal, StudySession, StudyTask, Subject, Topic, UserSettings } from '../types';
 
@@ -32,7 +32,7 @@ const themes=[
 type Backup = {subjects?:Subject[];topics?:Topic[];tasks?:StudyTask[];sessions?:StudySession[];goals?:Goal[];exams?:Exam[];settings?:UserSettings};
 
 export default function SettingsPage(){
- const {userId}=useCurrentUser(); const s=useSettings(userId); const {companion,motion,setCompanion,setMotion}=useCompanionPreferences(userId); const fileRef=useRef<HTMLInputElement>(null); const [message,setMessage]=useState(''); if(!s)return <div className="page">Loading…</div>;
+ const {userId}=useCurrentUser(); const s=useSettings(userId); const {companion,motion,setCompanion,setMotion}=useCompanionPreferences(userId); const fileRef=useRef<HTMLInputElement>(null); const [message,setMessage]=useState(''); const [previewState,setPreviewState]=useState<CompanionState>('running'); if(!s)return <div className="page">Loading…</div>;
  const patch=async(p:Partial<UserSettings>)=>{await db.settings.update(userId,{...p,updatedAt:nowIso()});};
  const exportJson=async()=>{const payload={subjects:await db.subjects.where('userId').equals(userId).toArray(),topics:await db.topics.where('userId').equals(userId).toArray(),tasks:await db.tasks.where('userId').equals(userId).toArray(),sessions:await db.sessions.where('userId').equals(userId).toArray(),goals:await db.goals.where('userId').equals(userId).toArray(),exams:await db.exams.where('userId').equals(userId).toArray(),settings:s};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='studyflow-backup.json';a.click();URL.revokeObjectURL(a.href);};
  const exportCsv=async()=>{const sessions=await db.sessions.where('userId').equals(userId).toArray();const esc=(v:unknown)=>`"${String(v??'').replaceAll('"','""')}"`;const csv=['id,start_time,end_time,study_seconds,timer_type,subject_id',...sessions.map(x=>[x.id,x.startTime,x.endTime,x.studySeconds,x.timerType,x.subjectId??''].map(esc).join(','))].join('\n');const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='studyflow-sessions.csv';a.click();URL.revokeObjectURL(a.href);};
@@ -47,8 +47,16 @@ export default function SettingsPage(){
     <div className="section-title"><div><div className="eyebrow">Focus companion</div><strong className="section-heading"><Sparkles size={19}/> Character animation studio</strong></div><span className="selection-note">{companionMeta.find(item=>item.id===companion)?.name}</span></div>
     <p className="subtle companion-settings-copy">Pick the exact character style you want beside the timer. Each one has separate idle, focusing, paused and session-complete motion.</p>
     {(()=>{const selected=companionMeta.find(item=>item.id===companion)??companionMeta[0];return <div className="character-showcase" style={{'--companion-accent':selected.accent} as CSSProperties}>
-      <FocusCompanion variant={selected.id} state="running" motion={motion} preview/>
-      <div className="character-showcase-copy"><span className="character-mode-note">Live vector character · StudyFlow animation rig</span><h3>{selected.emoji} {selected.name}</h3><p>{selected.subtitle}. {selected.vibe}. The timer automatically switches the character between idle, focus, pause and celebration states.</p></div>
+      <FocusCompanion variant={selected.id} state={previewState} motion={motion} preview/>
+      <div className="character-showcase-copy">
+        <span className="character-mode-note">Live vector character · reactive StudyFlow animation rig</span>
+        <h3>{selected.emoji} {selected.name}</h3>
+        <p>{selected.subtitle}. {selected.vibe}. Move your pointer over the scene to see eye tracking and parallax. The timer switches states automatically.</p>
+        <div className="companion-live-badges"><span>Pointer reactive</span><span>State aware</span><span>60fps transforms</span></div>
+        <div className="preview-state-controls" aria-label="Preview animation state">
+          {([{id:'idle',label:'Idle'},{id:'running',label:'Focus'},{id:'paused',label:'Pause'},{id:'celebrate',label:'Complete'}] as Array<{id:CompanionState;label:string}>).map(item=><button type="button" key={item.id} className={previewState===item.id?'active':''} onClick={()=>setPreviewState(item.id)}>{item.label}</button>)}
+        </div>
+      </div>
     </div>})()}
     <div className="companion-picker">{companionMeta.map(item=><button type="button" key={item.id} className={`companion-option ${companion===item.id?'selected':''}`} onClick={()=>setCompanion(item.id)} aria-pressed={companion===item.id}>
       <span className="companion-option-emoji">{item.emoji}</span><span className="companion-option-copy"><strong>{item.name}</strong><small>{item.subtitle}</small></span>{companion===item.id&&<span className="companion-selected"><Check size={14}/></span>}
