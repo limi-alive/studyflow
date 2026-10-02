@@ -14,86 +14,74 @@ type Props = {
   preview?: boolean;
 };
 
-type RuntimeInput = {
-  name: string;
-  value?: boolean | number;
-  fire?: () => void;
-};
+type RuntimeInput = { name:string; value?:boolean|number; fire?:()=>void };
 
-function setInput(inputs: RuntimeInput[], name: string, value: boolean | number) {
-  const input = inputs.find(item => item.name === name);
-  if (!input || !('value' in input)) return;
-  input.value = value;
+function normalized(value:string){ return value.toLowerCase().replace(/[^a-z0-9]+/g,' '); }
+function matches(name:string, words:string[]){ const key=normalized(name); return words.some(word=>key.includes(word)); }
+
+function applyState(rive: NonNullable<ReturnType<typeof useRive>['rive']>, state: CompanionState) {
+  const machine = rive.stateMachineNames?.[0];
+  if (machine && !(rive.playingStateMachineNames ?? []).includes(machine)) {
+    rive.reset({ stateMachines:[machine], autoplay:true });
+  }
+
+  const activeMachine = rive.stateMachineNames?.[0];
+  const inputs = activeMachine ? (rive.stateMachineInputs(activeMachine) as unknown as RuntimeInput[] | undefined) ?? [] : [];
+  const runWords = ['active','focus','dance','happy','check','look','awake','play','on'];
+  const pauseWords = ['pause','sleep','sad','hands up','rest','stop','off'];
+  const successWords = ['success','celebrate','win','happy','jump','done','complete','dance'];
+
+  inputs.forEach(input => {
+    if (typeof input.value === 'boolean') {
+      if (state === 'running') input.value = matches(input.name,runWords) && !matches(input.name,pauseWords);
+      else if (state === 'paused') input.value = matches(input.name,pauseWords);
+      else if (state === 'celebrate') input.value = matches(input.name,successWords);
+      else input.value = false;
+    } else if (typeof input.value === 'number') {
+      if (matches(input.name,['look','x','horizontal'])) input.value = state === 'running' ? 60 : 0;
+      else if (matches(input.name,['y','vertical'])) input.value = state === 'running' ? 25 : 0;
+      else if (matches(input.name,['mood','expression','state'])) input.value = state === 'celebrate' ? 100 : state === 'running' ? 65 : state === 'paused' ? 20 : 40;
+    }
+  });
+
+  if (state === 'celebrate') inputs.filter(input=>input.fire && matches(input.name,successWords)).forEach(input=>input.fire?.());
+  if (state === 'paused') rive.pause(); else rive.play();
 }
 
-function fireInput(inputs: RuntimeInput[], name: string) {
-  const input = inputs.find(item => item.name === name);
-  input?.fire?.();
-}
-
-function RiveCompanionScene({ meta, state, reducedMotion }:{meta:CompanionMeta;state:CompanionState;reducedMotion:boolean}) {
-  const lastState = useRef<CompanionState | null>(null);
-  const config = useMemo(() => ({
-    src: meta.runtimeUrl,
-    stateMachines: meta.stateMachine,
-    autoplay: true,
-    ...(meta.artboard ? { artboard: meta.artboard } : {})
-  }), [meta]);
+function RiveScene({meta,state,reducedMotion}:{meta:CompanionMeta;state:CompanionState;reducedMotion:boolean}) {
+  const last = useRef<CompanionState | null>(null);
+  const config = useMemo(() => ({ src:meta.runtimeUrl, autoplay:true }), [meta.runtimeUrl]);
   const { rive, RiveComponent } = useRive(config);
 
   useEffect(() => {
     if (!rive) return;
-    if (reducedMotion) {
-      rive.pause();
-      return;
-    }
+    if (reducedMotion) { rive.pause(); return; }
+    if (last.current !== state) {
+      last.current = state;
+      applyState(rive,state);
+    } else if (state !== 'paused') rive.play();
+  }, [rive,state,reducedMotion]);
 
-    const inputs = rive.stateMachineInputs(meta.stateMachine) as unknown as RuntimeInput[];
-    const entered = lastState.current !== state;
-    lastState.current = state;
-
-    if (meta.id === 'dash') {
-      setInput(inputs, 'dance', state === 'running' || state === 'celebrate');
-      if (state === 'celebrate' && entered) fireInput(inputs, 'look up');
-    }
-
-    if (meta.id === 'teddy') {
-      setInput(inputs, 'isChecking', state === 'running');
-      setInput(inputs, 'isHandsUp', state === 'paused');
-      setInput(inputs, 'numLook', state === 'running' ? 58 : 0);
-      if (state === 'celebrate' && entered) fireInput(inputs, 'trigSuccess');
-    }
-
-    if (meta.id === 'avatar') {
-      setInput(inputs, 'isHappy', state === 'running' || state === 'celebrate');
-      setInput(inputs, 'isSad', false);
-    }
-
-    if (state === 'paused' && meta.id === 'star') rive.pause();
-    else rive.play();
-  }, [rive, meta, state, reducedMotion]);
-
-  return <div className="rive-companion-canvas-wrap">
-    <div className="rive-fallback" aria-hidden="true">{meta.emoji}</div>
-    <RiveComponent className="rive-companion-canvas" aria-label={`${meta.name} animated focus companion`}/>
+  return <div className="premium-rive-stage" style={{'--companion-accent':meta.accent} as React.CSSProperties}>
+    <div className="premium-rive-orbit" aria-hidden="true"><i/><i/><i/></div>
+    <RiveComponent className="premium-rive-canvas" aria-label={`${meta.name} focus companion`}/>
   </div>;
 }
 
-export function FocusCompanion({ variant, state, motion='balanced', intro=false, subject, preview=false }: Props) {
-  const meta = companionMeta.find(item => item.id === variant) ?? companionMeta[0];
+export function FocusCompanion({variant,state,motion='balanced',intro=false,subject,preview=false}:Props){
+  const meta = companionMeta.find(item=>item.id===variant) ?? companionMeta[0];
   const reducedMotion = typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-motion');
-  const caption = state === 'running'
-    ? `${meta.name} is focusing${subject ? ` · ${subject}` : ''}`
-    : state === 'paused'
-      ? `${meta.name} is taking a breather`
-      : state === 'celebrate'
-        ? `${meta.name} says: nice work!`
+  const caption = state==='running'
+    ? `${meta.name} is locked in${subject ? ` · ${subject}` : ''}`
+    : state==='paused'
+      ? `${meta.name} is waiting`
+      : state==='celebrate'
+        ? `${meta.name} says: nailed it`
         : `${meta.name} is ready`;
 
-  return <div className={`focus-companion rive-companion variant-${variant} state-${state} motion-${motion} ${intro?'companion-intro':''} ${preview?'companion-preview':''}`}>
-    <div className="companion-glow"/>
-    <div className="companion-particles"><i/><i/><i/><i/><i/><i/></div>
-    <RiveCompanionScene key={variant} meta={meta} state={state} reducedMotion={reducedMotion}/>
-    {!preview && <div className="companion-caption"><span className="companion-status-dot"/>{caption}</div>}
+  return <div className={`focus-companion premium-companion variant-${variant} state-${state} motion-${motion} ${intro?'companion-intro':''} ${preview?'companion-preview':''}`}>
+    <div className="premium-companion-glow" style={{'--companion-accent':meta.accent} as React.CSSProperties}/>
+    <RiveScene key={variant} meta={meta} state={state} reducedMotion={reducedMotion}/>
+    {!preview && <div className="companion-caption premium-caption"><span className="companion-status-dot"/>{caption}</div>}
   </div>;
 }

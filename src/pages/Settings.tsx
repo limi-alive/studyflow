@@ -44,11 +44,11 @@ export default function SettingsPage(){
   <header className="page-header"><div><div className="eyebrow">Make it yours</div><h1>Settings</h1><p className="subtle">Personalize the mood without sacrificing focus or readability.</p></div></header>
 
   <Card className="companion-settings-panel">
-    <div className="section-title"><div><div className="eyebrow">Focus companion</div><strong className="section-heading"><Sparkles size={19}/> Rive animation library</strong></div><span className="selection-note">{companionMeta.find(item=>item.id===companion)?.name}</span></div>
-    <p className="subtle companion-settings-copy">These are interactive Rive community animations rather than the hand-drawn StudyFlow SVGs. Only the selected companion runs a live preview to keep Settings light.</p>
+    <div className="section-title"><div><div className="eyebrow">Focus companion</div><strong className="section-heading"><Sparkles size={19}/> Premium companion library</strong></div><span className="selection-note">{companionMeta.find(item=>item.id===companion)?.name}</span></div>
+    <p className="subtle companion-settings-copy">Three higher-quality interactive companions selected from reusable Rive community work. Chrome is the default. The preview reacts to focus state and pointer input when the original asset supports it.</p>
     {(()=>{const selected=companionMeta.find(item=>item.id===companion)??companionMeta[0];return <div className="rive-showcase">
       <FocusCompanion variant={selected.id} state="running" motion={motion} preview/>
-      <div className="rive-showcase-copy"><span className="rive-license">{selected.license} · Rive Community</span><h3>{selected.emoji} {selected.name}</h3><p>{selected.subtitle}. The animation reacts to focus state where the original Rive state machine exposes compatible inputs.</p><a className="rive-source-link" href={selected.sourceUrl} target="_blank" rel="noreferrer">View original by {selected.author} ↗</a></div>
+      <div className="rive-showcase-copy"><span className="rive-license">{selected.license} · Rive Community</span><h3>{selected.emoji} {selected.name}</h3><p>{selected.subtitle}. {selected.vibe}. StudyFlow automatically maps available Rive state-machine inputs to focus, pause and completion states.</p><a className="rive-source-link" href={selected.sourceUrl} target="_blank" rel="noreferrer">View original by {selected.author} ↗</a></div>
     </div>})()}
     <div className="companion-picker">{companionMeta.map(item=><button type="button" key={item.id} className={`companion-option ${companion===item.id?'selected':''}`} onClick={()=>setCompanion(item.id)} aria-pressed={companion===item.id}>
       <span className="companion-option-emoji">{item.emoji}</span><span className="companion-option-copy"><strong>{item.name}</strong><small>{item.subtitle}</small></span>{companion===item.id&&<span className="companion-selected"><Check size={14}/></span>}

@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 
-export type FocusCompanionId = 'dash' | 'teddy' | 'avatar' | 'star';
+export type FocusCompanionId = 'chrome' | 'volt' | 'mischief';
 export type CompanionMotion = 'calm' | 'balanced' | 'lively';
 
-const VALID_COMPANIONS: FocusCompanionId[] = ['dash', 'teddy', 'avatar', 'star'];
+const VALID_COMPANIONS: FocusCompanionId[] = ['chrome', 'volt', 'mischief'];
 const VALID_MOTION: CompanionMotion[] = ['calm', 'balanced', 'lively'];
-const LEGACY_COMPANIONS = new Set(['mochi', 'bunni', 'moss', 'orbit']);
 
 function companionKey(userId: string) { return `studyflow.companion.${userId}`; }
 function motionKey(userId: string) { return `studyflow.companionMotion.${userId}`; }
@@ -13,13 +12,13 @@ function motionKey(userId: string) { return `studyflow.companionMotion.${userId}
 function readCompanion(userId: string): FocusCompanionId {
   const raw = localStorage.getItem(companionKey(userId));
   if (raw && VALID_COMPANIONS.includes(raw as FocusCompanionId)) return raw as FocusCompanionId;
-  if (raw && LEGACY_COMPANIONS.has(raw)) localStorage.setItem(companionKey(userId), 'dash');
-  return 'dash';
+  localStorage.setItem(companionKey(userId), 'chrome');
+  return 'chrome';
 }
 
 function readMotion(userId: string): CompanionMotion {
-  const value = localStorage.getItem(motionKey(userId)) as CompanionMotion | null;
-  return value && VALID_MOTION.includes(value) ? value : 'balanced';
+  const raw = localStorage.getItem(motionKey(userId)) as CompanionMotion | null;
+  return raw && VALID_MOTION.includes(raw) ? raw : 'balanced';
 }
 
 export function useCompanionPreferences(userId: string) {
@@ -32,12 +31,12 @@ export function useCompanionPreferences(userId: string) {
   }, [userId]);
 
   useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
+    const sync = (event: StorageEvent) => {
       if (event.key === companionKey(userId)) setCompanionState(readCompanion(userId));
       if (event.key === motionKey(userId)) setMotionState(readMotion(userId));
     };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
   }, [userId]);
 
   const setCompanion = (value: FocusCompanionId) => {
