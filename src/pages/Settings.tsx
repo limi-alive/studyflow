@@ -9,6 +9,8 @@ import { db, nowIso } from '../lib/db';
 import { Card } from '../components/Card';
 import { FocusCompanion, type CompanionState } from '../components/FocusCompanion';
 import { companionMeta } from '../components/companionMeta';
+import { ProgressHub } from '../components/ProgressHub';
+import { AccountSecurityPanel } from '../components/AccountSecurityPanel';
 import type { Exam, Goal, StudySession, StudyTask, Subject, Topic, UserSettings } from '../types';
 
 const themes=[
@@ -82,6 +84,8 @@ export default function SettingsPage(){
     </div>
     <div className="focus-system-note"><Target size={15}/><span>Focus Score uses completion, pause time, distractions, duration and consistency — matching the StudyFlow product model.</span></div>
   </Card>
+
+  <ProgressHub userId={userId} calendarType={s.calendarType}/><AccountSecurityPanel userId={userId}/>
 
   <Card className="theme-panel">
     <div className="section-title"><div><div className="eyebrow">Appearance</div><strong className="section-heading"><Palette size={19}/> Theme studio</strong></div><span className="selection-note">{themes.find(t=>t.id===s.themeId)?.name ?? s.themeId}</span></div>
