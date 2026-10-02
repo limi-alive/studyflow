@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Archive, Plus } from 'lucide-react';
 import { Card } from '../components/Card';
@@ -7,7 +7,8 @@ import { db, nowIso } from '../lib/db';
 
 export default function SubjectsPage(){
  const {userId}=useCurrentUser();
- const subjects=useLiveQuery(()=>db.subjects.where('userId').equals(userId).filter(x=>!x.deletedAt).toArray(),[userId])??[];
+ const subjectRows=useLiveQuery(()=>db.subjects.where('userId').equals(userId).filter(x=>!x.deletedAt).toArray(),[userId]);
+const subjects=useMemo(()=>subjectRows??[],[subjectRows]);
  const [name,setName]=useState(''); const [color,setColor]=useState('#8a6cff'); const [selected,setSelected]=useState('');
  const topics=useLiveQuery(()=>selected?db.topics.where('subjectId').equals(selected).filter(x=>!x.deletedAt).toArray():Promise.resolve([]),[selected])??[];
  const [topicName,setTopicName]=useState(''); const [kind,setKind]=useState<'chapter'|'topic'>('chapter'); const [parentId,setParentId]=useState('');
