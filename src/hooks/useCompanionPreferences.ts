@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { markAccountPreferencesDirty } from '../lib/accountPreferences';
 
 export type FocusCompanionId = 'kuromi' | 'buttercup' | 'tom-jerry';
 export type CompanionMotion = 'calm' | 'balanced' | 'lively';
@@ -35,16 +36,20 @@ export function useCompanionPreferences(userId: string) {
       if (event.key === companionKey(userId)) setCompanionState(readCompanion(userId));
       if (event.key === motionKey(userId)) setMotionState(readMotion(userId));
     };
+    const applied = (event: Event) => { const detail=(event as CustomEvent<{userId?:string}>).detail; if(!detail?.userId||detail.userId===userId){setCompanionState(readCompanion(userId));setMotionState(readMotion(userId));} };
     window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
+    window.addEventListener('studyflow:account-preferences-applied', applied);
+    return () => { window.removeEventListener('storage', sync); window.removeEventListener('studyflow:account-preferences-applied', applied); };
   }, [userId]);
 
   const setCompanion = (value: FocusCompanionId) => {
     localStorage.setItem(companionKey(userId), value);
+    markAccountPreferencesDirty(userId);
     setCompanionState(value);
   };
   const setMotion = (value: CompanionMotion) => {
     localStorage.setItem(motionKey(userId), value);
+    markAccountPreferencesDirty(userId);
     setMotionState(value);
   };
 

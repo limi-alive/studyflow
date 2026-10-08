@@ -7,6 +7,7 @@ import { useCompanionPreferences } from '../hooks/useCompanionPreferences';
 import { useFocusProgress, type FocusInsight } from '../hooks/useFocusProgress';
 import { useFocusSystemPreferences } from '../hooks/useFocusSystemPreferences';
 import { db, getDeviceId, nowIso } from '../lib/db';
+import { requestSync } from '../lib/sync';
 import { useTimerStore } from '../stores/timerStore';
 import type { TimerType } from '../types';
 import { formatDuration, timerElapsedSeconds } from '../utils/time';
@@ -117,6 +118,7 @@ export default function TimerPage() {
       timerType: active.timerType,
       intent: intent.trim() || undefined
     });
+    requestSync(userId);
     clear();
     setZen(false);
     setDistractionOpen(false);

@@ -13,6 +13,16 @@ export function getLocalUserId() {
   return id;
 }
 
+export function separateOfflineIdentityFromCloudUser(cloudUserId: string) {
+  const current = localStorage.getItem(LOCAL_USER_KEY);
+  if (!current || current === cloudUserId) {
+    const next = crypto.randomUUID();
+    localStorage.setItem(LOCAL_USER_KEY, next);
+    return next;
+  }
+  return current;
+}
+
 export function getDeviceId() {
   let id = localStorage.getItem(DEVICE_ID_KEY);
   if (!id) {
@@ -54,7 +64,7 @@ export async function ensureSettings(userId: string) {
   const settings: UserSettings = {
     userId, language: 'en', calendarType: 'gregorian', numberFormat: 'latin', weekStart: 'monday', themeId: 'studio',
     defaultTimer: 'stopwatch', pomodoroFocus: 25, pomodoroShortBreak: 5, pomodoroLongBreak: 15,
-    notifications: true, haptics: true, sounds: false, reduceMotion: false, updatedAt: nowIso()
+    notifications: true, haptics: true, sounds: false, reduceMotion: false, updatedAt: nowIso(), syncStatus: 'pending'
   };
   await db.settings.put(settings);
   return settings;
@@ -80,10 +90,12 @@ export async function migrateOfflineDataToUser(oldUserId: string, newUserId: str
     await reassignTable(db.goals, oldUserId, newUserId);
     await reassignTable(db.exams, oldUserId, newUserId);
     const oldSettings = await db.settings.get(oldUserId);
+    const targetSettings = await db.settings.get(newUserId);
     if (oldSettings) {
-      await db.settings.put({ ...oldSettings, userId: newUserId, updatedAt: nowIso() });
+      // Never let a fresh device's offline defaults overwrite an existing
+      // cloud account. Existing account settings are pulled before migration.
+      if (!targetSettings) await db.settings.put({ ...oldSettings, userId: newUserId, updatedAt: nowIso(), syncStatus: 'pending' });
       await db.settings.delete(oldUserId);
     }
   });
-  localStorage.setItem(LOCAL_USER_KEY, newUserId);
 }

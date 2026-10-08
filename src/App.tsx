@@ -13,6 +13,7 @@ const ProfilePage = lazy(() => import('./pages/Profile'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const LoginPage = lazy(() => import('./pages/Login'));
 const SearchPage = lazy(() => import('./pages/Search'));
+const AdminPage = lazy(() => import('./pages/Admin'));
 
 export default function App() {
   return <Suspense fallback={<div className="page" style={{padding:24}}>Loading…</div>}><Routes>
@@ -28,6 +29,7 @@ export default function App() {
       <Route path="profile" element={<ProfilePage/>}/>
       <Route path="settings" element={<SettingsPage/>}/>
       <Route path="search" element={<SearchPage/>}/>
+      <Route path="admin" element={<AdminPage/>}/>
     </Route>
   </Routes></Suspense>;
 }

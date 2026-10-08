@@ -11,6 +11,7 @@ import './auth-reward-v12.css';
 
 import './theme-responsive.css';
 import './mobile-final-v12.css';
+import './admin-v13.css';
 
 registerSW({ immediate: true });
 

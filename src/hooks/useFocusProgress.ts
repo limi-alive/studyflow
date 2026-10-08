@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { markAccountPreferencesDirty } from '../lib/accountPreferences';
 
 export type FocusInsight = {
   id: string;
@@ -61,6 +62,7 @@ function read(userId: string): FocusProgressStore {
 
 function write(userId: string, next: FocusProgressStore) {
   localStorage.setItem(key(userId), JSON.stringify(next));
+  markAccountPreferencesDirty(userId);
   window.dispatchEvent(new CustomEvent('studyflow-focus-progress', { detail: { userId } }));
 }
 

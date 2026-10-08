@@ -40,6 +40,8 @@ export function DashboardRewardCard({ userId, calendarType, onOpenDetails }: Pro
       </div>
     </div>
 
+    <div className="dashboard-reward-rate"><span><b>{new Intl.NumberFormat('en-US').format(Math.round(reward.tomanPerHour))}</b> Toman / study hour</span><span>Live study value <b>{new Intl.NumberFormat('en-US').format(reward.studyValueToman)} Toman</b></span></div>
+
     <div className="dashboard-reward-progress-row">
       <div className="dashboard-reward-progress"><i style={{ width: `${percent}%` }}/></div>
       <span>{blockHours.toFixed(1)} / {reward.hoursPerReward}h</span>

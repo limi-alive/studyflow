@@ -72,7 +72,7 @@ async function wipeLocalUser(userId:string){
 
 async function fallbackCloudWipe(userId:string){
   if(!supabase)return;
-  const tables=['distractions','user_achievements','study_sessions','tasks','topics','goals','exams','subjects','user_settings'];
+  const tables=['distractions','user_achievements','study_sessions','tasks','topics','goals','exams','subjects','user_settings','user_preferences'];
   for(const table of tables){try{await supabase.from(table).delete().eq('user_id',userId);}catch{/* optional table */}}
 }
 

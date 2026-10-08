@@ -4,6 +4,9 @@ import { AtSign, CheckCircle2, Eye, EyeOff, KeyRound, LoaderCircle, LockKeyhole,
 import { claimUsername, validateUsername, usernameAvailable } from '../lib/accountSecurity';
 import { cloudEnabled, supabase } from '../lib/supabase';
 import { useAuthIdentity } from '../hooks/useAuthIdentity';
+import { getLocalUserId, migrateOfflineDataToUser } from '../lib/db';
+import { migrateAccountPreferences } from '../lib/accountPreferences';
+import { syncAll } from '../lib/sync';
 
 type Mode = 'signin' | 'signup' | 'forgot' | 'new-password';
 const OFFLINE_KEY = 'studyflow.auth.continueOffline';
@@ -157,13 +160,22 @@ export function AuthGate() {
   const signIn = async (event: FormEvent) => {
     event.preventDefault();
     if (!supabase) return;
+    const offlineUserId = getLocalUserId();
     setBusy(true); setStatus(''); setSuccess('');
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) { setBusy(false); setStatus(authErrorMessage(error.message)); return; }
+    if (data.user) {
+      // Pull the account first, then merge any true offline work from this device.
+      // This order prevents a fresh phone's defaults from overwriting established cloud settings.
+      await syncAll(data.user.id);
+      await migrateOfflineDataToUser(offlineUserId, data.user.id);
+      migrateAccountPreferences(offlineUserId, data.user.id);
+      await syncAll(data.user.id);
+    }
     setBusy(false);
-    if (error) { setStatus(authErrorMessage(error.message)); return; }
     localStorage.removeItem(OFFLINE_KEY);
     setOfflineAllowed(false);
-    setSuccess('Signed in. Loading your private StudyFlow space…');
+    setSuccess('Signed in. Your latest StudyFlow data is syncing to this device…');
   };
 
   const signUp = async (event: FormEvent) => {
@@ -174,6 +186,7 @@ export function AuthGate() {
     const available = usernameState === 'available' ? true : await checkUsername();
     if (!available || !normalizedUsername.ok) return;
 
+    const offlineUserId = getLocalUserId();
     setBusy(true); setStatus(''); setSuccess('');
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -186,13 +199,21 @@ export function AuthGate() {
       return;
     }
 
-    if (data.session) {
+    const signedUpUserId = data.session?.user.id ?? data.user?.id ?? null;
+
+    if (data.session && signedUpUserId) {
       const claimed = await claimUsername(normalizedUsername.username);
       if (!claimed.ok) {
         setBusy(false);
         setStatus(claimed.error);
         return;
       }
+      // Pull the account first, then merge any true offline work from this device.
+      // This order prevents a fresh phone's defaults from overwriting established cloud settings.
+      await syncAll(signedUpUserId);
+      await migrateOfflineDataToUser(offlineUserId, signedUpUserId);
+      migrateAccountPreferences(offlineUserId, signedUpUserId);
+      await syncAll(signedUpUserId);
       window.dispatchEvent(new Event('studyflow:profile-updated'));
       localStorage.removeItem(OFFLINE_KEY);
       setOfflineAllowed(false);

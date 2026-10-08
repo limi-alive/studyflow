@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
-
-const HOURS_PER_REWARD = 28;
-const REWARD_TOMAN = 5_000_000;
+import { markAccountPreferencesDirty } from '../lib/accountPreferences';
+import { calculateMonthlyReward, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
 
 type RewardLedger = Record<string, number>;
 
@@ -35,27 +34,37 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   const key = monthKey(now, calendarType);
 
   useEffect(() => setLedger(readLedger(userId)), [userId]);
+  useEffect(() => {
+    const refresh = (event: Event) => {
+      const detail = (event as CustomEvent<{userId?: string}>).detail;
+      if (!detail?.userId || detail.userId === userId) setLedger(readLedger(userId));
+    };
+    window.addEventListener('studyflow:account-preferences-applied', refresh);
+    return () => window.removeEventListener('studyflow:account-preferences-applied', refresh);
+  }, [userId]);
 
   const monthlySeconds = useMemo(() => sessions.reduce((sum, session) => {
     const ended = new Date(session.endTime || session.startTime);
     return monthKey(ended, calendarType) === key ? sum + Math.max(0, session.studySeconds || 0) : sum;
   }, 0), [sessions, calendarType, key]);
 
-  const milestoneSeconds = HOURS_PER_REWARD * 3600;
-  const earnedBlocks = Math.floor(monthlySeconds / milestoneSeconds);
+  const rewardMath = calculateMonthlyReward(monthlySeconds);
+  const earnedBlocks = rewardMath.earnedBlocks;
   const paidBlocks = Math.min(earnedBlocks, Math.max(0, ledger[key] ?? 0));
   const unpaidBlocks = Math.max(0, earnedBlocks - paidBlocks);
-  const remainderSeconds = monthlySeconds % milestoneSeconds;
-  const progress = remainderSeconds / milestoneSeconds;
-  const nextMilestoneSeconds = remainderSeconds === 0 ? milestoneSeconds : milestoneSeconds - remainderSeconds;
+  const progress = rewardMath.progress;
+  const nextMilestoneSeconds = rewardMath.nextMilestoneSeconds;
   const nextRewardSeconds = unpaidBlocks > 0 ? 0 : nextMilestoneSeconds;
-  const earnedToman = earnedBlocks * REWARD_TOMAN;
+  const tomanPerHour = rewardMath.tomanPerHour;
+  const studyValueToman = rewardMath.studyValueToman;
+  const earnedToman = rewardMath.earnedToman;
   const paidToman = paidBlocks * REWARD_TOMAN;
   const outstandingToman = unpaidBlocks * REWARD_TOMAN;
 
   const setPaidBlocks = (count: number) => {
     const next = { ...readLedger(userId), [key]: Math.max(0, Math.min(earnedBlocks, count)) };
     localStorage.setItem(ledgerKey(userId), JSON.stringify(next));
+    markAccountPreferencesDirty(userId);
     setLedger(next);
   };
 
@@ -64,6 +73,8 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
     monthLabel: monthLabel(now, calendarType),
     hoursPerReward: HOURS_PER_REWARD,
     rewardToman: REWARD_TOMAN,
+    tomanPerHour,
+    studyValueToman,
     monthlySeconds,
     monthlyHours: monthlySeconds / 3600,
     earnedBlocks,

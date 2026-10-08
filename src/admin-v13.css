@@ -1,0 +1,48 @@
+/* StudyFlow v13 — admin analytics + reward rate polish */
+.dashboard-reward-rate{
+  position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:14px 0 12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--border) 78%,transparent);
+  border-radius:14px;background:color-mix(in srgb,var(--surface) 72%,transparent);font-size:12px;color:var(--muted);
+}
+.dashboard-reward-rate b{color:var(--text);font-weight:800}
+.reward-rate-line{display:block;margin:7px 0 2px;color:var(--muted);font-size:12px;line-height:1.5}
+.reward-rate-line b{color:var(--text)}
+.sidebar-reward-meta{flex-wrap:wrap}.sidebar-reward-meta>span:last-child{width:100%;opacity:.82}
+
+.admin-page{max-width:1500px;margin:0 auto;padding-bottom:110px}
+.admin-header{align-items:flex-end}
+.admin-periods{display:inline-flex;max-width:100%;gap:4px;padding:5px;margin:4px 0 18px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+.admin-periods button{min-height:38px;padding:0 15px;border:0;border-radius:12px;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.admin-periods button.active{background:var(--surface2);color:var(--text);box-shadow:0 5px 20px rgba(0,0,0,.12)}
+.admin-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.admin-summary-grid>.surface-card{min-width:0;padding:18px;display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center}
+.admin-summary-grid svg{grid-row:1/4;width:20px;color:var(--accent)}
+.admin-summary-grid span,.admin-summary-grid small{color:var(--muted);font-size:11px}.admin-summary-grid strong{font-size:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-layout{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(0,1.4fr);gap:16px;align-items:start}
+.admin-detail-stack{display:grid;gap:16px}.admin-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}.admin-card-head h2{margin:4px 0 0;font-size:20px}
+.admin-ranking-list{display:grid;gap:7px}.admin-ranking-list>button{width:100%;display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border:1px solid transparent;border-radius:14px;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.admin-ranking-list>button:hover,.admin-ranking-list>button.selected{background:color-mix(in srgb,var(--accent) 9%,var(--surface));border-color:color-mix(in srgb,var(--accent) 35%,var(--border))}
+.admin-rank{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:var(--surface2);font-weight:900;color:var(--muted)}
+.admin-rank.rank-1{color:#f5c84c}.admin-rank.rank-2{color:#c7cbd4}.admin-rank.rank-3{color:#d49569}
+.admin-user-copy,.admin-user-time{min-width:0;display:flex;flex-direction:column}.admin-user-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.admin-user-copy small,.admin-user-time small{color:var(--muted);font-size:11px}.admin-user-time{text-align:right}.admin-user-time strong{font-size:16px}
+.admin-user-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.admin-user-kpis>div{padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface);display:flex;flex-direction:column;gap:3px}.admin-user-kpis span{font-size:11px;color:var(--muted)}.admin-user-kpis strong{font-size:18px}
+.admin-subject-list{display:grid;gap:13px}.admin-subject-list>div>div{display:flex;justify-content:space-between;gap:12px;font-size:12px}.admin-subject-list span{color:var(--muted);text-align:right}.admin-subject-list i{display:block;height:7px;margin-top:7px;border-radius:99px;background:var(--surface2);overflow:hidden}.admin-subject-list i b{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#f4c856)}
+.admin-session-list{display:grid}.admin-session-list>div{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}.admin-session-list>div:last-child{border-bottom:0}.admin-session-list span{display:flex;min-width:0;flex-direction:column}.admin-session-list small{color:var(--muted);font-size:11px}.admin-session-list b{white-space:nowrap}
+.admin-empty{padding:20px 0;text-align:center;color:var(--muted)}.admin-message{margin:0 0 14px;padding:11px 13px;border-radius:12px;background:rgba(239,68,68,.1);color:#fca5a5;font-size:13px}.admin-denied{max-width:620px;margin:80px auto;text-align:center;padding:34px}.admin-denied svg{color:var(--accent)}
+.admin-profile-card{display:flex;align-items:center;justify-content:space-between;gap:16px}.admin-profile-card>div{display:flex;gap:12px;align-items:flex-start}.admin-profile-card p{margin:5px 0 0}.admin-profile-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:color-mix(in srgb,var(--accent) 15%,var(--surface));color:var(--accent);flex:0 0 auto}
+
+.login-page-legacy{min-height:100vh;display:grid;place-items:center;padding:20px}.login-card-legacy{width:min(480px,100%)}
+
+@media(max-width:900px){
+  .admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-layout{grid-template-columns:1fr}.admin-leaderboard{order:0}.admin-detail-stack{order:1}
+}
+@media(max-width:640px){
+  .dashboard-reward-rate{display:grid;gap:5px;margin:10px 0;padding:9px 10px;font-size:11px}.dashboard-reward-rate span{display:flex;justify-content:space-between;gap:10px}
+  .admin-page{padding-inline:14px}.admin-header{display:block}.admin-header>.button{margin-top:10px}.admin-periods{display:grid;grid-template-columns:repeat(4,1fr);width:100%;padding:4px}.admin-periods button{min-width:0;padding:0 5px;font-size:11px}
+  .admin-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.admin-summary-grid>.surface-card{padding:13px}.admin-summary-grid strong{font-size:18px}.admin-summary-grid svg{width:17px}
+  .admin-layout,.admin-detail-stack{gap:10px}.admin-leaderboard,.admin-user-detail,.admin-subjects,.admin-recent{padding:15px}
+  .admin-ranking-list>button{grid-template-columns:36px minmax(0,1fr) auto;padding:9px 6px}.admin-rank{width:32px;height:32px}.admin-user-copy small{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.admin-user-time strong{font-size:14px}
+  .admin-user-kpis{gap:6px}.admin-user-kpis>div{padding:10px 8px}.admin-user-kpis strong{font-size:15px}
+  .admin-profile-card{align-items:stretch;flex-direction:column}.admin-profile-card>.button{width:100%;justify-content:center}
+  .login-page-legacy{padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 80px)}
+}

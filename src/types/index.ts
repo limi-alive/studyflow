@@ -93,6 +93,7 @@ export interface UserSettings {
   sounds: boolean;
   reduceMotion: boolean;
   updatedAt: string;
+  syncStatus?: SyncStatus;
 }
 
 export interface ActiveTimer {

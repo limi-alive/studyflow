@@ -31,6 +31,7 @@ export function SidebarRewardCard({ userId, calendarType, onOpenDetails }: Props
     <span className="sidebar-reward-meta">
       <span><b>{blockHours.toFixed(1)}h</b> / {reward.hoursPerReward}h</span>
       <span>{ready ? <><Sparkles size={12}/> {compactToman(reward.outstandingToman)} Toman ready</> : <><b>{remainingHours.toFixed(1)}h</b> to +5M</>}</span>
+      <span><b>{new Intl.NumberFormat('en-US').format(Math.round(reward.tomanPerHour))}</b> / hour</span>
     </span>
   </button>;
 }

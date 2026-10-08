@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, CalendarDays, Clock3, Home, Settings, UserRound, History, Plus, Search, Command, Sparkles, LogIn, LogOut } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, Clock3, Home, Settings, UserRound, History, Plus, Search, Command, Sparkles, LogIn, LogOut, ShieldCheck } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SyncBadge } from './SyncBadge';
@@ -8,6 +8,7 @@ import { DashboardRewardCard } from './DashboardRewardCard';
 import { useAuthIdentity } from '../hooks/useAuthIdentity';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { useEffect, useState } from 'react';
 
 function resolvedRoutePath(pathname: string) {
@@ -21,6 +22,7 @@ export function AppShell() {
   const { userId } = useCurrentUser();
   const settings = useSettings(userId);
   const identity = useAuthIdentity();
+  const admin = useAdminAccess();
   const navigate = useNavigate();
   const location = useLocation();
   const [quick, setQuick] = useState(false);
@@ -28,15 +30,16 @@ export function AppShell() {
   const mobile = [
     ['/', Home, fa ? 'خانه' : 'Home'], ['/timer', Clock3, fa ? 'تایمر' : 'Timer'], ['/planner', CalendarDays, fa ? 'برنامه' : 'Planner'], ['/stats', BarChart3, fa ? 'آمار' : 'Stats'], ['/profile', UserRound, fa ? 'من' : 'Me']
   ] as const;
-  const desktop = [
+  const desktopBase = [
     ['/', Home, fa ? 'خانه' : 'Dashboard'], ['/timer', Clock3, fa ? 'تایمر' : 'Focus'], ['/planner', CalendarDays, fa ? 'برنامه' : 'Planner'], ['/stats', BarChart3, fa ? 'آمار' : 'Analytics'], ['/subjects', BookOpen, fa ? 'درس‌ها' : 'Subjects'], ['/history', History, fa ? 'سابقه' : 'History'], ['/search', Search, fa ? 'جستجو' : 'Search']
   ] as const;
+  const desktop = admin.isAdmin ? [...desktopBase, ['/admin', ShieldCheck, fa ? 'مدیریت' : 'Admin'] as const] : desktopBase;
   const routePath = resolvedRoutePath(location.pathname);
   const routeKey = routePath === '/' ? 'dashboard' : routePath.slice(1).split('/')[0] || 'dashboard';
   const routeLabel: Record<string, string> = fa ? {
-    dashboard: 'خانه', timer: 'تمرکز', planner: 'برنامه', stats: 'آمار', profile: 'پروفایل', settings: 'تنظیمات', subjects: 'درس‌ها', history: 'سابقه', search: 'جستجو'
+    dashboard: 'خانه', timer: 'تمرکز', planner: 'برنامه', stats: 'آمار', profile: 'پروفایل', settings: 'تنظیمات', subjects: 'درس‌ها', history: 'سابقه', search: 'جستجو', admin: 'مدیریت'
   } : {
-    dashboard: 'Dashboard', timer: 'Focus', planner: 'Planner', stats: 'Analytics', profile: 'Profile', settings: 'Settings', subjects: 'Subjects', history: 'History', search: 'Search'
+    dashboard: 'Dashboard', timer: 'Focus', planner: 'Planner', stats: 'Analytics', profile: 'Profile', settings: 'Settings', subjects: 'Subjects', history: 'History', search: 'Search', admin: 'Admin'
   };
 
   useEffect(() => {
@@ -69,7 +72,7 @@ export function AppShell() {
   const openAuth = () => window.dispatchEvent(new Event('studyflow:open-auth'));
   const rewardCalendar = settings?.calendarType ?? 'gregorian';
 
-  return <div className="app-shell" data-route={routeKey} data-ui-build="12.5">
+  return <div className="app-shell" data-route={routeKey} data-ui-build="13.0">
     <aside className="sidebar studio-sidebar">
       <div className="brand studio-brand"><div className="brand-mark"><Sparkles size={18}/></div><div><strong>StudyFlow</strong><small>focus system</small></div></div>
       <nav className="studio-nav">{desktop.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'} title={label}><span className="nav-icon"><Icon size={19}/></span><span className="nav-label">{label}</span></NavLink>)}</nav>
@@ -89,7 +92,7 @@ export function AppShell() {
         </button>
         {identity.signedIn && <button className="sidebar-signout" type="button" title={fa ? 'خروج' : 'Sign out'} aria-label={fa ? 'خروج' : 'Sign out'} onClick={() => void identity.signOut()}><LogOut size={16}/></button>}
       </div>
-      <div className="sidebar-foot"><SyncBadge userId={userId}/></div>
+      <div className="sidebar-foot"><SyncBadge userId={userId} enabled={identity.signedIn}/></div>
     </aside>
 
     <header className="mobile-appbar">

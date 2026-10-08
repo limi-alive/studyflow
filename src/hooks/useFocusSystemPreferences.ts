@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { markAccountPreferencesDirty } from '../lib/accountPreferences';
 
 export type FocusSystemPreferences = {
   showSessionSummary: boolean;
@@ -23,9 +24,15 @@ function read(userId: string): FocusSystemPreferences {
 export function useFocusSystemPreferences(userId: string) {
   const [preferences, setPreferences] = useState<FocusSystemPreferences>(() => read(userId));
   useEffect(() => setPreferences(read(userId)), [userId]);
+  useEffect(() => {
+    const applied=(event:Event)=>{const detail=(event as CustomEvent<{userId?:string}>).detail;if(!detail?.userId||detail.userId===userId)setPreferences(read(userId));};
+    window.addEventListener('studyflow:account-preferences-applied',applied);
+    return()=>window.removeEventListener('studyflow:account-preferences-applied',applied);
+  },[userId]);
   const patchPreferences = (patch: Partial<FocusSystemPreferences>) => {
     const next = {...preferences, ...patch};
     localStorage.setItem(key(userId), JSON.stringify(next));
+    markAccountPreferencesDirty(userId);
     setPreferences(next);
   };
   return { preferences, patchPreferences };
