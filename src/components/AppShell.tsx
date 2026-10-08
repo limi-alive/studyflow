@@ -5,10 +5,12 @@ import { SyncBadge } from './SyncBadge';
 import { AuthGate } from './AuthGate';
 import { SidebarRewardCard } from './SidebarRewardCard';
 import { DashboardRewardCard } from './DashboardRewardCard';
+import { GlobalLeaderboardCard } from './GlobalLeaderboardCard';
 import { useAuthIdentity } from '../hooks/useAuthIdentity';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
 import { useAdminAccess } from '../hooks/useAdminAccess';
+import { usePublicLeaderboard } from '../hooks/usePublicLeaderboard';
 import { useEffect, useState } from 'react';
 
 function resolvedRoutePath(pathname: string) {
@@ -23,6 +25,7 @@ export function AppShell() {
   const settings = useSettings(userId);
   const identity = useAuthIdentity();
   const admin = useAdminAccess();
+  const leaderboard = usePublicLeaderboard();
   const navigate = useNavigate();
   const location = useLocation();
   const [quick, setQuick] = useState(false);
@@ -72,13 +75,14 @@ export function AppShell() {
   const openAuth = () => window.dispatchEvent(new Event('studyflow:open-auth'));
   const rewardCalendar = settings?.calendarType ?? 'gregorian';
 
-  return <div className="app-shell" data-route={routeKey} data-ui-build="13.0">
+  return <div className="app-shell" data-route={routeKey} data-ui-build="13.4">
     <aside className="sidebar studio-sidebar">
       <div className="brand studio-brand"><div className="brand-mark"><Sparkles size={18}/></div><div><strong>StudyFlow</strong><small>focus system</small></div></div>
       <nav className="studio-nav">{desktop.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'} title={label}><span className="nav-icon"><Icon size={19}/></span><span className="nav-label">{label}</span></NavLink>)}</nav>
 
       <div className="sidebar-spacer"/>
       <SidebarRewardCard userId={userId} calendarType={rewardCalendar} onOpenDetails={() => navigate('/settings')}/>
+      <GlobalLeaderboardCard board={leaderboard} variant="sidebar"/>
 
       <div className="sidebar-tools">
         <button className="command-button studio-command" onClick={() => setQuick(true)}><Command size={17}/><span>{fa ? 'دسترسی سریع' : 'Command'}</span><kbd>⌘K</kbd></button>
@@ -109,7 +113,7 @@ export function AppShell() {
 
     <main className="main studio-main">
       <AnimatePresence mode="wait" initial={false}><motion.div key={routePath} className="route-frame" data-route={routeKey} initial={reduceMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -4 }} transition={{ duration: reduceMotion ? 0 : .2, ease: [0.22, 1, 0.36, 1] }}>
-        {routeKey === 'dashboard' && <div className="dashboard-reward-mobile-host"><DashboardRewardCard userId={userId} calendarType={rewardCalendar} onOpenDetails={() => navigate('/settings')}/></div>}
+        {routeKey === 'dashboard' && <div className="dashboard-mobile-widgets"><div className="dashboard-reward-mobile-host"><DashboardRewardCard userId={userId} calendarType={rewardCalendar} onOpenDetails={() => navigate('/settings')}/></div><GlobalLeaderboardCard board={leaderboard} variant="dashboard"/></div>}
         <Outlet/>
       </motion.div></AnimatePresence>
     </main>

@@ -48,88 +48,88 @@
   }
   html { min-width:0; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
   body { min-width:0; margin:0; }
-  .app-shell[data-ui-build="12.5"] { width:100%; min-width:0; overflow:visible; }
-  .app-shell[data-ui-build="12.5"] *,
+  .app-shell[data-ui-build] { width:100%; min-width:0; overflow:visible; }
+  .app-shell[data-ui-build] *,
   .auth-gate-backdrop *, .focus-summary-backdrop *, .danger-modal-backdrop * { box-sizing:border-box; }
-  .app-shell[data-ui-build="12.5"] .sidebar { display:none!important; }
-  .app-shell[data-ui-build="12.5"] :is(.main,.studio-main) {
+  .app-shell[data-ui-build] .sidebar { display:none!important; }
+  .app-shell[data-ui-build] :is(.main,.studio-main) {
     margin:0!important; width:100%!important; max-width:none!important; min-width:0!important;
     padding:16px var(--sf-gutter) calc(var(--sf-tab-height) + var(--sf-safe-bottom) + 24px)!important;
     min-height:0!important;
   }
-  .app-shell[data-ui-build="12.5"] .route-frame {
+  .app-shell[data-ui-build] .route-frame {
     width:100%!important; max-width:100%!important; min-width:0!important;
     height:auto!important; min-height:0!important; padding:0!important;
   }
-  .app-shell[data-ui-build="12.5"] .page {
+  .app-shell[data-ui-build] .page {
     width:100%!important; max-width:100%!important; min-width:0!important;
     margin:0!important; padding:0!important; min-height:0!important;
   }
-  .app-shell[data-ui-build="12.5"] :is(section,article,form,fieldset,label,.grid,.grid-2,.grid-3,.list,.surface-card,.form-row,.form-grid) {
+  .app-shell[data-ui-build] :is(section,article,form,fieldset,label,.grid,.grid-2,.grid-3,.list,.surface-card,.form-row,.form-grid) {
     min-width:0; max-width:100%;
   }
-  .app-shell[data-ui-build="12.5"] .surface-card {
+  .app-shell[data-ui-build] .surface-card {
     width:100%; padding:16px!important; border-radius:20px!important; margin:0;
     color:var(--text); box-shadow:none;
   }
-  .app-shell[data-ui-build="12.5"] :is(.grid-2,.grid-3,.settings-grid,.stats-layout,.stats-main,.dashboard-grid,.home-bento) {
+  .app-shell[data-ui-build] :is(.grid-2,.grid-3,.settings-grid,.stats-layout,.stats-main,.dashboard-grid,.home-bento) {
     display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:16px!important;
     width:100%!important; min-width:0!important;
   }
-  .app-shell[data-ui-build="12.5"] :is(.dashboard-main-column,.dashboard-right-rail,.stats-rail) { min-width:0!important; gap:12px!important; }
-  .app-shell[data-ui-build="12.5"] :is(.page-header,.dashboard-topbar) {
+  .app-shell[data-ui-build] :is(.dashboard-main-column,.dashboard-right-rail,.stats-rail) { min-width:0!important; gap:12px!important; }
+  .app-shell[data-ui-build] :is(.page-header,.dashboard-topbar) {
     position:static!important; display:flex!important; flex-wrap:wrap!important;
     align-items:flex-start!important; justify-content:space-between!important;
     gap:12px!important; margin:0 0 20px!important; min-height:0!important;
   }
-  .app-shell[data-ui-build="12.5"] :is(.page-header,.dashboard-topbar) > div { min-width:0; }
-  .app-shell[data-ui-build="12.5"] :is(.page-header,.dashboard-topbar) h1 {
+  .app-shell[data-ui-build] :is(.page-header,.dashboard-topbar) > div { min-width:0; }
+  .app-shell[data-ui-build] :is(.page-header,.dashboard-topbar) h1 {
     font-size:30px!important; font-weight:750; line-height:1.15!important;
     letter-spacing:-.035em!important; margin:5px 0 0!important; overflow-wrap:anywhere;
   }
-  .app-shell[data-ui-build="12.5"] .eyebrow {
+  .app-shell[data-ui-build] .eyebrow {
     font-size:10px!important; letter-spacing:.12em!important; line-height:1.5!important;
     white-space:normal!important; margin:0; overflow-wrap:anywhere;
   }
-  .app-shell[data-ui-build="12.5"] :is(p,.subtle) { line-height:1.5; overflow-wrap:anywhere; }
-  .app-shell[data-ui-build="12.5"] :is(.page-header,.dashboard-topbar) p { font-size:13px; margin:8px 0 0; }
-  .app-shell[data-ui-build="12.5"] .section-title {
+  .app-shell[data-ui-build] :is(p,.subtle) { line-height:1.5; overflow-wrap:anywhere; }
+  .app-shell[data-ui-build] :is(.page-header,.dashboard-topbar) p { font-size:13px; margin:8px 0 0; }
+  .app-shell[data-ui-build] .section-title {
     display:flex!important; align-items:flex-start!important; flex-wrap:wrap!important; gap:10px!important;
     min-width:0; max-width:100%;
   }
-  .app-shell[data-ui-build="12.5"] .section-title > div { min-width:0; flex:1 1 150px; }
-  .app-shell[data-ui-build="12.5"] :is(.section-title strong,.section-heading) {
+  .app-shell[data-ui-build] .section-title > div { min-width:0; flex:1 1 150px; }
+  .app-shell[data-ui-build] :is(.section-title strong,.section-heading) {
     font-size:17px!important; line-height:1.4!important; white-space:normal!important; overflow-wrap:anywhere;
   }
-  .app-shell[data-ui-build="12.5"] .section-heading { align-items:flex-start; }
-  .app-shell[data-ui-build="12.5"] .selection-note { font-size:12px; white-space:normal; overflow-wrap:anywhere; }
-  .app-shell[data-ui-build="12.5"] .lucide { flex-shrink:0; max-width:24px; max-height:24px; }
-  .app-shell[data-ui-build="12.5"] .button {
+  .app-shell[data-ui-build] .section-heading { align-items:flex-start; }
+  .app-shell[data-ui-build] .selection-note { font-size:12px; white-space:normal; overflow-wrap:anywhere; }
+  .app-shell[data-ui-build] .lucide { flex-shrink:0; max-width:24px; max-height:24px; }
+  .app-shell[data-ui-build] .button {
     min-height:46px!important; padding:10px 12px!important; font-size:14px!important;
     line-height:1.35!important; white-space:normal!important; gap:8px; border-radius:14px!important;
     display:inline-flex; align-items:center; justify-content:center;
   }
-  .app-shell[data-ui-build="12.5"] :is(.button,.icon-button) > .lucide { width:18px!important; height:18px!important; }
-  .app-shell[data-ui-build="12.5"] .icon-button { width:44px!important; height:44px!important; min-width:44px!important; padding:0!important; display:grid!important; place-items:center; }
-  .app-shell[data-ui-build="12.5"] :is(button,a,input,select,textarea) { touch-action:manipulation; }
-  .app-shell[data-ui-build="12.5"] :is(input,select,textarea) {
+  .app-shell[data-ui-build] :is(.button,.icon-button) > .lucide { width:18px!important; height:18px!important; }
+  .app-shell[data-ui-build] .icon-button { width:44px!important; height:44px!important; min-width:44px!important; padding:0!important; display:grid!important; place-items:center; }
+  .app-shell[data-ui-build] :is(button,a,input,select,textarea) { touch-action:manipulation; }
+  .app-shell[data-ui-build] :is(input,select,textarea) {
     max-width:100%; min-width:0!important; box-sizing:border-box; font-size:16px!important;
   }
-  .app-shell[data-ui-build="12.5"] .input {
+  .app-shell[data-ui-build] .input {
     width:100%!important; min-height:48px!important; padding:12px!important;
     border-radius:13px!important; line-height:1.4!important;
   }
-  .app-shell[data-ui-build="12.5"] input:is([type="date"],[type="time"],[type="datetime-local"]) {
+  .app-shell[data-ui-build] input:is([type="date"],[type="time"],[type="datetime-local"]) {
     appearance:none; -webkit-appearance:none; display:block; width:100%!important;
     min-width:0!important; min-inline-size:0!important;
   }
-  .app-shell[data-ui-build="12.5"] input::-webkit-date-and-time-value { min-height:1.4em; text-align:start; }
-  .app-shell[data-ui-build="12.5"] .form-row { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:12px!important; width:100%; }
-  .app-shell[data-ui-build="12.5"] .form-grid { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:12px!important; width:100%; }
-  .app-shell[data-ui-build="12.5"] .empty { min-height:110px!important; padding:20px 12px!important; font-size:13px; }
+  .app-shell[data-ui-build] input::-webkit-date-and-time-value { min-height:1.4em; text-align:start; }
+  .app-shell[data-ui-build] .form-row { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:12px!important; width:100%; }
+  .app-shell[data-ui-build] .form-grid { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:12px!important; width:100%; }
+  .app-shell[data-ui-build] .empty { min-height:110px!important; padding:20px 12px!important; font-size:13px; }
 
   /* App bar stays in flow. No negative offsets or double safe-area padding. */
-  .app-shell[data-ui-build="12.5"] .mobile-appbar {
+  .app-shell[data-ui-build] .mobile-appbar {
     display:flex!important; position:sticky!important; inset-block-start:0; inset-inline:0;
     width:100%; min-height:62px; height:auto!important; align-items:center; justify-content:space-between;
     gap:12px; padding:calc(9px + var(--sf-safe-top)) var(--sf-gutter) 9px!important;
@@ -147,7 +147,7 @@
   .mobile-appbar .lucide { width:19px!important; height:19px!important; }
 
   /* One active tab. Timer has no permanent gradient or special inactive style. */
-  .app-shell[data-ui-build="12.5"] .bottom-nav {
+  .app-shell[data-ui-build] .bottom-nav {
     display:grid!important; grid-template-columns:repeat(5,minmax(0,1fr))!important;
     position:fixed!important; z-index:80!important; inset-inline:0!important; bottom:0!important;
     width:100%!important; height:calc(var(--sf-tab-height) + var(--sf-safe-bottom))!important;
@@ -155,310 +155,310 @@
     border:0!important; border-top:1px solid var(--border)!important; border-radius:0!important;
     background:var(--bg)!important; box-shadow:none!important; backdrop-filter:none!important;
   }
-  .app-shell[data-ui-build="12.5"] .bottom-nav a {
+  .app-shell[data-ui-build] .bottom-nav a {
     display:flex!important; flex-direction:column!important; align-items:center!important; justify-content:center!important;
     gap:4px!important; min-width:0!important; min-height:52px!important; padding:3px 0!important;
     color:var(--muted)!important; background:transparent!important; box-shadow:none!important; border:0!important;
   }
-  .app-shell[data-ui-build="12.5"] .bottom-nav a .nav-icon {
+  .app-shell[data-ui-build] .bottom-nav a .nav-icon {
     display:grid!important; place-items:center!important; width:38px!important; height:28px!important;
     margin:0!important; padding:0!important; border:0!important; border-radius:10px!important;
     background:none!important; box-shadow:none!important; color:inherit!important;
     transform:none!important; filter:none!important;
   }
-  .app-shell[data-ui-build="12.5"] .bottom-nav a[aria-current="page"] { color:var(--text)!important; }
-  .app-shell[data-ui-build="12.5"] .bottom-nav a[aria-current="page"] .nav-icon {
+  .app-shell[data-ui-build] .bottom-nav a[aria-current="page"] { color:var(--text)!important; }
+  .app-shell[data-ui-build] .bottom-nav a[aria-current="page"] .nav-icon {
     background:color-mix(in srgb,var(--accent) 18%,var(--surface))!important; color:var(--accent)!important;
   }
-  .app-shell[data-ui-build="12.5"] .bottom-nav .lucide { width:22px!important; height:22px!important; }
-  .app-shell[data-ui-build="12.5"] .bottom-nav small { font-size:11px!important; line-height:1.1!important; white-space:nowrap!important; }
-  .app-shell[data-ui-build="12.5"] .fab {
+  .app-shell[data-ui-build] .bottom-nav .lucide { width:22px!important; height:22px!important; }
+  .app-shell[data-ui-build] .bottom-nav small { font-size:11px!important; line-height:1.1!important; white-space:nowrap!important; }
+  .app-shell[data-ui-build] .fab {
     display:none!important; place-items:center; position:fixed!important; z-index:81!important;
     inset-inline-start:auto!important; inset-inline-end:16px!important;
     bottom:calc(var(--sf-tab-height) + var(--sf-safe-bottom) + 14px)!important;
     width:46px!important; height:46px!important; padding:0!important; border-radius:16px!important;
   }
-  .app-shell[data-ui-build="12.5"][data-route="timer"] .fab,
-  .app-shell[data-ui-build="12.5"][data-route="stats"] .fab { display:none!important; }
+  .app-shell[data-ui-build][data-route="timer"] .fab,
+  .app-shell[data-ui-build][data-route="stats"] .fab { display:none!important; }
 
   /* Dashboard title and period controls are distinct rows, never competing columns. */
-  .app-shell[data-ui-build="12.5"] .analytics-hero {
+  .app-shell[data-ui-build] .analytics-hero {
     min-height:0!important; height:auto!important; overflow:visible!important; padding:16px!important;
   }
-  .app-shell[data-ui-build="12.5"] .analytics-heading {
+  .app-shell[data-ui-build] .analytics-heading {
     display:grid!important; grid-template-columns:minmax(0,1fr)!important;
     width:100%!important; gap:12px!important; margin:0!important; padding:0!important; align-items:start!important;
   }
-  .app-shell[data-ui-build="12.5"] .analytics-heading > div { min-width:0!important; max-width:100%; }
-  .app-shell[data-ui-build="12.5"] .analytics-heading h2 {
+  .app-shell[data-ui-build] .analytics-heading > div { min-width:0!important; max-width:100%; }
+  .app-shell[data-ui-build] .analytics-heading h2 {
     font-size:21px!important; line-height:1.3!important; margin:4px 0 0!important;
     padding:0!important; letter-spacing:-.025em!important; white-space:normal!important;
   }
-  .app-shell[data-ui-build="12.5"] .range-tabs {
+  .app-shell[data-ui-build] .range-tabs {
     position:static!important; float:none!important; display:grid!important;
     grid-template-columns:repeat(3,minmax(0,1fr))!important; align-items:stretch!important;
     width:100%!important; min-width:0!important; max-width:100%!important; gap:4px!important;
     padding:4px!important; margin:0!important; background:var(--surface2); border:1px solid var(--border); border-radius:14px;
   }
-  .app-shell[data-ui-build="12.5"] .range-tabs button {
+  .app-shell[data-ui-build] .range-tabs button {
     width:100%!important; min-width:0!important; min-height:40px!important; padding:6px 3px!important;
     font-size:13px!important; line-height:1.2!important; margin:0!important; border:0; border-radius:10px;
     background:transparent; color:var(--muted); text-align:center; white-space:nowrap;
   }
-  .app-shell[data-ui-build="12.5"] .range-tabs button.active { background:var(--surface); color:var(--text); }
-  .app-shell[data-ui-build="12.5"][data-route="stats"] .range-tabs { grid-template-columns:repeat(5,minmax(0,1fr))!important; }
-  .app-shell[data-ui-build="12.5"][data-route="stats"] .dashboard-topbar { display:grid!important; grid-template-columns:minmax(0,1fr)!important; }
-  .app-shell[data-ui-build="12.5"] .live-chip {
+  .app-shell[data-ui-build] .range-tabs button.active { background:var(--surface); color:var(--text); }
+  .app-shell[data-ui-build][data-route="stats"] .range-tabs { grid-template-columns:repeat(5,minmax(0,1fr))!important; }
+  .app-shell[data-ui-build][data-route="stats"] .dashboard-topbar { display:grid!important; grid-template-columns:minmax(0,1fr)!important; }
+  .app-shell[data-ui-build] .live-chip {
     display:inline-flex; align-items:center; justify-self:start; width:auto; max-width:100%;
     font-size:11px!important; line-height:1.5!important; padding:6px 9px!important;
     white-space:normal!important; gap:6px!important; border-radius:10px;
   }
-  .app-shell[data-ui-build="12.5"] .live-chip .lucide { width:15px!important; height:15px!important; }
-  .app-shell[data-ui-build="12.5"] .dashboard-top-actions .live-chip { display:none; }
-  .app-shell[data-ui-build="12.5"] .dashboard-top-actions .button {
+  .app-shell[data-ui-build] .live-chip .lucide { width:15px!important; height:15px!important; }
+  .app-shell[data-ui-build] .dashboard-top-actions .live-chip { display:none; }
+  .app-shell[data-ui-build] .dashboard-top-actions .button {
     font-size:0!important; width:44px; height:44px; min-height:44px!important; padding:0!important; gap:0;
   }
-  .app-shell[data-ui-build="12.5"] .dashboard-top-actions .button .lucide { width:20px!important; height:20px!important; }
-  .app-shell[data-ui-build="12.5"] .date-strip {
+  .app-shell[data-ui-build] .dashboard-top-actions .button .lucide { width:20px!important; height:20px!important; }
+  .app-shell[data-ui-build] .date-strip {
     display:grid!important; grid-template-columns:repeat(7,minmax(0,1fr))!important;
     grid-auto-flow:row!important; grid-auto-columns:auto!important; gap:4px!important;
     width:100%!important; max-width:100%!important; padding:0!important; margin:14px 0 4px!important;
     overflow:visible!important;
   }
-  .app-shell[data-ui-build="12.5"] .date-chip {
+  .app-shell[data-ui-build] .date-chip {
     display:flex!important; flex-direction:column; align-items:center!important; justify-content:center!important;
     width:auto!important; min-width:0!important; max-width:100%!important;
     height:54px!important; min-height:0!important; margin:0!important; padding:6px 1px!important;
     gap:3px!important; border-radius:11px!important;
   }
-  .app-shell[data-ui-build="12.5"] .date-chip strong { font-size:13px!important; line-height:1.1!important; }
-  .app-shell[data-ui-build="12.5"] .date-chip span { font-size:10px!important; line-height:1.1!important; white-space:nowrap; }
-  .app-shell[data-ui-build="12.5"] .chart-legend {
+  .app-shell[data-ui-build] .date-chip strong { font-size:13px!important; line-height:1.1!important; }
+  .app-shell[data-ui-build] .date-chip span { font-size:10px!important; line-height:1.1!important; white-space:nowrap; }
+  .app-shell[data-ui-build] .chart-legend {
     display:flex!important; justify-content:flex-start!important; align-items:center; flex-wrap:wrap!important;
     width:100%; gap:8px 16px!important; font-size:11px!important; line-height:1.5!important; margin:10px 0 0!important;
   }
-  .app-shell[data-ui-build="12.5"] .chart-legend span { display:flex; align-items:center; gap:6px; }
-  .app-shell[data-ui-build="12.5"] .stats-chart-card { min-height:0!important; height:auto!important; }
-  .app-shell[data-ui-build="12.5"] .stats-rail { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; }
-  .app-shell[data-ui-build="12.5"] .insight-card { min-height:120px!important; padding:14px!important; gap:6px; }
-  .app-shell[data-ui-build="12.5"] .insight-card strong { font-size:20px; }
-  .app-shell[data-ui-build="12.5"] .insight-card :is(small,span:last-child) { font-size:11px; white-space:normal; }
-  .app-shell[data-ui-build="12.5"] .subject-breakdown-row {
+  .app-shell[data-ui-build] .chart-legend span { display:flex; align-items:center; gap:6px; }
+  .app-shell[data-ui-build] .stats-chart-card { min-height:0!important; height:auto!important; }
+  .app-shell[data-ui-build] .stats-rail { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; }
+  .app-shell[data-ui-build] .insight-card { min-height:120px!important; padding:14px!important; gap:6px; }
+  .app-shell[data-ui-build] .insight-card strong { font-size:20px; }
+  .app-shell[data-ui-build] .insight-card :is(small,span:last-child) { font-size:11px; white-space:normal; }
+  .app-shell[data-ui-build] .subject-breakdown-row {
     display:grid!important; grid-template-columns:20px 8px minmax(0,1fr) auto!important; gap:8px!important;
     font-size:12px; min-width:0;
   }
-  .app-shell[data-ui-build="12.5"] .subject-breakdown-row strong { min-width:0; overflow-wrap:anywhere; font-size:12px!important; }
-  .app-shell[data-ui-build="12.5"] .subject-breakdown-row > span:last-child { font-size:11px!important; }
-  .app-shell[data-ui-build="12.5"] .subject-meter { grid-column:3/-1; grid-row:2; display:block!important; width:100%; }
-  .app-shell[data-ui-build="12.5"] .dashboard-subject-row { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:12px!important; }
-  .app-shell[data-ui-build="12.5"] .subject-summary-card { min-height:0!important; }
+  .app-shell[data-ui-build] .subject-breakdown-row strong { min-width:0; overflow-wrap:anywhere; font-size:12px!important; }
+  .app-shell[data-ui-build] .subject-breakdown-row > span:last-child { font-size:11px!important; }
+  .app-shell[data-ui-build] .subject-meter { grid-column:3/-1; grid-row:2; display:block!important; width:100%; }
+  .app-shell[data-ui-build] .dashboard-subject-row { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:12px!important; }
+  .app-shell[data-ui-build] .subject-summary-card { min-height:0!important; }
 
   /* Monthly reward stays on Home only; its amount is never clipped. */
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-mobile-host { display:block; margin:0 0 20px!important; padding:0!important; }
-  .app-shell[data-ui-build="12.5"]:not([data-route="dashboard"]) .dashboard-reward-mobile-host { display:none!important; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-card { padding:16px; border-radius:20px; box-shadow:none; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-title small { font-size:10px; line-height:1.4; letter-spacing:.08em; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-title strong { font-size:14px; line-height:1.4; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-head > button { width:40px; min-width:40px; height:40px; padding:0; font-size:0; justify-content:center; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-head > button .lucide { width:18px; height:18px; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-body { display:grid; grid-template-columns:minmax(0,1fr) 112px; gap:10px; margin:14px 0; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-amount > strong { font-size:clamp(26px,7vw,36px); line-height:1.15; overflow-wrap:anywhere; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-amount > span { font-size:11px; flex-wrap:wrap; line-height:1.4; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-amount > small { display:none; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-next { min-width:0; padding:10px; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-next :is(span,small) { font-size:10px; line-height:1.4; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-next > small { display:none; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-next > strong { font-size:14px; line-height:1.4; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-progress-row > span { font-size:11px; }
+  .app-shell[data-ui-build] .dashboard-reward-mobile-host { display:block; margin:0 0 20px!important; padding:0!important; }
+  .app-shell[data-ui-build]:not([data-route="dashboard"]) .dashboard-reward-mobile-host { display:none!important; }
+  .app-shell[data-ui-build] .dashboard-reward-card { padding:16px; border-radius:20px; box-shadow:none; }
+  .app-shell[data-ui-build] .dashboard-reward-title small { font-size:10px; line-height:1.4; letter-spacing:.08em; }
+  .app-shell[data-ui-build] .dashboard-reward-title strong { font-size:14px; line-height:1.4; }
+  .app-shell[data-ui-build] .dashboard-reward-head > button { width:40px; min-width:40px; height:40px; padding:0; font-size:0; justify-content:center; }
+  .app-shell[data-ui-build] .dashboard-reward-head > button .lucide { width:18px; height:18px; }
+  .app-shell[data-ui-build] .dashboard-reward-body { display:grid; grid-template-columns:minmax(0,1fr) 112px; gap:10px; margin:14px 0; }
+  .app-shell[data-ui-build] .dashboard-reward-amount > strong { font-size:clamp(26px,7vw,36px); line-height:1.15; overflow-wrap:anywhere; }
+  .app-shell[data-ui-build] .dashboard-reward-amount > span { font-size:11px; flex-wrap:wrap; line-height:1.4; }
+  .app-shell[data-ui-build] .dashboard-reward-amount > small { display:none; }
+  .app-shell[data-ui-build] .dashboard-reward-next { min-width:0; padding:10px; }
+  .app-shell[data-ui-build] .dashboard-reward-next :is(span,small) { font-size:10px; line-height:1.4; }
+  .app-shell[data-ui-build] .dashboard-reward-next > small { display:none; }
+  .app-shell[data-ui-build] .dashboard-reward-next > strong { font-size:14px; line-height:1.4; }
+  .app-shell[data-ui-build] .dashboard-reward-progress-row > span { font-size:11px; }
 
   /* Focus: small contained companion, then timer + primary actions, then utilities. */
-  .app-shell[data-ui-build="12.5"] .timer-stage {
+  .app-shell[data-ui-build] .timer-stage {
     display:flex!important; flex-direction:column!important; align-items:stretch!important; justify-content:flex-start!important;
     gap:12px!important; width:100%!important; min-height:0!important; height:auto!important; padding:0!important;
   }
-  .app-shell[data-ui-build="12.5"] .timer-backdrop-orb { display:none!important; }
-  .app-shell[data-ui-build="12.5"] .timer-start-burst::before,
-  .app-shell[data-ui-build="12.5"] .timer-start-burst::after { display:none; }
-  .app-shell[data-ui-build="12.5"] .timer-heading {
+  .app-shell[data-ui-build] .timer-backdrop-orb { display:none!important; }
+  .app-shell[data-ui-build] .timer-start-burst::before,
+  .app-shell[data-ui-build] .timer-start-burst::after { display:none; }
+  .app-shell[data-ui-build] .timer-heading {
     order:0; display:flex!important; justify-content:space-between!important; align-items:center!important;
     width:100%!important; min-height:32px!important; margin:0!important; padding:0!important; gap:10px;
   }
-  .app-shell[data-ui-build="12.5"] .timer-heading .eyebrow { flex:1; min-width:0; }
-  .app-shell[data-ui-build="12.5"] .focus-state { padding:6px 10px!important; font-size:10px!important; line-height:1.4; flex:none; }
-  .app-shell[data-ui-build="12.5"] .focus-progress-hud {
+  .app-shell[data-ui-build] .timer-heading .eyebrow { flex:1; min-width:0; }
+  .app-shell[data-ui-build] .focus-state { padding:6px 10px!important; font-size:10px!important; line-height:1.4; flex:none; }
+  .app-shell[data-ui-build] .focus-progress-hud {
     order:1; display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr))!important;
     width:100%!important; gap:6px!important; margin:0!important; padding:0!important;
   }
-  .app-shell[data-ui-build="12.5"] .focus-progress-hud > div { min-width:0; padding:9px!important; }
-  .app-shell[data-ui-build="12.5"] .focus-progress-hud .hud-xp { display:none; }
-  .app-shell[data-ui-build="12.5"] .focus-progress-hud small { font-size:10px!important; }
-  .app-shell[data-ui-build="12.5"] .focus-progress-hud strong { font-size:13px!important; }
-  .app-shell[data-ui-build="12.5"] .focus-visual {
+  .app-shell[data-ui-build] .focus-progress-hud > div { min-width:0; padding:9px!important; }
+  .app-shell[data-ui-build] .focus-progress-hud .hud-xp { display:none; }
+  .app-shell[data-ui-build] .focus-progress-hud small { font-size:10px!important; }
+  .app-shell[data-ui-build] .focus-progress-hud strong { font-size:13px!important; }
+  .app-shell[data-ui-build] .focus-visual {
     order:2; display:grid!important; place-items:center; min-width:0; width:100%;
     padding:4px 8px 8px; margin:0; border:1px solid var(--border); border-radius:22px;
     background:radial-gradient(ellipse at 50% 65%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 75%),var(--surface);
     overflow:hidden; isolation:isolate;
   }
-  .app-shell[data-ui-build="12.5"] .focus-visual > .focus-companion {
+  .app-shell[data-ui-build] .focus-visual > .focus-companion {
     width:100%!important; max-width:290px!important; height:auto!important; min-height:0!important;
     margin:0 auto!important; padding:0!important; display:block!important;
   }
-  .app-shell[data-ui-build="12.5"] .focus-visual .character-stage {
+  .app-shell[data-ui-build] .focus-visual .character-stage {
     display:block!important; width:100%!important; height:164px!important; min-height:0!important; max-height:none!important;
     margin:0!important; padding:0!important; transform:none!important; perspective:none!important;
   }
-  .app-shell[data-ui-build="12.5"] .focus-visual .character-svg {
+  .app-shell[data-ui-build] .focus-visual .character-svg {
     display:block!important; width:100%!important; height:164px!important; min-height:0!important;
     max-height:none!important; overflow:visible; aspect-ratio:auto!important;
   }
-  .app-shell[data-ui-build="12.5"] .focus-visual :is(.companion-orbit,.companion-ambient,.companion-floor-shadow,.character-glow) { display:none!important; }
-  .app-shell[data-ui-build="12.5"] .companion-caption-row {
+  .app-shell[data-ui-build] .focus-visual :is(.companion-orbit,.companion-ambient,.companion-floor-shadow,.character-glow) { display:none!important; }
+  .app-shell[data-ui-build] .companion-caption-row {
     position:relative!important; display:flex!important; align-items:center!important; justify-content:center!important;
     gap:8px!important; width:100%!important; height:auto!important; margin:0!important; padding:0 0 2px!important;
   }
-  .app-shell[data-ui-build="12.5"] :is(.companion-caption,.exact-caption) {
+  .app-shell[data-ui-build] :is(.companion-caption,.exact-caption) {
     position:static!important; display:flex!important; flex:0 1 auto!important; min-width:0!important;
     max-width:calc(100% - 52px)!important; align-items:center; gap:6px; font-size:11px!important;
     line-height:1.4!important; padding:0!important; margin:0!important; background:none!important;
     border:0!important; box-shadow:none!important; white-space:normal!important; text-align:center;
   }
-  .app-shell[data-ui-build="12.5"] .companion-status-dot { display:block!important; width:5px!important; height:5px!important; min-width:5px!important; flex:0 0 5px; padding:0!important; border-radius:50%; }
-  .app-shell[data-ui-build="12.5"] .companion-level-pill { flex:none; font-size:10px!important; line-height:1.3; padding:4px 7px!important; }
-  .app-shell[data-ui-build="12.5"] .timer-setup { order:3; display:grid; grid-template-columns:minmax(0,1fr); justify-content:stretch; gap:12px; width:100%!important; margin:0!important; }
-  .app-shell[data-ui-build="12.5"] .mode-picker { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:8px!important; }
-  .app-shell[data-ui-build="12.5"] .mode-card { min-width:0; min-height:56px!important; padding:10px!important; border-radius:14px!important; gap:8px; }
-  .app-shell[data-ui-build="12.5"] .mode-card strong { font-size:12px!important; }
-  .app-shell[data-ui-build="12.5"] .mode-card small { display:none; }
-  .app-shell[data-ui-build="12.5"] .mode-icon { width:28px; height:28px; flex:none; }
-  .app-shell[data-ui-build="12.5"] .setup-fields { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:10px!important; }
-  .app-shell[data-ui-build="12.5"] .setup-fields label { display:grid; gap:6px; min-width:0; }
-  .app-shell[data-ui-build="12.5"] .setup-fields label > span { font-size:11px!important; }
-  .app-shell[data-ui-build="12.5"] .timer-core {
+  .app-shell[data-ui-build] .companion-status-dot { display:block!important; width:5px!important; height:5px!important; min-width:5px!important; flex:0 0 5px; padding:0!important; border-radius:50%; }
+  .app-shell[data-ui-build] .companion-level-pill { flex:none; font-size:10px!important; line-height:1.3; padding:4px 7px!important; }
+  .app-shell[data-ui-build] .timer-setup { order:3; display:grid; grid-template-columns:minmax(0,1fr); justify-content:stretch; gap:12px; width:100%!important; margin:0!important; }
+  .app-shell[data-ui-build] .mode-picker { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:8px!important; }
+  .app-shell[data-ui-build] .mode-card { min-width:0; min-height:56px!important; padding:10px!important; border-radius:14px!important; gap:8px; }
+  .app-shell[data-ui-build] .mode-card strong { font-size:12px!important; }
+  .app-shell[data-ui-build] .mode-card small { display:none; }
+  .app-shell[data-ui-build] .mode-icon { width:28px; height:28px; flex:none; }
+  .app-shell[data-ui-build] .setup-fields { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:10px!important; }
+  .app-shell[data-ui-build] .setup-fields label { display:grid; gap:6px; min-width:0; }
+  .app-shell[data-ui-build] .setup-fields label > span { font-size:11px!important; }
+  .app-shell[data-ui-build] .timer-core {
     order:4; display:grid!important; gap:12px!important; align-items:center!important; justify-items:stretch!important;
     width:100%!important; min-width:0!important; min-height:0!important; padding:18px 14px 14px!important; margin:0!important;
     background:var(--surface)!important; border:1px solid var(--border)!important; border-radius:22px!important;
   }
-  .app-shell[data-ui-build="12.5"] .timer-display {
+  .app-shell[data-ui-build] .timer-display {
     width:100%; font-size:clamp(46px,17vw,70px)!important; line-height:1.1!important;
     font-variant-numeric:tabular-nums; letter-spacing:-.055em!important; text-align:center!important;
     padding:0!important; margin:0!important; white-space:nowrap; color:var(--text)!important;
   }
-  .app-shell[data-ui-build="12.5"] .timer-tickline { display:none!important; }
-  .app-shell[data-ui-build="12.5"] .timer-progress { width:100%!important; height:5px!important; margin:0!important; }
-  .app-shell[data-ui-build="12.5"] .timer-actions { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:8px!important; width:100%!important; margin:0!important; justify-content:stretch!important; justify-items:stretch!important; }
-  .app-shell[data-ui-build="12.5"] .timer-main-actions { display:flex!important; gap:8px; width:100%; }
-  .app-shell[data-ui-build="12.5"] .timer-main-actions .button { flex:1; min-width:0; min-height:48px!important; font-size:15px!important; }
-  .app-shell[data-ui-build="12.5"] .timer-secondary-actions { display:flex!important; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; width:100%; }
-  .app-shell[data-ui-build="12.5"] .timer-secondary-actions .button { font-size:12px!important; padding:6px 10px!important; min-height:44px!important; }
-  .app-shell[data-ui-build="12.5"] .timer-secondary-actions .icon-button { width:44px!important; height:44px!important; }
-  .app-shell[data-ui-build="12.5"] .focus-active-context {
+  .app-shell[data-ui-build] .timer-tickline { display:none!important; }
+  .app-shell[data-ui-build] .timer-progress { width:100%!important; height:5px!important; margin:0!important; }
+  .app-shell[data-ui-build] .timer-actions { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:8px!important; width:100%!important; margin:0!important; justify-content:stretch!important; justify-items:stretch!important; }
+  .app-shell[data-ui-build] .timer-main-actions { display:flex!important; gap:8px; width:100%; }
+  .app-shell[data-ui-build] .timer-main-actions .button { flex:1; min-width:0; min-height:48px!important; font-size:15px!important; }
+  .app-shell[data-ui-build] .timer-secondary-actions { display:flex!important; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; width:100%; }
+  .app-shell[data-ui-build] .timer-secondary-actions .button { font-size:12px!important; padding:6px 10px!important; min-height:44px!important; }
+  .app-shell[data-ui-build] .timer-secondary-actions .icon-button { width:44px!important; height:44px!important; }
+  .app-shell[data-ui-build] .focus-active-context {
     order:5; display:grid!important; grid-template-columns:minmax(0,1fr)!important; justify-content:stretch!important; justify-items:stretch!important; gap:10px!important; width:100%!important; margin:0!important;
     padding:0!important; border:0!important; background:none!important;
   }
-  .app-shell[data-ui-build="12.5"] .focus-intention { display:flex; align-items:center; gap:6px; font-size:12px!important; line-height:1.5; margin:0; padding:0; }
-  .app-shell[data-ui-build="12.5"] .focus-intention span { min-width:0; overflow-wrap:anywhere; }
-  .app-shell[data-ui-build="12.5"] .focus-live-tools { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr))!important; gap:6px!important; width:100%!important; }
-  .app-shell[data-ui-build="12.5"] .distraction-wrap { min-width:0; position:static!important; }
-  .app-shell[data-ui-build="12.5"] .focus-active-context { position:relative; }
-  .app-shell[data-ui-build="12.5"] :is(.focus-tool,.focus-score-live) {
+  .app-shell[data-ui-build] .focus-intention { display:flex; align-items:center; gap:6px; font-size:12px!important; line-height:1.5; margin:0; padding:0; }
+  .app-shell[data-ui-build] .focus-intention span { min-width:0; overflow-wrap:anywhere; }
+  .app-shell[data-ui-build] .focus-live-tools { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr))!important; gap:6px!important; width:100%!important; }
+  .app-shell[data-ui-build] .distraction-wrap { min-width:0; position:static!important; }
+  .app-shell[data-ui-build] .focus-active-context { position:relative; }
+  .app-shell[data-ui-build] :is(.focus-tool,.focus-score-live) {
     display:flex!important; align-items:center!important; justify-content:center!important; gap:5px!important;
     width:100%!important; min-width:0!important; min-height:44px!important; padding:6px!important;
     grid-column:auto!important; margin:0!important; font-size:11px!important; font-weight:600;
     line-height:1.3!important; border:1px solid var(--border)!important; border-radius:13px!important;
     background:var(--surface)!important; color:var(--muted)!important;
   }
-  .app-shell[data-ui-build="12.5"] .focus-tool span { display:inline!important; font-size:11px!important; max-width:none; white-space:normal!important; }
-  .app-shell[data-ui-build="12.5"] .distraction-menu { left:0!important; right:0!important; width:auto!important; max-width:100%!important; top:100%!important; margin-top:8px; z-index:30; }
-  .app-shell[data-ui-build="12.5"] .distraction-menu > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .app-shell[data-ui-build="12.5"] .distraction-menu button { min-height:44px; }
-  .app-shell[data-ui-build="12.5"] .focus-shortcuts { display:none!important; }
-  .app-shell[data-ui-build="12.5"] .session-safety { order:6; font-size:10px!important; line-height:1.5!important; margin:0!important; text-align:center; justify-content:center; padding:0 10px; }
-  body.focus-zen .app-shell[data-ui-build="12.5"] .mobile-appbar,
-  body.focus-zen .app-shell[data-ui-build="12.5"] .bottom-nav { display:none!important; }
-  body.focus-zen .app-shell[data-ui-build="12.5"] .main { margin:0!important; padding-block:calc(12px + var(--sf-safe-top)) calc(12px + var(--sf-safe-bottom))!important; }
-  body.focus-zen .app-shell[data-ui-build="12.5"] .focus-visual { display:none!important; }
+  .app-shell[data-ui-build] .focus-tool span { display:inline!important; font-size:11px!important; max-width:none; white-space:normal!important; }
+  .app-shell[data-ui-build] .distraction-menu { left:0!important; right:0!important; width:auto!important; max-width:100%!important; top:100%!important; margin-top:8px; z-index:30; }
+  .app-shell[data-ui-build] .distraction-menu > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .app-shell[data-ui-build] .distraction-menu button { min-height:44px; }
+  .app-shell[data-ui-build] .focus-shortcuts { display:none!important; }
+  .app-shell[data-ui-build] .session-safety { order:6; font-size:10px!important; line-height:1.5!important; margin:0!important; text-align:center; justify-content:center; padding:0 10px; }
+  body.focus-zen .app-shell[data-ui-build] .mobile-appbar,
+  body.focus-zen .app-shell[data-ui-build] .bottom-nav { display:none!important; }
+  body.focus-zen .app-shell[data-ui-build] .main { margin:0!important; padding-block:calc(12px + var(--sf-safe-top)) calc(12px + var(--sf-safe-bottom))!important; }
+  body.focus-zen .app-shell[data-ui-build] .focus-visual { display:none!important; }
 
   /* Planner and history: every field fits the card, long titles can wrap. */
-  .app-shell[data-ui-build="12.5"][data-route="planner"] .surface-card > strong { font-size:18px; line-height:1.4; }
-  .app-shell[data-ui-build="12.5"][data-route="planner"] .form-row { margin-block-start:14px; }
-  .app-shell[data-ui-build="12.5"] .list-item { min-width:0; max-width:100%; padding:12px!important; gap:10px!important; }
-  .app-shell[data-ui-build="12.5"] .list-item > div { min-width:0; }
-  .app-shell[data-ui-build="12.5"][data-route="planner"] .list-item { flex-wrap:wrap; }
-  .app-shell[data-ui-build="12.5"][data-route="planner"] .list-item > div:first-child { flex:1 1 150px; }
-  .app-shell[data-ui-build="12.5"] .list-item strong { font-size:14px; line-height:1.4; overflow-wrap:anywhere; white-space:normal; }
-  .app-shell[data-ui-build="12.5"] .list-item select { max-width:100%; min-width:0; }
-  .app-shell[data-ui-build="12.5"] :is(.table-wrap,.table-scroll) { width:100%; min-width:0; overflow-x:auto; }
-  .app-shell[data-ui-build="12.5"] table { max-width:100%; }
+  .app-shell[data-ui-build][data-route="planner"] .surface-card > strong { font-size:18px; line-height:1.4; }
+  .app-shell[data-ui-build][data-route="planner"] .form-row { margin-block-start:14px; }
+  .app-shell[data-ui-build] .list-item { min-width:0; max-width:100%; padding:12px!important; gap:10px!important; }
+  .app-shell[data-ui-build] .list-item > div { min-width:0; }
+  .app-shell[data-ui-build][data-route="planner"] .list-item { flex-wrap:wrap; }
+  .app-shell[data-ui-build][data-route="planner"] .list-item > div:first-child { flex:1 1 150px; }
+  .app-shell[data-ui-build] .list-item strong { font-size:14px; line-height:1.4; overflow-wrap:anywhere; white-space:normal; }
+  .app-shell[data-ui-build] .list-item select { max-width:100%; min-width:0; }
+  .app-shell[data-ui-build] :is(.table-wrap,.table-scroll) { width:100%; min-width:0; overflow-x:auto; }
+  .app-shell[data-ui-build] table { max-width:100%; }
 
   /* Settings: cards do not inherit desktop minimum columns or fixed artwork widths. */
-  .app-shell[data-ui-build="12.5"] :is(.theme-panel,.companion-settings-panel,.focus-system-settings,.progress-hub-grid,.account-security-panel) { margin-block:0 16px!important; }
-  .app-shell[data-ui-build="12.5"] .theme-gallery {
+  .app-shell[data-ui-build] :is(.theme-panel,.companion-settings-panel,.focus-system-settings,.progress-hub-grid,.account-security-panel) { margin-block:0 16px!important; }
+  .app-shell[data-ui-build] .theme-gallery {
     display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; grid-auto-flow:row!important;
     grid-auto-columns:auto!important; gap:10px!important; width:100%; overflow:visible!important; padding:14px 0 0!important;
   }
-  .app-shell[data-ui-build="12.5"] .theme-tile { width:100%; min-width:0; margin:0!important; padding:7px!important; }
-  .app-shell[data-ui-build="12.5"] .theme-preview { height:68px!important; }
-  .app-shell[data-ui-build="12.5"] .theme-tile-copy strong { font-size:12px!important; }
-  .app-shell[data-ui-build="12.5"] .theme-tile-copy small { font-size:10px!important; }
-  .app-shell[data-ui-build="12.5"] .character-showcase {
+  .app-shell[data-ui-build] .theme-tile { width:100%; min-width:0; margin:0!important; padding:7px!important; }
+  .app-shell[data-ui-build] .theme-preview { height:68px!important; }
+  .app-shell[data-ui-build] .theme-tile-copy strong { font-size:12px!important; }
+  .app-shell[data-ui-build] .theme-tile-copy small { font-size:10px!important; }
+  .app-shell[data-ui-build] .character-showcase {
     display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:8px!important;
     min-height:0!important; padding:12px!important; margin:14px 0!important; border-radius:18px!important;
   }
-  .app-shell[data-ui-build="12.5"] .character-showcase .focus-companion {
+  .app-shell[data-ui-build] .character-showcase .focus-companion {
     width:100%!important; max-width:320px!important; min-height:0!important; margin:0 auto!important;
   }
-  .app-shell[data-ui-build="12.5"] .character-showcase .character-stage { width:100%!important; height:186px!important; min-height:0!important; max-height:none!important; transform:none!important; }
-  .app-shell[data-ui-build="12.5"] .character-showcase .character-svg { width:100%!important; height:186px!important; max-height:none!important; min-height:0!important; }
-  .app-shell[data-ui-build="12.5"] .character-showcase :is(.companion-orbit,.companion-ambient,.companion-floor-shadow,.character-glow) { display:none; }
-  .app-shell[data-ui-build="12.5"] .character-showcase-copy { display:grid; min-width:0; gap:8px; }
-  .app-shell[data-ui-build="12.5"] .character-showcase-copy h3 { font-size:22px!important; line-height:1.3; margin:0; }
-  .app-shell[data-ui-build="12.5"] .character-showcase-copy p { font-size:12px!important; line-height:1.6!important; }
-  .app-shell[data-ui-build="12.5"] .character-mode-note { display:none; }
-  .app-shell[data-ui-build="12.5"] .companion-live-badges { display:none; }
-  .app-shell[data-ui-build="12.5"] .preview-state-controls { display:grid!important; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
-  .app-shell[data-ui-build="12.5"] .preview-state-controls button { min-width:0; min-height:44px; padding:7px 3px!important; font-size:11px!important; }
-  .app-shell[data-ui-build="12.5"] .companion-picker { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:8px!important; }
-  .app-shell[data-ui-build="12.5"] .companion-option { width:100%!important; min-width:0!important; padding:12px!important; min-height:60px; }
-  .app-shell[data-ui-build="12.5"] .companion-option-copy { min-width:0; }
-  .app-shell[data-ui-build="12.5"] .companion-option strong { font-size:13px!important; }
-  .app-shell[data-ui-build="12.5"] .companion-option small { font-size:11px!important; white-space:normal; }
-  .app-shell[data-ui-build="12.5"] .motion-settings { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:10px!important; }
-  .app-shell[data-ui-build="12.5"] .motion-settings small { font-size:11px!important; line-height:1.6!important; }
-  .app-shell[data-ui-build="12.5"] .motion-segments { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; gap:6px; }
-  .app-shell[data-ui-build="12.5"] .motion-segments button { min-width:0; min-height:46px; padding:9px 4px!important; }
-  .app-shell[data-ui-build="12.5"] .motion-segments button small { display:none; }
-  .app-shell[data-ui-build="12.5"] .motion-segments strong { font-size:12px; }
-  .app-shell[data-ui-build="12.5"] :is(.focus-system-overview,.focus-system-toggles,.progress-hub-grid,.account-security-grid) { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:12px!important; }
-  .app-shell[data-ui-build="12.5"] .focus-level-card { grid-column:auto!important; }
-  .app-shell[data-ui-build="12.5"] .switch-row { display:flex!important; flex-direction:row!important; align-items:center!important; gap:12px!important; padding:12px!important; }
-  .app-shell[data-ui-build="12.5"] .switch-row > span { flex:1; min-width:0; }
-  .app-shell[data-ui-build="12.5"] .switch-row strong { font-size:13px!important; line-height:1.4!important; }
-  .app-shell[data-ui-build="12.5"] .switch-row small { font-size:11px!important; line-height:1.5!important; }
-  .app-shell[data-ui-build="12.5"] .switch-row input { flex:0 0 44px!important; width:44px!important; max-width:44px!important; min-height:25px; }
-  .app-shell[data-ui-build="12.5"] .settings-form label > span { font-size:12px!important; }
-  .app-shell[data-ui-build="12.5"] :is(.data-actions,.reward-actions,.username-row) { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:8px!important; }
-  .app-shell[data-ui-build="12.5"] .data-actions .button:last-child { grid-column:1/-1; }
-  .app-shell[data-ui-build="12.5"] .username-row > input { grid-column:1/-1; }
-  .app-shell[data-ui-build="12.5"] .reward-main { display:grid!important; grid-template-columns:80px minmax(0,1fr)!important; gap:12px!important; }
-  .app-shell[data-ui-build="12.5"] .reward-ring { width:80px!important; height:80px!important; }
-  .app-shell[data-ui-build="12.5"] .reward-ring strong { font-size:20px!important; }
-  .app-shell[data-ui-build="12.5"] .reward-copy { min-width:0; }
-  .app-shell[data-ui-build="12.5"] .reward-copy > strong { font-size:24px!important; overflow-wrap:anywhere; }
-  .app-shell[data-ui-build="12.5"] .reward-copy > small { font-size:11px!important; line-height:1.4; }
-  .app-shell[data-ui-build="12.5"] .reward-rule { width:auto!important; font-size:10px!important; white-space:normal!important; }
-  .app-shell[data-ui-build="12.5"] :is(.reward-ledger,.wrapped-grid) { grid-template-columns:repeat(2,minmax(0,1fr))!important; }
-  .app-shell[data-ui-build="12.5"] .reward-ledger > div:last-child { grid-column:1/-1; }
-  .app-shell[data-ui-build="12.5"] :is(.reward-ledger,.wrapped-grid) strong { font-size:13px!important; white-space:normal!important; overflow-wrap:anywhere; }
-  .app-shell[data-ui-build="12.5"] :is(.reward-ledger,.wrapped-grid) span { font-size:10px!important; }
-  .app-shell[data-ui-build="12.5"] .reward-card-head { flex-wrap:wrap; }
-  .app-shell[data-ui-build="12.5"] .reward-card-head h3 { font-size:18px!important; }
-  .app-shell[data-ui-build="12.5"] .achievement-item { grid-template-columns:34px minmax(0,1fr)!important; }
-  .app-shell[data-ui-build="12.5"] .achievement-state { grid-column:2; }
-  .app-shell[data-ui-build="12.5"] .achievement-item strong { font-size:12px!important; }
-  .app-shell[data-ui-build="12.5"] .achievement-item small { font-size:11px!important; line-height:1.4!important; }
-  .app-shell[data-ui-build="12.5"] .danger-zone { flex-direction:column!important; align-items:stretch!important; gap:14px; }
-  .app-shell[data-ui-build="12.5"] .danger-zone > div { align-items:flex-start; }
-  .app-shell[data-ui-build="12.5"] .danger-zone small { font-size:11px!important; line-height:1.5!important; }
+  .app-shell[data-ui-build] .character-showcase .character-stage { width:100%!important; height:186px!important; min-height:0!important; max-height:none!important; transform:none!important; }
+  .app-shell[data-ui-build] .character-showcase .character-svg { width:100%!important; height:186px!important; max-height:none!important; min-height:0!important; }
+  .app-shell[data-ui-build] .character-showcase :is(.companion-orbit,.companion-ambient,.companion-floor-shadow,.character-glow) { display:none; }
+  .app-shell[data-ui-build] .character-showcase-copy { display:grid; min-width:0; gap:8px; }
+  .app-shell[data-ui-build] .character-showcase-copy h3 { font-size:22px!important; line-height:1.3; margin:0; }
+  .app-shell[data-ui-build] .character-showcase-copy p { font-size:12px!important; line-height:1.6!important; }
+  .app-shell[data-ui-build] .character-mode-note { display:none; }
+  .app-shell[data-ui-build] .companion-live-badges { display:none; }
+  .app-shell[data-ui-build] .preview-state-controls { display:grid!important; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
+  .app-shell[data-ui-build] .preview-state-controls button { min-width:0; min-height:44px; padding:7px 3px!important; font-size:11px!important; }
+  .app-shell[data-ui-build] .companion-picker { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:8px!important; }
+  .app-shell[data-ui-build] .companion-option { width:100%!important; min-width:0!important; padding:12px!important; min-height:60px; }
+  .app-shell[data-ui-build] .companion-option-copy { min-width:0; }
+  .app-shell[data-ui-build] .companion-option strong { font-size:13px!important; }
+  .app-shell[data-ui-build] .companion-option small { font-size:11px!important; white-space:normal; }
+  .app-shell[data-ui-build] .motion-settings { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:10px!important; }
+  .app-shell[data-ui-build] .motion-settings small { font-size:11px!important; line-height:1.6!important; }
+  .app-shell[data-ui-build] .motion-segments { display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; gap:6px; }
+  .app-shell[data-ui-build] .motion-segments button { min-width:0; min-height:46px; padding:9px 4px!important; }
+  .app-shell[data-ui-build] .motion-segments button small { display:none; }
+  .app-shell[data-ui-build] .motion-segments strong { font-size:12px; }
+  .app-shell[data-ui-build] :is(.focus-system-overview,.focus-system-toggles,.progress-hub-grid,.account-security-grid) { display:grid!important; grid-template-columns:minmax(0,1fr)!important; gap:12px!important; }
+  .app-shell[data-ui-build] .focus-level-card { grid-column:auto!important; }
+  .app-shell[data-ui-build] .switch-row { display:flex!important; flex-direction:row!important; align-items:center!important; gap:12px!important; padding:12px!important; }
+  .app-shell[data-ui-build] .switch-row > span { flex:1; min-width:0; }
+  .app-shell[data-ui-build] .switch-row strong { font-size:13px!important; line-height:1.4!important; }
+  .app-shell[data-ui-build] .switch-row small { font-size:11px!important; line-height:1.5!important; }
+  .app-shell[data-ui-build] .switch-row input { flex:0 0 44px!important; width:44px!important; max-width:44px!important; min-height:25px; }
+  .app-shell[data-ui-build] .settings-form label > span { font-size:12px!important; }
+  .app-shell[data-ui-build] :is(.data-actions,.reward-actions,.username-row) { display:grid!important; grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:8px!important; }
+  .app-shell[data-ui-build] .data-actions .button:last-child { grid-column:1/-1; }
+  .app-shell[data-ui-build] .username-row > input { grid-column:1/-1; }
+  .app-shell[data-ui-build] .reward-main { display:grid!important; grid-template-columns:80px minmax(0,1fr)!important; gap:12px!important; }
+  .app-shell[data-ui-build] .reward-ring { width:80px!important; height:80px!important; }
+  .app-shell[data-ui-build] .reward-ring strong { font-size:20px!important; }
+  .app-shell[data-ui-build] .reward-copy { min-width:0; }
+  .app-shell[data-ui-build] .reward-copy > strong { font-size:24px!important; overflow-wrap:anywhere; }
+  .app-shell[data-ui-build] .reward-copy > small { font-size:11px!important; line-height:1.4; }
+  .app-shell[data-ui-build] .reward-rule { width:auto!important; font-size:10px!important; white-space:normal!important; }
+  .app-shell[data-ui-build] :is(.reward-ledger,.wrapped-grid) { grid-template-columns:repeat(2,minmax(0,1fr))!important; }
+  .app-shell[data-ui-build] .reward-ledger > div:last-child { grid-column:1/-1; }
+  .app-shell[data-ui-build] :is(.reward-ledger,.wrapped-grid) strong { font-size:13px!important; white-space:normal!important; overflow-wrap:anywhere; }
+  .app-shell[data-ui-build] :is(.reward-ledger,.wrapped-grid) span { font-size:10px!important; }
+  .app-shell[data-ui-build] .reward-card-head { flex-wrap:wrap; }
+  .app-shell[data-ui-build] .reward-card-head h3 { font-size:18px!important; }
+  .app-shell[data-ui-build] .achievement-item { grid-template-columns:34px minmax(0,1fr)!important; }
+  .app-shell[data-ui-build] .achievement-state { grid-column:2; }
+  .app-shell[data-ui-build] .achievement-item strong { font-size:12px!important; }
+  .app-shell[data-ui-build] .achievement-item small { font-size:11px!important; line-height:1.4!important; }
+  .app-shell[data-ui-build] .danger-zone { flex-direction:column!important; align-items:stretch!important; gap:14px; }
+  .app-shell[data-ui-build] .danger-zone > div { align-items:flex-start; }
+  .app-shell[data-ui-build] .danger-zone small { font-size:11px!important; line-height:1.5!important; }
 
   /* Dialogs scroll above the tab bar instead of behind it. */
   :is(.modal-backdrop,.danger-modal-backdrop,.focus-summary-backdrop) {
@@ -547,21 +547,21 @@
 
 @media (max-width:359px) {
   :root { --sf-gutter:12px; }
-  .app-shell[data-ui-build="12.5"] .surface-card { padding:14px!important; }
-  .app-shell[data-ui-build="12.5"] .range-tabs button { font-size:12px!important; }
-  .app-shell[data-ui-build="12.5"] .date-chip span { font-size:9px!important; }
-  .app-shell[data-ui-build="12.5"] .dashboard-reward-body { grid-template-columns:minmax(0,1fr) 100px; }
-  .app-shell[data-ui-build="12.5"] .focus-visual .character-stage,
-  .app-shell[data-ui-build="12.5"] .focus-visual .character-svg { height:140px!important; }
-  .app-shell[data-ui-build="12.5"] .focus-live-tools { grid-template-columns:repeat(2,minmax(0,1fr))!important; }
-  .app-shell[data-ui-build="12.5"] .focus-score-live { grid-column:1/-1!important; }
+  .app-shell[data-ui-build] .surface-card { padding:14px!important; }
+  .app-shell[data-ui-build] .range-tabs button { font-size:12px!important; }
+  .app-shell[data-ui-build] .date-chip span { font-size:9px!important; }
+  .app-shell[data-ui-build] .dashboard-reward-body { grid-template-columns:minmax(0,1fr) 100px; }
+  .app-shell[data-ui-build] .focus-visual .character-stage,
+  .app-shell[data-ui-build] .focus-visual .character-svg { height:140px!important; }
+  .app-shell[data-ui-build] .focus-live-tools { grid-template-columns:repeat(2,minmax(0,1fr))!important; }
+  .app-shell[data-ui-build] .focus-score-live { grid-column:1/-1!important; }
   .auth-gate-backdrop .auth-gate-shell { padding-inline:16px!important; }
 }
 
 @media (max-height:540px) and (max-width:820px) and (orientation:landscape) {
-  .app-shell[data-ui-build="12.5"] .focus-visual { display:none!important; }
-  .app-shell[data-ui-build="12.5"] .mobile-appbar { position:relative!important; }
-  .app-shell[data-ui-build="12.5"] .timer-display { font-size:52px!important; }
+  .app-shell[data-ui-build] .focus-visual { display:none!important; }
+  .app-shell[data-ui-build] .mobile-appbar { position:relative!important; }
+  .app-shell[data-ui-build] .timer-display { font-size:52px!important; }
 }
 
 @media (prefers-reduced-motion:reduce) {

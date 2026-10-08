@@ -18,6 +18,20 @@ function safeRedirectUrl() {
   return url.toString();
 }
 
+
+async function reconcileAccountInBackground(offlineUserId: string, userId: string) {
+  try {
+    // Cloud-first protects an established account from fresh-device defaults.
+    await syncAll(userId);
+    await migrateOfflineDataToUser(offlineUserId, userId);
+    migrateAccountPreferences(offlineUserId, userId);
+    const result = await syncAll(userId);
+    window.dispatchEvent(new CustomEvent('studyflow:sync-complete', { detail: { userId, ok: result.ok } }));
+  } catch {
+    window.dispatchEvent(new CustomEvent('studyflow:sync-complete', { detail: { userId, ok: false } }));
+  }
+}
+
 function authErrorMessage(message: string) {
   const lower = message.toLowerCase();
   if (lower.includes('invalid login')) return 'Email or password is incorrect.';
@@ -165,17 +179,14 @@ export function AuthGate() {
     const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) { setBusy(false); setStatus(authErrorMessage(error.message)); return; }
     if (data.user) {
-      // Pull the account first, then merge any true offline work from this device.
-      // This order prevents a fresh phone's defaults from overwriting established cloud settings.
-      await syncAll(data.user.id);
-      await migrateOfflineDataToUser(offlineUserId, data.user.id);
-      migrateAccountPreferences(offlineUserId, data.user.id);
-      await syncAll(data.user.id);
+      // Do not hold the login sheet open while network reconciliation runs.
+      // Local UI opens immediately; cloud-first merge continues safely in the background.
+      void reconcileAccountInBackground(offlineUserId, data.user.id);
     }
     setBusy(false);
     localStorage.removeItem(OFFLINE_KEY);
     setOfflineAllowed(false);
-    setSuccess('Signed in. Your latest StudyFlow data is syncing to this device…');
+    setSuccess('Signed in. Sync continues quietly in the background.');
   };
 
   const signUp = async (event: FormEvent) => {
@@ -208,16 +219,12 @@ export function AuthGate() {
         setStatus(claimed.error);
         return;
       }
-      // Pull the account first, then merge any true offline work from this device.
-      // This order prevents a fresh phone's defaults from overwriting established cloud settings.
-      await syncAll(signedUpUserId);
-      await migrateOfflineDataToUser(offlineUserId, signedUpUserId);
-      migrateAccountPreferences(offlineUserId, signedUpUserId);
-      await syncAll(signedUpUserId);
+      // The account becomes usable immediately; reconciliation continues behind the UI.
+      void reconcileAccountInBackground(offlineUserId, signedUpUserId);
       window.dispatchEvent(new Event('studyflow:profile-updated'));
       localStorage.removeItem(OFFLINE_KEY);
       setOfflineAllowed(false);
-      setSuccess('Account created. Your username is reserved and your data space is private.');
+      setSuccess('Account created. Your private data is syncing in the background.');
     } else {
       setSuccess('Account created. Check your email to confirm it, then sign in. Your username is reserved.');
     }

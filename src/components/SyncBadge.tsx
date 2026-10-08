@@ -17,7 +17,9 @@ export function SyncBadge({ userId, enabled = true }: { userId: string; enabled?
       const result = await syncAll(userId);
       running.current = false;
       if (!alive) return;
-      setState(result.ok ? 'synced' : result.error === 'offline-or-cloud-disabled' || result.error === 'auth-mismatch' ? 'offline' : 'failed');
+      const nextState = result.ok ? 'synced' : result.error === 'offline-or-cloud-disabled' || result.error === 'auth-mismatch' ? 'offline' : 'failed';
+      setState(nextState);
+      window.dispatchEvent(new CustomEvent('studyflow:sync-complete', { detail: { userId, ok: result.ok } }));
     };
     const online = () => void run();
     const offline = () => setState('offline');

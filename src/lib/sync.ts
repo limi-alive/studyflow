@@ -153,7 +153,10 @@ export async function syncPending(userId: string): Promise<{ ok: boolean; count:
   return { ok: true, count };
 }
 
-export async function syncAll(userId: string): Promise<{ ok: boolean; count: number; error?: string }> {
+type SyncResult = { ok: boolean; count: number; error?: string };
+const syncFlights = new Map<string, Promise<SyncResult>>();
+
+async function runSyncAll(userId: string): Promise<SyncResult> {
   const dataResult = await syncPending(userId);
   if (!dataResult.ok) return dataResult;
   const preferenceResult = await syncAccountPreferences(userId);
@@ -161,4 +164,14 @@ export async function syncAll(userId: string): Promise<{ ok: boolean; count: num
     return { ok: false, count: dataResult.count, error: preferenceResult.error };
   }
   return { ok: true, count: dataResult.count + (preferenceResult.changed ? 1 : 0) };
+}
+
+export function syncAll(userId: string): Promise<SyncResult> {
+  const existing = syncFlights.get(userId);
+  if (existing) return existing;
+  const task = runSyncAll(userId).finally(() => {
+    if (syncFlights.get(userId) === task) syncFlights.delete(userId);
+  });
+  syncFlights.set(userId, task);
+  return task;
 }

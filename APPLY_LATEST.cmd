@@ -3,17 +3,17 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 echo ======================================================
-echo   StudyFlow - Sync + Reward + Admin v13
+echo   StudyFlow - Global League + Mobile Polish v13.4
 echo ======================================================
 echo.
 
 if not exist package.json goto :wrongfolder
 if not exist .git goto :wrongfolder
-if not exist src\App.tsx goto :missing
-if not exist src\pages\Admin.tsx goto :missing
-if not exist src\utils\reward.ts goto :missing
-if not exist src\utils\syncConflict.ts goto :missing
-if not exist supabase\migrations\005_cross_device_admin.sql goto :missing
+if not exist src\components\GlobalLeaderboardCard.tsx goto :missing
+if not exist src\hooks\usePublicLeaderboard.ts goto :missing
+if not exist src\mobile-v13-4.css goto :missing
+if not exist supabase\migrations\007_public_leaderboard.sql goto :missing
+if not exist verify-v13-4.cjs goto :missing
 
 for %%F in (APPLY_*.cmd) do (
   if /I not "%%~nxF"=="APPLY_LATEST.cmd" del /q "%%F" >nul 2>nul
@@ -39,21 +39,24 @@ echo [5/9] Building production PWA...
 call npm.cmd run build
 if errorlevel 1 goto :fail
 
-echo [6/9] Verifying v13 production files...
+echo [6/9] Running v13.4 regression checks...
+node verify-v13-4.cjs
+if errorlevel 1 goto :fail
+
+echo [7/9] Verifying production output...
 if not exist dist goto :nodist
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$needed=@('src/pages/Admin.tsx','src/utils/reward.ts','src/utils/syncConflict.ts','src/lib/sync.ts','supabase/migrations/005_cross_device_admin.sql'); foreach($f in $needed){if(-not (Test-Path $f)){Write-Host ('Missing: '+$f); exit 1}}; $files=Get-ChildItem -Path 'dist' -Recurse -File -ErrorAction SilentlyContinue; if(-not $files){exit 1}; Write-Host ('Production files: '+$files.Count); Write-Host 'v13 file check passed.'"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$files=Get-ChildItem -Path 'dist' -Recurse -File -ErrorAction SilentlyContinue; if(-not $files){exit 1}; Write-Host ('Production files: '+$files.Count)"
 if errorlevel 1 goto :fail
 
-echo [7/9] Staging v13...
-git add src supabase\migrations\005_cross_device_admin.sql ADMIN_SETUP_V13.md FEATURES_V13.md SYNC_QA_V13.md PHONE_INSTALL_V13.md APPLY_LATEST.cmd
+echo [8/9] Committing v13.4...
+git add src\components\GlobalLeaderboardCard.tsx src\components\AppShell.tsx src\components\AuthGate.tsx src\components\SyncBadge.tsx src\hooks\usePublicLeaderboard.ts src\lib\sync.ts src\main.tsx src\mobile-final-v12.css src\mobile-v13-4.css supabase\migrations\006_core_cloud_tables.sql supabase\migrations\007_public_leaderboard.sql MOBILE_QA_V13_4.md verify-v13-4.cjs APPLY_LATEST.cmd
 if errorlevel 1 goto :fail
 
-echo [8/9] Committing...
 git diff --cached --quiet
 if not errorlevel 1 (
-  echo No new v13 changes to commit.
+  echo No new v13.4 changes to commit.
 ) else (
-  git commit -m "Add cross-device sync rewards and admin dashboard"
+  git commit -m "Add global leaderboard and refine mobile experience"
   if errorlevel 1 goto :fail
 )
 
@@ -62,10 +65,10 @@ git push
 if errorlevel 1 goto :fail
 
 echo.
-echo SUCCESS: StudyFlow v13 passed lint, typecheck, tests and production build, then pushed to GitHub.
+echo SUCCESS: StudyFlow v13.4 passed lint, typecheck, tests, build and regression checks, then pushed to GitHub.
 echo.
-echo NEXT STEP: Run supabase\migrations\005_cross_device_admin.sql once in Supabase SQL Editor.
-echo Then promote your own username to admin using the command in ADMIN_SETUP_V13.md.
+echo IMPORTANT: Run supabase\migrations\007_public_leaderboard.sql once in Supabase SQL Editor.
+echo Migration 006 is included in Git now for completeness; if you already ran it successfully, do NOT need to run it again.
 echo.
 pause
 exit /b 0
@@ -77,7 +80,7 @@ pause
 exit /b 1
 
 :missing
-echo ERROR: One or more v13 patch files are missing.
+echo ERROR: One or more v13.4 patch files are missing.
 echo Extract the ZIP again and choose Replace files in destination.
 pause
 exit /b 1
