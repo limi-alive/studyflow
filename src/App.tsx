@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
 import { AppShell } from './components/AppShell';
 import { HomeGate } from './components/HomeGate';
 
@@ -15,8 +16,16 @@ const LoginPage = lazy(() => import('./pages/Login'));
 const SearchPage = lazy(() => import('./pages/Search'));
 const AdminPage = lazy(() => import('./pages/Admin'));
 
+function RouteFallback() {
+  return <div className="route-fallback" role="status" aria-live="polite">
+    <span className="route-fallback-mark"><Sparkles size={20}/></span>
+    <div className="route-fallback-copy"><strong>Opening StudyFlow</strong><small>Getting this view ready...</small></div>
+    <span className="route-fallback-line"/>
+  </div>;
+}
+
 export default function App() {
-  return <Suspense fallback={<div className="page" style={{padding:24}}>Loading…</div>}><Routes>
+  return <Suspense fallback={<RouteFallback/>}><Routes>
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/onboarding" element={<OnboardingPage/>}/>
     <Route element={<AppShell/>}>

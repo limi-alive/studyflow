@@ -166,12 +166,34 @@ async function runSyncAll(userId: string): Promise<SyncResult> {
   return { ok: true, count: dataResult.count + (preferenceResult.changed ? 1 : 0) };
 }
 
+function emitSyncState(userId: string, state: 'syncing' | 'synced' | 'failed' | 'offline', result?: SyncResult) {
+  window.dispatchEvent(new CustomEvent('studyflow:sync-state', {
+    detail: { userId, state, ok: result?.ok, error: result?.error }
+  }));
+}
+
 export function syncAll(userId: string): Promise<SyncResult> {
   const existing = syncFlights.get(userId);
   if (existing) return existing;
-  const task = runSyncAll(userId).finally(() => {
-    if (syncFlights.get(userId) === task) syncFlights.delete(userId);
-  });
+
+  emitSyncState(userId, 'syncing');
+  const task = runSyncAll(userId)
+    .then(result => {
+      const offline = result.error === 'offline-or-cloud-disabled' || result.error === 'auth-mismatch';
+      emitSyncState(userId, result.ok ? 'synced' : offline ? 'offline' : 'failed', result);
+      window.dispatchEvent(new CustomEvent('studyflow:sync-complete', { detail: { userId, ok: result.ok, error: result.error } }));
+      return result;
+    })
+    .catch(error => {
+      const result: SyncResult = { ok: false, count: 0, error: error instanceof Error ? error.message : 'sync-failed' };
+      emitSyncState(userId, 'failed', result);
+      window.dispatchEvent(new CustomEvent('studyflow:sync-complete', { detail: { userId, ok: false, error: result.error } }));
+      return result;
+    })
+    .finally(() => {
+      if (syncFlights.get(userId) === task) syncFlights.delete(userId);
+    });
+
   syncFlights.set(userId, task);
   return task;
 }

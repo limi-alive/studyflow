@@ -2,6 +2,7 @@ import { BarChart3, BookOpen, CalendarDays, Clock3, Home, Settings, UserRound, H
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SyncBadge } from './SyncBadge';
+import { BackgroundSyncNotice } from './BackgroundSyncNotice';
 import { AuthGate } from './AuthGate';
 import { SidebarRewardCard } from './SidebarRewardCard';
 import { DashboardRewardCard } from './DashboardRewardCard';
@@ -75,7 +76,7 @@ export function AppShell() {
   const openAuth = () => window.dispatchEvent(new Event('studyflow:open-auth'));
   const rewardCalendar = settings?.calendarType ?? 'gregorian';
 
-  return <div className="app-shell" data-route={routeKey} data-ui-build="13.4">
+  return <div className="app-shell" data-route={routeKey} data-ui-build="13.5">
     <aside className="sidebar studio-sidebar">
       <div className="brand studio-brand"><div className="brand-mark"><Sparkles size={18}/></div><div><strong>StudyFlow</strong><small>focus system</small></div></div>
       <nav className="studio-nav">{desktop.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'} title={label}><span className="nav-icon"><Icon size={19}/></span><span className="nav-label">{label}</span></NavLink>)}</nav>
@@ -122,6 +123,7 @@ export function AppShell() {
     <nav className="bottom-nav" aria-label="Main navigation">{mobile.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'}><span className="nav-icon"><Icon size={21}/></span><small>{label}</small></NavLink>)}</nav>
 
     {quick && <div className="modal-backdrop" onClick={() => setQuick(false)}><div className="modal quick-modal" onClick={event => event.stopPropagation()}><div className="modal-grabber"/><div className="eyebrow">{fa ? 'دسترسی سریع' : 'Quick actions'}</div><h2>{fa ? 'بعدی چیه؟' : 'What’s next?'}</h2><p className="subtle">{fa ? 'بدون گشتن بین صفحه‌ها، سریع شروع کن.' : 'Start fast without digging through menus.'}</p><div className="quick-grid"><button className="quick-action primary" onClick={() => go('/timer')}><Clock3/><span><strong>{fa ? 'شروع مطالعه' : 'Start focus'}</strong><small>{fa ? 'تایمر را باز کن' : 'Open the timer'}</small></span></button><button className="quick-action" onClick={() => go('/planner')}><CalendarDays/><span><strong>{fa ? 'افزودن کار' : 'Add task'}</strong><small>{fa ? 'برای امروز برنامه بریز' : 'Plan your day'}</small></span></button><button className="quick-action" onClick={() => go('/subjects')}><BookOpen/><span><strong>{fa ? 'افزودن درس' : 'Add subject'}</strong><small>{fa ? 'ساختار مطالعه' : 'Organize study'}</small></span></button><button className="quick-action" onClick={() => go('/search')}><Search/><span><strong>{fa ? 'جستجو' : 'Search'}</strong><small>{fa ? 'هرچیزی را پیدا کن' : 'Find anything'}</small></span></button></div></div></div>}
+    <BackgroundSyncNotice userId={userId} enabled={identity.signedIn}/>
     <AuthGate/>
   </div>;
 }

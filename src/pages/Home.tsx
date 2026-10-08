@@ -1,14 +1,14 @@
 import { useMemo, type CSSProperties } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUpRight, BookOpen, CalendarCheck2, Flame, Play, Target, Clock3, Zap, Trophy, CheckCircle2 } from 'lucide-react';
+import { ArrowUpRight, BookOpen, CalendarCheck2, Flame, Play, Target, Clock3, Zap, Trophy, CheckCircle2, Sparkles, TimerReset } from 'lucide-react';
 import { Card } from '../components/Card';
 import { TrendChart } from '../components/TrendChart';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
 import { formatAppDate, localText } from '../lib/locale';
 import { db } from '../lib/db';
-import { dailySeries, totalStudySeconds } from '../utils/stats';
+import { currentStreak, dailySeries, totalStudySeconds } from '../utils/stats';
 import { formatDuration, startOfLocalDay } from '../utils/time';
 
 export default function HomePage() {
@@ -31,6 +31,10 @@ export default function HomePage() {
   const progress = Math.min(100, (todaySeconds / Math.max(goalSeconds, 1)) * 100);
   const activeDays = new Set(sessions.map(s=>new Date(s.startTime).toLocaleDateString())).size;
   const allTimeHours = Math.round(totalStudySeconds(sessions)/3600);
+  const weeklySeconds = series.reduce((sum, item) => sum + item.seconds, 0);
+  const weekStartMs = todayStart - 6 * 86400000;
+  const weeklySessions = sessions.filter(session => new Date(session.endTime).getTime() >= weekStartMs).length;
+  const streak = currentStreak(sessions);
   const bestDay = series.reduce((best, item) => item.seconds > best.seconds ? item : best, series[0] ?? {date:'',seconds:0});
   const subjectTotals = useMemo(() => {
     const totals = new Map<string, number>();
@@ -50,6 +54,17 @@ export default function HomePage() {
       <div><div className="eyebrow">{formatAppDate(new Date(), settings, {weekday:'long',month:'long',day:'numeric'})}</div><h1>{localText(settings,'Dashboard','داشبورد')}</h1></div>
       <div className="dashboard-top-actions"><span className="live-chip"><span className="status-dot"/> {localText(settings,'Ready to focus','آماده تمرکز')}</span><button className="button primary compact" onClick={()=>navigate('/timer')}><Play size={17}/>{localText(settings,'Start session','شروع جلسه')}</button></div>
     </header>
+
+    <section className="study-pulse-strip" aria-label={localText(settings,'Study pulse','نبض مطالعه')}>
+      <div className="study-pulse-intro">
+        <span className="study-pulse-orb"><Sparkles size={17}/></span>
+        <span><small>{localText(settings,'STUDY PULSE','نبض مطالعه')}</small><strong>{progress >= 100 ? localText(settings,'Daily goal cleared','هدف امروز کامل شد') : progress >= 50 ? localText(settings,'Momentum is building','ریتمت داره شکل می‌گیره') : localText(settings,'One focused block at a time','هر بار فقط یک تمرکز')}</strong></span>
+      </div>
+      <div className="study-pulse-metric"><small>{localText(settings,'Today','امروز')}</small><strong>{formatDuration(todaySeconds)}</strong><span>{Math.round(progress)}% {localText(settings,'of goal','از هدف')}</span></div>
+      <div className="study-pulse-metric"><small>{localText(settings,'Last 7 days','۷ روز اخیر')}</small><strong>{formatDuration(weeklySeconds)}</strong><span>{weeklySessions} {localText(settings,'sessions','جلسه')}</span></div>
+      <div className="study-pulse-metric"><small>{localText(settings,'Current streak','استریک فعلی')}</small><strong>{streak} {localText(settings,'days','روز')}</strong><span>{streak ? localText(settings,'Keep the chain alive','زنجیره را حفظ کن') : localText(settings,'Start it today','امروز شروعش کن')}</span></div>
+      <button className="study-pulse-action" type="button" onClick={()=>navigate('/timer')}><TimerReset size={17}/><span><strong>{localText(settings,'Focus now','الان تمرکز کن')}</strong><small>{localText(settings,'Open timer','باز کردن تایمر')}</small></span><ArrowUpRight size={16}/></button>
+    </section>
 
     <div className="dashboard-grid">
       <section className="dashboard-main-column">
