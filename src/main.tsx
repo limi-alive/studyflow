@@ -14,6 +14,7 @@ import './mobile-final-v12.css';
 import './admin-v13.css';
 import './mobile-v13-4.css';
 import './monthly-league-v13-6.css';
+import './growth-v13-7.css';
 import './ux-v13-5.css';
 
 registerSW({ immediate: true });

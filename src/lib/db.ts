@@ -62,7 +62,7 @@ export async function ensureSettings(userId: string) {
   const existing = await db.settings.get(userId);
   if (existing) return existing;
   const settings: UserSettings = {
-    userId, language: 'en', calendarType: 'gregorian', numberFormat: 'latin', weekStart: 'monday', themeId: 'studio',
+    userId, language: 'fa', calendarType: 'jalali', numberFormat: 'persian', weekStart: 'saturday', themeId: 'studio',
     defaultTimer: 'stopwatch', pomodoroFocus: 25, pomodoroShortBreak: 5, pomodoroLongBreak: 15,
     notifications: true, haptics: true, sounds: false, reduceMotion: false, updatedAt: nowIso(), syncStatus: 'pending'
   };
