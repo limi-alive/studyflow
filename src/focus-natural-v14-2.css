@@ -1,0 +1,37 @@
+/* StudyFlow 14.2: subtle character micro-animations. Existing motion modes control intensity. */
+.character-eyelids { opacity: 0; pointer-events: none; }
+.focus-companion.state-idle .character-eyelids,
+.focus-companion.state-running .character-eyelids,
+.focus-companion.state-paused .character-eyelids {
+  animation: companion-natural-blink 7.3s steps(1, end) infinite;
+}
+.focus-companion.variant-buttercup .character-eyelids { animation-delay: -2.2s; }
+.focus-companion.variant-tom-jerry .tom-eyelids { animation-delay: -3.4s; }
+.focus-companion.variant-tom-jerry .jerry-eyelids { animation-delay: -1.2s; animation-duration: 8.4s; }
+@keyframes companion-natural-blink {
+  0%, 36%, 39%, 68%, 71%, 100% {opacity:0}
+  37%, 38%, 69%, 70% {opacity:1}
+}
+/* A slower base rhythm feels less mechanical during long focus sessions. */
+.focus-companion.state-running.variant-kuromi .kuromi-main { animation-duration: 3.25s; }
+.focus-companion.state-running.variant-kuromi .kuromi-hands { animation-duration: 1.45s; }
+.focus-companion.state-running.variant-kuromi .kuromi-page { animation-duration: 5.5s; }
+.focus-companion.state-running.variant-buttercup .buttercup-hero { animation-duration: 3.4s; }
+.focus-companion.state-running.variant-buttercup .buttercup-arm-left,
+.focus-companion.state-running.variant-buttercup .buttercup-arm-right { animation-duration: 2.9s; }
+.focus-companion.state-running.variant-tom-jerry .tom-group,
+.focus-companion.state-running.variant-tom-jerry .jerry-group { animation-duration: 3.8s; }
+.focus-companion.state-running.variant-tom-jerry .tj-book { animation-duration: 3.1s; }
+/* Settings controls reduce amplitude; do not force movement on reduced motion. */
+.focus-companion.motion-calm .character-eyelids { animation-duration: 9.5s; }
+.focus-companion.motion-lively .character-eyelids { animation-duration: 6.1s; }
+@media (prefers-reduced-motion: reduce) {
+  .focus-companion .character-eyelids { animation: none !important; opacity: 0 !important; }
+}
+html.reduce-motion .focus-companion .character-eyelids,
+html.reduce-motion .focus-companion .character-stage *,
+html.reduce-motion .focus-companion .character-glow,
+html.reduce-motion .focus-companion .companion-ambient span,
+html.reduce-motion .focus-companion .companion-orbit {
+  animation: none !important; transition: none !important;
+}

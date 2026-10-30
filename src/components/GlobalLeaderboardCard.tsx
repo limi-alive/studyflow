@@ -1,7 +1,6 @@
-import { useUiText } from '../lib/uiLanguage';
+import { useUiLanguage, useUiText } from '../lib/uiLanguage';
 import { Crown, Medal, RefreshCw, Trophy } from 'lucide-react';
 import type { PublicLeaderboardRow } from '../hooks/usePublicLeaderboard';
-import { formatAppDate } from '../lib/locale';
 
 type BoardData = {
   rows: PublicLeaderboardRow[];
@@ -10,9 +9,16 @@ type BoardData = {
   signedIn: boolean;
   refresh?: () => Promise<void>;
   periodKey?: string;
+  periodStartAt?: string;
   nextResetAt?: string;
   lastUpdatedAt?: string | null;
 };
+
+function persianPeriodDate(value: string, language: 'fa' | 'en') {
+  return new Intl.DateTimeFormat(language === 'fa' ? 'fa-IR-u-ca-persian-nu-arabext' : 'en-US-u-ca-persian-nu-latn', {
+    timeZone: 'Asia/Tehran', year: 'numeric', month: 'long', day: 'numeric'
+  }).format(new Date(value));
+}
 
 function nameOf(row: PublicLeaderboardRow) {
   return row.display_name || row.username || 'StudyFlow user';
@@ -31,13 +37,14 @@ function RankMark({ rank }: { rank: number }) {
 
 export function GlobalLeaderboardCard({ board, variant = 'sidebar' }: { board: BoardData; variant?: 'sidebar' | 'dashboard' }) {
  const uiText=useUiText();
+  const uiLanguage = useUiLanguage();
   const leaders = board.rows.slice(0, 3);
   const me = board.rows.find(row => row.is_me);
 
   return <section className={`global-leaderboard-card global-leaderboard-${variant}`} aria-label={uiText("StudyFlow monthly leaderboard")}>
     <div className="global-leaderboard-head">
       <span className="global-leaderboard-icon"><Trophy size={15}/></span>
-      <div><small>{uiText("THIS MONTH")}</small><strong>{uiText("Study League")}</strong></div>
+      <div><small>{uiLanguage === 'fa' ? 'ماه شمسی جاری' : 'Current Persian month'}</small><strong>{uiText("Study League")}</strong></div>
       {board.loading && <RefreshCw className="spin" size={13}/>}
     </div>
 
@@ -52,7 +59,7 @@ export function GlobalLeaderboardCard({ board, variant = 'sidebar' }: { board: B
 
     {me && !leaders.some(row => row.is_me) && <div className="global-leaderboard-me"><span>{uiText("Your rank")}</span><strong>#{me.rank_no} · {hours(Number(me.period_seconds))}</strong></div>}
     <div className="global-leaderboard-foot league-foot-v1364">
-      <span >{uiText("پایان دوره رتبه‌بندی:")} {board.nextResetAt ? formatAppDate(new Date(new Date(board.nextResetAt).getTime()-1)) : "—"} {uiText("(دوره فعلی میلادی)")}</span>
+      <span>{uiLanguage === 'fa' ? 'دوره لیگ:' : 'Jalali league period:'} {board.periodStartAt ? persianPeriodDate(board.periodStartAt, uiLanguage) : '—'} {uiLanguage === 'fa' ? 'تا' : 'to'} {board.nextResetAt ? persianPeriodDate(new Date(new Date(board.nextResetAt).getTime() - 1).toISOString(), uiLanguage) : '—'}</span>
       <button type="button" onClick={() => void board.refresh?.()} disabled={board.loading} title={uiText("Refresh monthly leaderboard")} aria-label={uiText("Refresh leaderboard")}>{uiText("Refresh")}</button>
     </div>
   </section>;

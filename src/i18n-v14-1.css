@@ -48,3 +48,23 @@
 @media(max-width:820px) { .dashboard-widgets-fold {display:block;padding:10px 12px;border:1px solid var(--border);background:var(--surface);border-radius:18px;margin-bottom:12px}.dashboard-widgets-fold>summary{display:flex;align-items:center;gap:8px;font-weight:750;cursor:pointer;min-height:40px}.dashboard-widgets-fold:not([open]) .dashboard-reward-mobile-host{display:none}.dashboard-widgets-fold[open] .dashboard-reward-mobile-host{display:block}  .language-setting-top {align-items:stretch;gap:16px}.language-choice {width:100%;justify-content:center}.language-choice button{flex:1}.settings-fold>summary{align-items:flex-start;flex-direction:column;gap:3px;padding:15px 16px}.settings-fold>summary:after{position:absolute;inset-inline-end:20px}.settings-fold{position:relative}.sidebar-league-container{display:none}}
 @media(max-width:390px) {.language-choice button{min-width:0}.settings-page .settings-grid {grid-template-columns:minmax(0,1fr)}.settings-page .theme-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce) {.studio-more-toggle .lucide-chevron-down,.sidebar-league-toggle .lucide-chevron-down{transition:none}}
+
+
+/* v14.2: single clean sidebar surface; retain keyboard/mouse/touch scrolling. */
+.studio-sidebar .studio-nav,
+.studio-sidebar .sidebar-league-container,
+.studio-sidebar .sidebar-league-content,
+.studio-sidebar .studio-subnav {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-x: hidden;
+  min-width: 0;
+}
+.studio-sidebar .studio-nav::-webkit-scrollbar,
+.studio-sidebar .sidebar-league-container::-webkit-scrollbar,
+.studio-sidebar .sidebar-league-content::-webkit-scrollbar,
+.studio-sidebar .studio-subnav::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.studio-sidebar .studio-nav { padding-inline-end: 0; overscroll-behavior: contain; }
+.studio-sidebar .studio-more-toggle, .studio-sidebar .sidebar-league-toggle { min-width: 0; }
+.studio-sidebar .studio-subnav { box-sizing: border-box; max-width: 100%; }
+.studio-sidebar .sidebar-league-container { overscroll-behavior: contain; }
