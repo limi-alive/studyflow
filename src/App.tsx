@@ -18,6 +18,7 @@ const SearchPage = lazy(() => import('./pages/Search'));
 const AdminPage = lazy(() => import('./pages/Admin'));
 const ProgressPage = lazy(() => import('./pages/Progress'));
 const StudyOSPage = lazy(() => import('./pages/StudyOS'));
+const StudyCoachPage = lazy(() => import('./pages/StudyCoach'));
 
 function RouteFallback() {
  const uiText=useUiText();
@@ -37,6 +38,7 @@ export default function App() {
       <Route path="timer" element={<TimerPage/>}/>
       <Route path="planner" element={<PlannerPage/>}/>
       <Route path="studyos" element={<StudyOSPage/>}/>
+      <Route path="coach" element={<StudyCoachPage/>}/>
       <Route path="stats" element={<StatsPage/>}/>
       <Route path="subjects" element={<SubjectsPage/>}/>
       <Route path="history" element={<HistoryPage/>}/>
