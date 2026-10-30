@@ -196,6 +196,10 @@ export function StudyCoachChatWidget() {
     if (!planPreview || planBusyRef.current || importedMessages.includes(planPreview.sourceIndex)) return;
     const items = planPreview.items.filter((x,i)=>x.kind === 'study' && planPreview.selected.includes(i));
     if (!items.length) return;
+    if (items.some(item=>!Number.isInteger(item.minutes)||item.minutes<5||item.minutes>240)) {
+      setPlanStatus(fa ? 'مدت هر فعالیت باید بین ۵ تا ۲۴۰ دقیقه باشد.' : 'Each duration must be 5–240 minutes.');
+      return;
+    }
     const accountAtStart = userId;
     planBusyRef.current = true;setPlanBusy(true);setPlanStatus('');
     try {
@@ -234,13 +238,19 @@ export function StudyCoachChatWidget() {
           {planBusy && <div role="status" className="sf-ai-chat-status">{fa ? 'در حال آماده‌سازی برنامه…' : 'Preparing study plan…'}</div>}
           {planPreview && <div className="sf-ai-plan-preview" role="region" aria-label={fa ? 'پیش‌نمایش برنامه' : 'Plan preview'}>
             <strong>{fa ? 'پیش‌نمایش قبل از ذخیره' : 'Review before saving'}</strong>
-            {planPreview.estimated && <small role="status">{fa ? 'این برنامه تقریبی است؛ مدل نتوانست زمان‌بندی دقیق بدهد. لطفاً درس‌ها و مدت‌ها را پیش از ذخیره بررسی کن.' : 'This is an estimated draft. Review subjects and durations before saving.'}</small>}
+            {planPreview.estimated && <small role="status">{fa ? 'مدت فعالیت‌ها پیشنهادی است و ساعت دقیقی تعیین نشده؛ پیش از ذخیره دقیقه‌ها را ویرایش یا تأیید کن.' : 'Durations are suggested. Edit the minutes before saving if needed.'}</small>}
             <small>{fa ? 'فقط کارهای انتخاب‌شده ذخیره می‌شوند. زمان استراحت فقط جهت اطلاع نمایش داده می‌شود.' : 'Only selected study tasks will be saved. Breaks are shown for reference.'}</small>
             <div className="sf-ai-plan-items">
-              {planPreview.items.map((item,i)=><label key={i} className="sf-ai-plan-row" dir="auto">
-                <input type="checkbox" disabled={planBusy || item.kind === 'break'} checked={item.kind === 'study' && planPreview.selected.includes(i)} onChange={()=>togglePlanItem(i)}/>
-                <span><b>{item.title}</b><small>{item.date ?? (fa ? 'بدون تاریخ' : 'Unscheduled')} {item.startTime ?? ''}{item.endTime ? `–${item.endTime}` : ''} · {item.minutes} {fa ? 'دقیقه' : 'min'} {item.kind === 'break' ? (fa ? '· استراحت' : '· break') : ''}</small></span>
-              </label>)}
+              {planPreview.items.map((item,i)=><div key={i} className="sf-ai-plan-row" dir="auto">
+                <label style={{display:'flex',alignItems:'flex-start',gap:8,minWidth:0,flex:1}}>
+                  <input type="checkbox" disabled={planBusy || item.kind === 'break'} checked={item.kind === 'study' && planPreview.selected.includes(i)} onChange={()=>togglePlanItem(i)}/>
+                  <span><b>{item.title}</b><small>{item.date ?? (fa ? 'بدون تاریخ' : 'Unscheduled')} {item.startTime ?? ''}{item.endTime ? `–${item.endTime}` : ''} · {item.minutes} {fa ? 'دقیقه' : 'min'}</small></span>
+                </label>
+                {planPreview.estimated && item.kind === 'study' && <input type="number" min={5} max={240} step={5} inputMode="numeric" disabled={planBusy}
+                  aria-label={fa ? `مدت پیشنهادی ${item.title} به دقیقه` : `Suggested minutes for ${item.title}`}
+                  style={{width:65,flex:'0 0 65px',padding:5,borderRadius:6,background:'transparent',color:'inherit',border:'1px solid #657184'}}
+                  value={item.minutes} onChange={e=>setPlanPreview(current=>current ? ({...current,items:current.items.map((x,j)=>j===i?{...x,minutes:Number(e.target.value)}:x)}) : null)}/>}
+              </div>)}
             </div>
             <div className="sf-ai-plan-buttons">
               <button type="button" disabled={planBusy} onClick={()=>setPlanPreview(null)}>{fa ? 'انصراف' : 'Cancel'}</button>

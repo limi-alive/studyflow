@@ -20,6 +20,12 @@ describe('AI Coach plan import safety',()=>{
     expect(rows[0].syncStatus).toBe('pending');
     expect(rows[0].estimatedMinutes).toBe(50);
   });
+  it('accepts a weekly list of 14 items without truncation',()=>{
+    const items=Array.from({length:14},(_,i)=>({...study,title:`Task ${i}`,date:'2026-11-01',startTime:null,endTime:null}));
+    expect(parseCoachPlan({tasks:items})).toHaveLength(14);
+    expect(coachPlanDeadline(items[0])).not.toBe(null);
+    expect(new Date(coachPlanDeadline(items[0])!).getHours()).toBe(23);
+  });
   it('uses a local deadline and refuses invalid wall times',()=>{
     expect(coachPlanDeadline({...study,date:null,startTime:null,endTime:null})).toBe(null);
     expect(new Date(coachPlanDeadline(study)!).getHours()).toBe(9);

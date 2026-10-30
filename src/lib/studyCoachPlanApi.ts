@@ -30,5 +30,5 @@ export async function requestCoachPlan(params: {
     throw new Error('network_error');
   }
   const payload = await response.json();
-  return {items: parseCoachPlan(payload), estimated: payload?.draftSource === 'estimated'};
+  return {items: parseCoachPlan(payload), estimated: payload?.draftSource === 'estimated' || payload?.draftSource === 'weekly_estimated'};
 }
