@@ -1,12 +1,14 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { BrainCircuit, ChevronDown, MessageCircle, Send, ShieldCheck, Trash2, X } from 'lucide-react';
+import { BrainCircuit, CalendarPlus2, Check, ChevronDown, MessageCircle, Send, ShieldCheck, Trash2, X } from 'lucide-react';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useUiLanguage } from '../lib/uiLanguage';
 import { db } from '../lib/db';
 import { anonymousCoachContext, buildCoachSnapshot } from '../utils/studyCoach';
 import { getStudyCoachEndpoint, requestStudyCoachReply, type CoachChatMessage } from '../lib/studyCoachChat';
 import { selectCoachReplyLanguage } from '../lib/studyCoachLanguage';
+import { requestCoachPlan } from '../lib/studyCoachPlanApi';
+import { saveCoachPlan, todayLocalIso, type CoachPlanItem } from '../lib/studyCoachPlan';
 import '../study-coach-chat-widget.css';
 
 /** Mounted once above route transitions: the conversation stays open while navigating. */
@@ -21,6 +23,13 @@ export function StudyCoachChatWidget() {
   const [sending, setSending] = useState(false);
   const [endpoint, setEndpoint] = useState<string | null>(null);
   const [status, setStatus] = useState('');
+  const [planPreview, setPlanPreview] = useState<{sourceIndex:number; items:CoachPlanItem[]; selected:number[]} | null>(null);
+  const [planBusy, setPlanBusy] = useState(false);
+  const [planStatus, setPlanStatus] = useState('');
+  const [importedMessages, setImportedMessages] = useState<number[]>([]);
+  const planAbortRef = useRef<AbortController | null>(null);
+  const planBusyRef = useRef(false);
+  const accountRef = useRef(userId);
   const [shareSummary, setShareSummary] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -29,6 +38,7 @@ export function StudyCoachChatWidget() {
   const abortRef = useRef<AbortController | null>(null);
   const busyRef = useRef(false);
   const lastAccountRef = useRef(userId);
+  accountRef.current = userId;
 
   useEffect(() => {
     let active = true;
@@ -46,11 +56,13 @@ export function StudyCoachChatWidget() {
     if (lastAccountRef.current === userId) return;
     lastAccountRef.current = userId;
     abortRef.current?.abort();
+    planAbortRef.current?.abort(); planBusyRef.current = false;
+    setPlanPreview(null); setPlanBusy(false); setPlanStatus(''); setImportedMessages([]);
     busyRef.current = false;
     setMessages([]); setDraft(''); setStatus(''); setShareSummary(false); setSending(false);
   }, [userId]);
 
-  useEffect(() => () => { abortRef.current?.abort(); }, []);
+  useEffect(() => () => { abortRef.current?.abort(); planAbortRef.current?.abort(); }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -93,7 +105,8 @@ export function StudyCoachChatWidget() {
     }
   };
   const clear = () => {
-    abortRef.current?.abort(); busyRef.current = false; setSending(false);
+    abortRef.current?.abort(); planAbortRef.current?.abort(); planBusyRef.current = false; setPlanBusy(false); setPlanPreview(null); setPlanStatus(''); setImportedMessages([]);
+    busyRef.current = false; setSending(false);
     setMessages([]); setStatus(''); setDraft('');
     textRef.current?.focus();
   };
@@ -149,6 +162,52 @@ export function StudyCoachChatWidget() {
     }
   };
 
+  const extractPlan = async (sourceIndex: number) => {
+    if (!endpoint || planBusyRef.current || importedMessages.includes(sourceIndex)) return;
+    const response = messages[sourceIndex];
+    const question = messages.slice(0, sourceIndex).reverse().find(m => m.role === 'user')?.content;
+    if (!question || response?.role !== 'assistant') return;
+    const accountAtStart = userId;
+    const controller = new AbortController();
+    planAbortRef.current?.abort(); planAbortRef.current = controller;
+    planBusyRef.current = true; setPlanBusy(true); setPlanStatus(''); setPlanPreview(null);
+    try {
+      const items = await requestCoachPlan({endpoint,userPrompt:question,assistantReply:response.content,
+        language:selectCoachReplyLanguage(question,messages.slice(0,sourceIndex),language),today:todayLocalIso(),signal:controller.signal});
+      if (!controller.signal.aborted && accountRef.current === accountAtStart) {
+        setPlanPreview({sourceIndex,items,selected:items.flatMap((item,i)=>item.kind === 'study' ? [i] : [])});
+      }
+    } catch (error) {
+      if (controller.signal.aborted || accountRef.current !== accountAtStart) return;
+      const code = error instanceof Error ? error.message : '';
+      setPlanStatus(code === 'no_plan' || code === 'invalid_plan'
+        ? (fa ? 'برنامه قابل‌ذخیره‌ای در پاسخ پیدا نشد. از مربی یک برنامه با درس و مدت زمان بخواه.' : 'No importable study plan was found. Ask the coach for subjects and durations.')
+        : code === 'login_required'
+          ? (fa ? 'برای ذخیره برنامه باید وارد حساب شوی.' : 'Sign in to import this plan.')
+          : (fa ? 'استخراج برنامه انجام نشد. دوباره امتحان کن.' : 'Could not extract the plan. Please retry.'));
+    } finally {
+      if (planAbortRef.current === controller) {planAbortRef.current = null;planBusyRef.current = false;setPlanBusy(false);}
+    }
+  };
+  const togglePlanItem = (index:number) => setPlanPreview(previous => previous ? ({...previous,
+    selected:previous.selected.includes(index) ? previous.selected.filter(x=>x !== index) : [...previous.selected,index]}) : null);
+  const confirmPlan = async () => {
+    if (!planPreview || planBusyRef.current || importedMessages.includes(planPreview.sourceIndex)) return;
+    const items = planPreview.items.filter((x,i)=>x.kind === 'study' && planPreview.selected.includes(i));
+    if (!items.length) return;
+    const accountAtStart = userId;
+    planBusyRef.current = true;setPlanBusy(true);setPlanStatus('');
+    try {
+      if (accountRef.current !== accountAtStart) return;
+      const count = await saveCoachPlan(items, accountAtStart);
+      setImportedMessages(previous=>[...previous,planPreview.sourceIndex]);
+      setPlanPreview(null);
+      setPlanStatus(fa ? `${count} کار به برنامه‌ریز اضافه شد. همگام‌سازی در پس‌زمینه انجام می‌شود.` : `${count} tasks added to Planner. Cloud sync will run in the background.`);
+    } catch {
+      setPlanStatus(fa ? 'ذخیره برنامه ناموفق بود؛ موردی به‌صورت ناقص اضافه نشده است.' : 'Plan could not be saved; no partial import was committed.');
+    } finally {planBusyRef.current=false;setPlanBusy(false);}
+  };
+
   const greeting = fa ? 'سلام! برای برنامه‌ریزی، تمرکز و تحلیل مطالعه چه کمکی می‌خواهی؟' : 'Hi! Ask me about planning, focus or your study progress.';
   return createPortal(
     <div className="sf-ai-chat-root" data-keyboard-open={keyboardInset > 110} dir={fa ? 'rtl' : 'ltr'} style={{ '--sf-ai-keyboard': `${keyboardInset}px` } as CSSProperties}>
@@ -161,10 +220,31 @@ export function StudyCoachChatWidget() {
         </header>
         <div className="sf-ai-chat-messages" ref={listRef} role="log" aria-live="polite" aria-relevant="additions text">
           <div className="sf-ai-chat-welcome"><span className="sf-ai-chat-welcome-icon"><BrainCircuit size={20}/></span><p>{greeting}</p></div>
-          {messages.map((message, index) => <div key={index} className={`sf-ai-chat-message ${message.role === 'user' ? 'from-user' : 'from-ai'}`}><p dir="auto">{message.content}</p></div>)}
+          {messages.map((message, index) => <div key={index} className={`sf-ai-chat-message ${message.role === 'user' ? 'from-user' : 'from-ai'}`}>
+            <p dir="auto">{message.content}</p>
+            {message.role === 'assistant' && <button type="button" className="sf-ai-plan-extract" disabled={planBusy || importedMessages.includes(index)} onClick={()=>void extractPlan(index)}>
+              {importedMessages.includes(index) ? <><Check size={14}/>{fa ? 'به برنامه‌ریز اضافه شد' : 'Added to Planner'}</> : <><CalendarPlus2 size={14}/>{fa ? 'افزودن برنامه به Planner' : 'Add plan to Planner'}</>}
+            </button>}
+          </div>)}
           {sending && <div role="status" className="sf-ai-chat-typing"><span/><span/><span/><span className="sf-ai-visually-hidden">{fa ? 'در حال پاسخ‌گویی' : 'Thinking'}</span></div>}
         </div>
         <div className="sf-ai-chat-footer">
+          {planStatus && <div role="status" className="sf-ai-chat-status">{planStatus}</div>}
+          {planBusy && <div role="status" className="sf-ai-chat-status">{fa ? 'در حال آماده‌سازی برنامه…' : 'Preparing study plan…'}</div>}
+          {planPreview && <div className="sf-ai-plan-preview" role="region" aria-label={fa ? 'پیش‌نمایش برنامه' : 'Plan preview'}>
+            <strong>{fa ? 'پیش‌نمایش قبل از ذخیره' : 'Review before saving'}</strong>
+            <small>{fa ? 'فقط کارهای انتخاب‌شده ذخیره می‌شوند. زمان استراحت فقط جهت اطلاع نمایش داده می‌شود.' : 'Only selected study tasks will be saved. Breaks are shown for reference.'}</small>
+            <div className="sf-ai-plan-items">
+              {planPreview.items.map((item,i)=><label key={i} className="sf-ai-plan-row" dir="auto">
+                <input type="checkbox" disabled={planBusy || item.kind === 'break'} checked={item.kind === 'study' && planPreview.selected.includes(i)} onChange={()=>togglePlanItem(i)}/>
+                <span><b>{item.title}</b><small>{item.date ?? (fa ? 'بدون تاریخ' : 'Unscheduled')} {item.startTime ?? ''}{item.endTime ? `–${item.endTime}` : ''} · {item.minutes} {fa ? 'دقیقه' : 'min'} {item.kind === 'break' ? (fa ? '· استراحت' : '· break') : ''}</small></span>
+              </label>)}
+            </div>
+            <div className="sf-ai-plan-buttons">
+              <button type="button" disabled={planBusy} onClick={()=>setPlanPreview(null)}>{fa ? 'انصراف' : 'Cancel'}</button>
+              <button type="button" className="is-primary" disabled={planBusy || !planPreview.selected.length} onClick={()=>void confirmPlan()}>{fa ? 'تأیید و افزودن به Planner' : 'Confirm and add to Planner'}</button>
+            </div>
+          </div>}
           {status && <div className="sf-ai-chat-status" role="status">{status}{status.includes('وارد حساب') || status.includes('Sign in') ? <button type="button" onClick={() => window.dispatchEvent(new Event('studyflow:open-auth'))}>{fa ? 'ورود' : 'Sign in'}</button> : null}</div>}
           <label className="sf-ai-chat-consent"><input type="checkbox" checked={shareSummary} onChange={event => setShareSummary(event.target.checked)} disabled={sending}/><span>{fa ? 'ارسال اختیاری خلاصه عددی مطالعه' : 'Share numeric study summary (optional)'}</span></label>
           <form className="sf-ai-chat-form" onSubmit={event => void send(event)}>
