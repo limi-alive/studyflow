@@ -15,6 +15,7 @@ import { formatDuration, timerElapsedSeconds } from '../utils/time';
 import { focusTaskDefaults, selectablePlannerTasks } from '../utils/focusPlan';
 import { FocusCompanion } from '../components/FocusCompanion';
 import { SessionSummary } from '../components/SessionSummary';
+import { FocusTaskPicker } from '../components/FocusTaskPicker';
 
 const modeMeta: Array<{id:TimerType;label:string;hint:string;icon:typeof TimerReset}> = [
   {id:'stopwatch',label:'Stopwatch',hint:'Open-ended focus',icon:TimerReset},
@@ -98,6 +99,10 @@ export default function TimerPage() {
   };
 
   useEffect(() => { setTaskId(''); setSubjectId(''); setIntent(''); }, [userId]);
+  // A task can become completed/deleted on another device while this screen stays open.
+  useEffect(() => {
+    if (taskId && taskRows && !focusTasks.some(task => task.id === taskId)) setTaskId('');
+  }, [taskId, taskRows, focusTasks]);
 
   const begin = () => {
     if (settings?.haptics && 'vibrate' in navigator) navigator.vibrate([30, 40, 30]);
@@ -192,10 +197,7 @@ export default function TimerPage() {
     {!active && <div className="timer-setup">
       <div className="mode-picker">{modeMeta.map(({id,label,hint,icon:Icon})=><button key={id} className={`mode-card ${mode===id?'active':''}`} onClick={()=>setMode(id)}><span className="mode-icon"><Icon size={20}/></span><span><strong>{label}</strong><small>{hint}</small></span></button>)}</div>
       <div className="setup-fields">
-        <label><span>{fa ? 'کارهای برنامه‌ریز' : 'Planner task'}</span><select className="input" value={focusTasks.some(task => task.id === taskId) ? taskId : ''} onChange={e=>chooseTask(e.target.value)} aria-label={fa ? 'انتخاب فعالیت مطالعه از برنامه‌ریز' : 'Select a Planner task'}>
-          <option value="">{fa ? 'تمرکز آزاد (بدون فعالیت)' : 'Free focus (no Planner task)'}</option>
-          {focusTasks.map(task=><option key={task.id} value={task.id}>{task.title} · {task.estimatedMinutes ?? 25} {fa ? 'دقیقه' : 'min'}</option>)}
-        </select></label>
+        <FocusTaskPicker tasks={focusTasks} subjects={subjects} selectedTaskId={taskId} onSelect={chooseTask} fa={fa}/>
         <label><span>{uiText("Subject")}</span><select className="input" value={subjectId} onChange={e=>{setSubjectId(e.target.value);setTaskId('');}}><option value="">{uiText("No subject")}</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
         {(mode==='countdown'||mode==='pomodoro') && <label><span>{uiText("Minutes")}</span><input className="input" type="number" min="1" max="240" value={duration} onChange={e=>setDuration(Number(e.target.value)||25)} aria-label={uiText("Minutes")}/></label>}
         {preferences.promptIntent && <label className="session-intent-field"><span>{uiText("Session intention")}</span><input className="input" value={intent} maxLength={90} onChange={event=>setIntent(event.target.value)} placeholder={uiText("What will make this session a win?")}/></label>}

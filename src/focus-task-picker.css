@@ -1,0 +1,55 @@
+/* Focus Planner task picker: isolated, theme-aware, keyboard and touch friendly. */
+.focus-task-field { display:grid;gap:7px;min-width:0; }
+.focus-task-field-label {color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;}
+.focus-task-opener {display:flex;align-items:center;gap:12px;width:100%;min-width:0;min-height:70px;padding:11px 14px;text-align:start;background:var(--surface);color:var(--text);border:1px solid var(--border-strong);border-radius:16px;transition:border-color .15s ease, background .15s ease;}
+.focus-task-opener:hover {border-color:var(--accent);background:var(--surface2);}
+.focus-task-opener-icon {display:grid;place-items:center;width:38px;height:38px;flex:none;background:color-mix(in srgb,var(--accent) 13%,var(--surface2));color:var(--accent);border-radius:12px;}
+.focus-task-opener-copy {display:grid;gap:5px;min-width:0;flex:1;}
+.focus-task-opener-copy strong {min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;line-height:1.4;}
+.focus-task-opener-copy small {color:var(--muted);font-size:11px;line-height:1.35;}
+.focus-task-opener-chevron {flex:none;color:var(--muted);}
+.focus-task-clear {display:flex;align-items:center;gap:5px;justify-self:start;background:transparent;border:0;color:var(--muted);font-size:12px;min-height:38px;padding:5px 2px;}
+.focus-task-clear:hover {color:var(--text);}
+.focus-task-backdrop {position:fixed;inset:0;z-index:10020;background:rgba(0,0,0,.68);display:flex;align-items:center;justify-content:center;padding:12px;padding-bottom:max(12px,env(safe-area-inset-bottom));overscroll-behavior:contain;}
+.focus-task-dialog {display:flex;flex-direction:column;width:min(580px,100%);max-height:min(690px,calc(100dvh - 24px));min-height:0;background:var(--surface);color:var(--text);border:1px solid var(--border-strong);border-radius:23px;box-shadow:var(--shadow-float);overflow:hidden;}
+.focus-task-dialog-head {display:flex;align-items:start;justify-content:space-between;gap:12px;padding:21px 20px 11px;flex:none;}
+.focus-task-kicker {color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.07em;}
+.focus-task-dialog h2 {font-size:18px;line-height:1.4;letter-spacing:0;margin:4px 0;}
+.focus-task-dialog p {margin:0;color:var(--muted);font-size:12px;line-height:1.55;}
+.focus-task-dismiss {display:grid;place-items:center;border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:12px;width:44px;height:44px;flex:none;}
+.focus-task-search-wrap {margin:0 20px 11px;display:flex;gap:9px;align-items:center;min-height:45px;flex:none;padding:0 12px;background:var(--surface2);border:1px solid var(--border);border-radius:13px;color:var(--muted);}
+.focus-task-search-wrap:focus-within {border-color:var(--accent);}
+.focus-task-search-wrap input {width:100%;min-width:0;height:43px;background:none;color:var(--text);outline:0;border:0;font-size:14px;}
+.focus-task-search-wrap input::placeholder {color:var(--muted);}
+.focus-task-filter {display:flex;flex-wrap:wrap;gap:7px;flex:none;padding:0 20px 12px;}
+.focus-task-filter button {display:flex;align-items:center;gap:6px;padding:7px 10px;min-height:40px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;}
+.focus-task-filter button.is-current {background:color-mix(in srgb,var(--accent) 16%,var(--surface));border-color:var(--accent);color:var(--text);}
+.focus-task-filter button span {opacity:.8;font-variant-numeric:tabular-nums;}
+.focus-task-scroll {min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;padding:4px 14px 12px;scrollbar-width:thin;}
+.focus-task-choice {width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;margin:5px 0;padding:11px 14px;text-align:start;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:14px;}
+.focus-task-choice:hover {border-color:var(--border-strong);background:var(--surface-strong);}
+.focus-task-choice.is-selected {border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface2));}
+.focus-task-choice > svg {flex:none;color:var(--accent);}
+.focus-task-choice-main {min-width:0;display:grid;gap:8px;}
+.focus-task-choice-main > strong {font-size:13px;line-height:1.55;overflow-wrap:anywhere;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.focus-task-choice-main > small {font-size:11px;color:var(--muted);}
+.focus-task-meta {display:flex;gap:6px 11px;flex-wrap:wrap;color:var(--muted);font-size:12px;line-height:1.5;}
+.focus-task-meta > span {display:inline-flex;gap:4px;align-items:center;min-width:0;}
+.focus-task-meta svg {flex:none;}
+.focus-task-free {background:color-mix(in srgb,var(--accent) 7%,var(--surface));}
+.focus-task-empty,.focus-task-limit {padding:18px 12px;text-align:center;color:var(--muted);font-size:12px;line-height:1.8;}
+.focus-task-dialog-foot {display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none;padding:12px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);}
+.focus-task-dialog-foot button {border:1px solid var(--border-strong);border-radius:10px;padding:9px 17px;background:var(--surface2);color:var(--text);font-size:12px;}
+@media (max-width:600px) {
+ .focus-task-backdrop {align-items:flex-end;padding:0;}
+ .focus-task-dialog {width:100%;max-height:min(82dvh,760px);border-radius:24px 24px 0 0;border-bottom:0;padding-bottom:env(safe-area-inset-bottom);}
+ .focus-task-dialog-head {padding:16px 16px 9px;}
+ .focus-task-dialog h2 {font-size:16px;}
+ .focus-task-search-wrap {margin:0 16px 10px;}
+ .focus-task-filter {padding:0 16px 10px;}
+ .focus-task-scroll {padding:0 10px 8px;}
+ .focus-task-dialog-foot {padding:10px 16px;}
+}
+@media (prefers-reduced-motion:reduce) {
+ .focus-task-opener {transition:none;}
+}
