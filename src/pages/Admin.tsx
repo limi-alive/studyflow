@@ -4,6 +4,7 @@ import { Card } from '../components/Card';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { supabase } from '../lib/supabase';
 import { formatDuration } from '../utils/time';
+import { persianDateLabel } from '../utils/persianCalendar';
 
 type Period = 'today' | 'week' | 'month' | 'all';
 type OverviewRow = {
@@ -41,7 +42,7 @@ function rangeFor(period: Period) {
 
 function displayName(row: OverviewRow) { return row.display_name || row.username || `User ${row.user_id.slice(0, 6)}`; }
 function compactHours(seconds: number) { return `${(Math.max(0, seconds) / 3600).toFixed(seconds >= 36000 ? 0 : 1)}h`; }
-function dateLabel(iso: string | null) { return iso ? new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)) : 'No sessions yet'; }
+function dateLabel(iso: string | null) { return iso ? persianDateLabel(iso, {month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'No sessions yet'; }
 
 export default function AdminPage() {
   const access = useAdminAccess();

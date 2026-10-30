@@ -4,6 +4,7 @@ import { useAchievements } from '../hooks/useAchievements';
 import { useMonthlyReward } from '../hooks/useMonthlyReward';
 import { useStudyReview } from '../hooks/useStudyReview';
 import { formatDuration } from '../utils/time';
+import { persianDateLabel } from '../utils/persianCalendar';
 
 function toman(value:number){return `${new Intl.NumberFormat('en-US').format(value)} Toman`;}
 
@@ -47,7 +48,7 @@ export function ProgressHub({userId,calendarType}:Props){
     <Card className="review-card monthly-wrap-card">
       <div className="reward-card-head"><div><div className="eyebrow">Monthly wrapped</div><h3><CalendarRange size={20}/> Your month in focus</h3></div><span className="wrap-spark">✦</span></div>
       <div className="wrapped-hero"><strong>{formatDuration(review.monthSeconds)}</strong><span>{review.monthSessions} sessions</span></div>
-      <div className="wrapped-grid"><div><span>Top subject</span><strong>{review.topSubject}</strong></div><div><span>Best day</span><strong>{review.bestDay}</strong></div><div><span>Peak hour</span><strong>{review.bestHour}</strong></div><div><span>Reward blocks</span><strong>{reward.earnedBlocks}</strong></div></div>
+      <div className="wrapped-grid"><div><span>Top subject</span><strong>{review.topSubject}</strong></div><div><span>Best day</span><strong>{review.bestDay === '—' ? '—' : persianDateLabel(`${review.bestDay}T12:00:00`)}</strong></div><div><span>Peak hour</span><strong>{review.bestHour}</strong></div><div><span>Reward blocks</span><strong>{reward.earnedBlocks}</strong></div></div>
     </Card>
   </section>;
 }

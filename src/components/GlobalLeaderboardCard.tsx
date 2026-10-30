@@ -1,5 +1,6 @@
 import { Crown, Medal, RefreshCw, Trophy } from 'lucide-react';
 import type { PublicLeaderboardRow } from '../hooks/usePublicLeaderboard';
+import { persianDateLabel } from '../utils/persianCalendar';
 
 type BoardData = {
   rows: PublicLeaderboardRow[];
@@ -49,7 +50,7 @@ export function GlobalLeaderboardCard({ board, variant = 'sidebar' }: { board: B
 
     {me && !leaders.some(row => row.is_me) && <div className="global-leaderboard-me"><span>Your rank</span><strong>#{me.rank_no} · {hours(Number(me.period_seconds))}</strong></div>}
     <div className="global-leaderboard-foot league-foot-v1364">
-      <span>Monthly ranking · resets on 1st (UTC)</span>
+      <span dir="rtl" lang="fa">پایان دوره رتبه‌بندی: {board.nextResetAt ? persianDateLabel(new Date(new Date(board.nextResetAt).getTime()-1)) : "—"} (دوره فعلی میلادی)</span>
       <button type="button" onClick={() => void board.refresh?.()} disabled={board.loading} title="Refresh monthly leaderboard" aria-label="Refresh leaderboard">Refresh</button>
     </div>
   </section>;

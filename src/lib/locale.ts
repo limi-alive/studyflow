@@ -1,9 +1,10 @@
 import type { UserSettings } from '../types';
 
 export function formatAppDate(value: string | Date, settings?: UserSettings, options: Intl.DateTimeFormatOptions = { year:'numeric', month:'short', day:'numeric' }) {
+  void settings;
   const date = typeof value === 'string' ? new Date(value) : value;
-  const persianCalendar = settings?.calendarType === 'jalali';
-  const locale = persianCalendar ? 'fa-IR-u-ca-persian' : settings?.language === 'fa' ? 'fa-IR' : undefined;
+  // The Iranian edition uses Jalali for every visible date; ISO data is unchanged.
+  const locale = 'fa-IR-u-ca-persian-nu-arabext';
   return new Intl.DateTimeFormat(locale, options).format(date);
 }
 
