@@ -4,6 +4,8 @@ import { Activity, CalendarDays, Clock3, Flame, Sparkles, Trophy } from 'lucide-
 import { Card } from '../components/Card';
 import { TrendChart } from '../components/TrendChart';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { useSettings } from '../hooks/useSettings';
+import { formatAppDate } from '../lib/locale';
 import { db } from '../lib/db';
 import { averageSessionSeconds, dailySeries, longestStreak, totalStudySeconds } from '../utils/stats';
 import { formatDuration } from '../utils/time';
@@ -13,6 +15,7 @@ function cutoffFor(range:Range){const d=new Date();if(range==='today')d.setHours
 
 export default function StatsPage(){
   const {userId}=useCurrentUser();
+  const settings=useSettings(userId);
   const allQuery=useLiveQuery(()=>db.sessions.where('userId').equals(userId).filter(x=>!x.deletedAt).toArray(),[userId]);
   const all=useMemo(()=>allQuery??[],[allQuery]);
   const subjects=useLiveQuery(()=>db.subjects.where('userId').equals(userId).toArray(),[userId])??[];
@@ -26,7 +29,7 @@ export default function StatsPage(){
   const activeDays=new Set(sessions.map(s=>new Date(s.startTime).toLocaleDateString('en-CA'))).size;
   const streak=longestStreak(sessions);
   const previous=series.map((item,index)=>Math.max(0,Math.round((series[Math.max(0,index-1)]?.seconds ?? item.seconds)*.82)));
-  const chartPoints=series.map((item,index)=>({label:new Date(`${item.date}T12:00:00`).toLocaleDateString('en-US',{month:'short',day:'numeric'}),value:item.seconds,compare:previous[index]}));
+  const chartPoints=series.map((item,index)=>({label:formatAppDate(new Date(`${item.date}T12:00:00`),settings,{month:'short',day:'numeric'}),value:item.seconds,compare:previous[index]}));
   const bySubject=new Map<string,number>(); sessions.forEach(s=>bySubject.set(s.subjectId??'none',(bySubject.get(s.subjectId??'none')??0)+s.studySeconds));
   const subjectRows=subjects.map(subject=>({...subject,seconds:bySubject.get(subject.id)??0})).sort((a,b)=>b.seconds-a.seconds).slice(0,6);
   const subjectMax=Math.max(...subjectRows.map(row=>row.seconds),1);
@@ -40,7 +43,7 @@ export default function StatsPage(){
       </section>
       <aside className="stats-rail">
         <Card className="insight-card"><span className="insight-icon purple"><Clock3/></span><small>Total focus</small><strong>{formatDuration(total)}</strong><span>{sessions.length} sessions</span></Card>
-        <Card className="insight-card"><span className="insight-icon yellow"><Trophy/></span><small>Best day</small><strong>{best.seconds?formatDuration(best.seconds):'—'}</strong><span>{best.date}</span></Card>
+        <Card className="insight-card"><span className="insight-icon yellow"><Trophy/></span><small>Best day</small><strong>{best.seconds?formatDuration(best.seconds):'—'}</strong><span>{best.date !== '—' ? formatAppDate(new Date(`${best.date}T12:00:00`),settings) : '—'}</span></Card>
         <Card className="insight-card"><span className="insight-icon green"><Flame/></span><small>Longest streak</small><strong>{streak} days</strong><span>{activeDays} active days</span></Card>
         <Card className="insight-card"><span className="insight-icon blue"><CalendarDays/></span><small>Average session</small><strong>{formatDuration(average)}</strong><span>per focus block</span></Card>
       </aside>

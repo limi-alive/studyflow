@@ -1,0 +1,41 @@
+/* StudyFlow growth features — scoped only to the new dashboard section. */
+.growth-hub{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:14px;margin:0 0 17px;min-width:0}
+.growth-hub>div{position:relative;isolation:isolate;overflow:hidden;min-width:0;border-radius:24px;padding:20px 21px;border:1px solid var(--border);box-shadow:0 14px 38px rgba(0,0,0,.09)}
+.growth-sprint-card{background:radial-gradient(circle at 4% 0%,color-mix(in srgb,var(--accent) 17%,transparent),transparent 60%),linear-gradient(130deg,var(--surface),color-mix(in srgb,var(--surface2) 88%,var(--surface)))}
+.growth-share-card{display:flex;flex-direction:column;background:radial-gradient(circle at 92% 4%,rgba(243,187,85,.17),transparent 57%),linear-gradient(140deg,var(--surface),color-mix(in srgb,var(--surface2) 85%,var(--surface)))}
+.growth-topline{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.growth-eyebrow{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:820;letter-spacing:.11em;color:var(--muted);min-width:0;line-height:1.5}
+.growth-eyebrow svg{color:var(--accent);flex:0 0 auto}
+.growth-count{flex:0 0 auto;font-size:22px;font-weight:850;color:var(--text);font-variant-numeric:tabular-nums}.growth-count small{color:var(--muted);font-size:12px}
+.growth-hub h2{font-size:clamp(19px,1.7vw,24px);line-height:1.2;letter-spacing:-.025em;margin:10px 0 6px;overflow-wrap:break-word}
+.growth-hub p{font-size:12px;line-height:1.5;color:var(--muted);margin:0 0 15px;max-width:46ch}
+.growth-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin:12px 0 13px}
+.growth-day{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.growth-day>span{width:100%;min-height:48px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--border) 95%,transparent);border-radius:13px;background:color-mix(in srgb,var(--surface2) 82%,transparent);color:var(--muted)}
+.growth-day.is-done>span{color:#190f2b;background:linear-gradient(135deg,#ae89fa,#d3a8ff);border-color:color-mix(in srgb,var(--accent) 42%,transparent);box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 18%,transparent)}
+.growth-day-dot{display:block;width:5px;height:5px;border-radius:99px;background:var(--muted);opacity:.6}
+.growth-day small{font-size:10px;color:var(--muted);white-space:nowrap}.growth-day.is-done small{color:var(--text);font-weight:700}
+.growth-statsline{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:0 0 15px;color:var(--muted);font-size:11px}.growth-statsline>span:first-child{display:flex;align-items:center;gap:5px}.growth-statsline svg{color:var(--accent)}
+.growth-cta{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:44px;padding:10px 13px;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--border));border-radius:13px;background:color-mix(in srgb,var(--accent) 13%,var(--surface2));color:var(--text);font-size:12px;font-weight:760;transition:background .18s ease,transform .18s ease}
+.growth-cta:hover{background:color-mix(in srgb,var(--accent) 20%,var(--surface2))}.growth-cta:active{transform:scale(.99)}
+.growth-share-icon{display:flex;align-items:center;gap:3px;width:max-content;color:#edc371;margin-bottom:11px}
+.growth-highlight{display:flex;flex-direction:column;gap:2px;padding:11px 12px;margin:auto 0 12px;border:1px solid color-mix(in srgb,var(--border) 85%,transparent);border-radius:13px;background:color-mix(in srgb,var(--surface2) 55%,transparent)}
+.growth-highlight strong{font-size:28px;line-height:1.12;font-variant-numeric:tabular-nums}.growth-highlight span{font-size:10px;color:var(--muted)}
+.growth-share-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.growth-share-actions button{display:flex;justify-content:center;align-items:center;gap:7px;min-height:43px;padding:9px 11px;background:color-mix(in srgb,var(--accent) 14%,var(--surface2));color:var(--text);font-size:11px;font-weight:750;border:1px solid color-mix(in srgb,var(--accent) 27%,var(--border));border-radius:12px;transition:background .18s ease}
+.growth-share-actions button:last-child{background:color-mix(in srgb,#f0c75b 12%,var(--surface2));border-color:color-mix(in srgb,#f0c75b 25%,var(--border))}
+.growth-share-actions button:disabled{opacity:.48;cursor:not-allowed}.growth-share-actions button:not(:disabled):hover{filter:brightness(1.13)}
+.growth-privacy{color:var(--muted);font-size:9px;line-height:1.45;margin-top:11px}
+.growth-share-link{display:flex;align-items:center;gap:4px;width:max-content;max-width:100%;color:var(--muted);font-size:9px;overflow-wrap:anywhere;margin-top:8px;text-decoration:underline;text-underline-offset:3px}
+.growth-message{margin-top:8px;font-size:11px;color:var(--accent);line-height:1.4}
+@media(max-width:1100px){.growth-hub{grid-template-columns:1fr 1fr}.growth-hub>div{padding:17px}.growth-week{gap:5px}.growth-day>span{min-height:42px}}
+@media(max-width:820px){.growth-hub{grid-template-columns:1fr;gap:10px;margin:0 0 12px}.growth-hub>div{padding:15px 16px;border-radius:20px}.growth-hub h2{font-size:19px;margin:7px 0 5px}.growth-hub p{font-size:11px;margin-bottom:10px}.growth-week{gap:6px;margin:10px 0}.growth-day>span{min-height:43px;border-radius:11px}.growth-day small{font-size:9px}.growth-count{font-size:20px}.growth-statsline{font-size:10px;margin-bottom:11px}.growth-cta{min-height:43px}.growth-share-icon{margin-bottom:8px}.growth-highlight{margin:8px 0 10px}.growth-highlight strong{font-size:24px}.growth-share-actions button{min-height:43px;font-size:11px}.growth-privacy{font-size:9px}}
+@media(max-width:355px){.growth-hub>div{padding:12px}.growth-week{gap:4px}.growth-day>span{min-height:38px}.growth-day small{font-size:8px}.growth-share-actions{gap:5px}.growth-share-actions button{gap:4px;padding:8px 4px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.growth-hub button{transition:none!important}}
+.growth-jalali-period,.growth-highlight-date{display:block;color:var(--muted);font-size:11px;line-height:1.5;unicode-bidi:isolate}
+.growth-jalali-period{margin:5px 0 7px;text-align:start}
+.growth-highlight-date{font-size:10px;margin-top:5px;text-align:start}
+.growth-day .growth-jalali-day{color:var(--text);opacity:.75;font-size:9px;margin-top:-4px}
+
+.growth-jalali-switch{display:block;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--border));background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--text);padding:7px 10px;margin:6px 0 9px;border-radius:10px;font-size:11px;line-height:1.4;text-align:center;width:100%}
+.growth-jalali-switch:focus-visible{outline:2px solid var(--accent);outline-offset:3px}

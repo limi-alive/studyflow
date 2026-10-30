@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUpRight, BookOpen, CalendarCheck2, Flame, Play, Target, Clock3, Zap, Trophy, CheckCircle2, Sparkles, TimerReset } from 'lucide-react';
 import { Card } from '../components/Card';
+import { GrowthHub } from '../components/GrowthHub';
 import { TrendChart } from '../components/TrendChart';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
@@ -42,7 +43,7 @@ export default function HomePage() {
     return subjects.map(subject => ({...subject, seconds: totals.get(subject.id) ?? 0})).sort((a,b)=>b.seconds-a.seconds).slice(0,3);
   }, [sessions, subjects]);
   const chartPoints = series.map((item,index) => ({
-    label: new Date(`${item.date}T12:00:00`).toLocaleDateString(settings?.language==='fa'?'fa-IR':'en-US',{weekday:'short'}),
+    label: formatAppDate(new Date(`${item.date}T12:00:00`),settings,{weekday:'short'}),
     value: item.seconds,
     compare: previous[index]?.seconds ?? Math.round(item.seconds * .82)
   }));
@@ -66,6 +67,8 @@ export default function HomePage() {
       <button className="study-pulse-action" type="button" onClick={()=>navigate('/timer')}><TimerReset size={17}/><span><strong>{localText(settings,'Focus now','الان تمرکز کن')}</strong><small>{localText(settings,'Open timer','باز کردن تایمر')}</small></span><ArrowUpRight size={16}/></button>
     </section>
 
+    <GrowthHub sessions={sessions} settings={settings}/>
+
     <div className="dashboard-grid">
       <section className="dashboard-main-column">
         <Card className="analytics-hero">
@@ -73,7 +76,7 @@ export default function HomePage() {
             <div><div className="eyebrow">{localText(settings,'Statistics','آمار')}</div><h2>{localText(settings,'Your focus rhythm','ریتم تمرکز تو')}</h2></div>
             <div className="range-tabs"><button className="active">Days</button><button onClick={()=>navigate('/stats')}>Weeks</button><button onClick={()=>navigate('/stats')}>Months</button></div>
           </div>
-          <div className="date-strip">{series.map((item,index)=>{const date=new Date(`${item.date}T12:00:00`);return <div className={`date-chip ${index===series.length-1?'active':''}`} key={item.date}><strong>{date.toLocaleDateString('en-US',{day:'2-digit'})}</strong><span>{date.toLocaleDateString(settings?.language==='fa'?'fa-IR':'en-US',{weekday:'short'})}</span></div>;})}</div>
+          <div className="date-strip">{series.map((item,index)=>{const date=new Date(`${item.date}T12:00:00`);return <div className={`date-chip ${index===series.length-1?'active':''}`} key={item.date}><strong>{formatAppDate(date,settings,{day:'2-digit'})}</strong><span>{formatAppDate(date,settings,{weekday:'short'})}</span></div>;})}</div>
           <TrendChart points={chartPoints}/>
           <div className="chart-legend"><span><i className="legend-solid"/> {localText(settings,'Study time','زمان مطالعه')}</span><span><i className="legend-dashed"/> {localText(settings,'Previous rhythm','ریتم قبلی')}</span></div>
         </Card>
