@@ -32,3 +32,27 @@
 @media(max-width:850px){.study-coach-layout{grid-template-columns:minmax(0,1fr)}.study-coach-side{grid-template-columns:repeat(2,minmax(0,1fr))}.study-coach-privacy{grid-column:1/-1}}
 @media(max-width:550px){.study-coach-page{gap:13px;padding-bottom:120px}.study-coach-hero{border-radius:20px;padding:20px}.study-coach-summary{gap:7px}.study-coach-summary>div{padding:11px 10px;border-radius:13px}.study-coach-summary strong{font-size:23px}.study-coach-summary small,.study-coach-summary span{font-size:10px}.study-coach-side{grid-template-columns:1fr}.study-coach-privacy{grid-column:auto}.study-coach-answer{padding:15px;gap:9px}.study-coach-answer-mark{height:30px;flex-basis:30px}.study-coach-actions{flex-direction:column;align-items:stretch}.study-coach-actions button{justify-content:center;width:100%}}
 @media(prefers-reduced-motion:reduce){.study-coach-spin{animation:none}}
+/* v15.2 AI chat — only scoped Study Coach styles. */
+.study-coach-chat{display:grid;gap:12px}
+.study-coach-chat .study-coach-section-top{margin-bottom:0}
+.study-coach-chat .study-coach-section-top h2{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.study-coach-chat-clear{display:grid;place-items:center;min-width:42px;min-height:42px;border-radius:12px;border:1px solid var(--border,#dae2ea);background:transparent;color:inherit;cursor:pointer}
+.study-coach-chat-clear:disabled{opacity:.45;cursor:default}
+.study-coach-chat-description{font-size:12px;color:var(--muted,#657487);margin:0;line-height:1.8}
+.study-coach-chat-thread{background:var(--surface2,#f4f7f9);border:1px solid var(--border,#dde5e9);border-radius:17px;padding:15px;min-height:156px;max-height:380px;overflow:auto;display:flex;flex-direction:column;align-items:stretch;gap:10px;overscroll-behavior:contain}
+.study-coach-chat-empty{align-self:center;margin:auto;text-align:center;color:var(--muted,#687a86);font-size:13px;line-height:1.8}
+.study-coach-chat-bubble{max-width:min(85%,620px);padding:11px 14px;border-radius:15px;background:var(--surface,#fff);color:inherit;border:1px solid var(--border,#dfe7eb);overflow-wrap:anywhere}
+.study-coach-chat-bubble.is-user{align-self:flex-end;background:#224c5c;color:#fff;border-color:#224c5c}
+.study-coach-chat-bubble.is-coach{align-self:flex-start}
+.study-coach-chat-bubble span{font-size:10px;opacity:.7;font-weight:750}
+.study-coach-chat-bubble p{margin:5px 0 0;font-size:13px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere}
+.study-coach-chat-wait,.study-coach-chat-hint{font-size:12px;line-height:1.8;color:var(--muted,#657487);margin:0}
+.study-coach-chat-compose{display:flex;align-items:stretch;gap:8px;min-width:0}
+.study-coach-chat-compose input{min-width:0;flex:1;min-height:48px;border:1px solid var(--border,#d9e4e9);border-radius:14px;padding:12px;background:var(--surface,#fff);color:inherit;font:inherit;font-size:13px}
+.study-coach-chat-compose button{border:0;background:#224c5c;color:#fff;min-height:48px;border-radius:13px;padding:0 15px;display:flex;gap:8px;align-items:center;cursor:pointer;font:inherit;font-size:13px}
+.study-coach-chat-compose button:disabled{opacity:.55;cursor:default}
+.study-coach-chat-consent{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.8;cursor:pointer}
+.study-coach-chat-consent input{width:17px;height:17px;flex:none;margin-top:3px;accent-color:#267a65}
+.study-coach-chat-disclaimer{margin:0;font-size:11px;line-height:1.7;color:var(--muted,#657487)}
+.study-coach-chat-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(max-width:550px){.study-coach-chat{padding:15px}.study-coach-chat-thread{padding:10px;max-height:320px}.study-coach-chat-bubble{max-width:93%}.study-coach-chat-compose button{padding:0 12px}}
