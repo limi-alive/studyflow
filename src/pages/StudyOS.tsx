@@ -22,14 +22,15 @@ function FocusGlyph({kind}:{kind: StudyOSItem['kind']}) {
 
 function TaskRow({item, order, onStart, onDone, disabled}:{item:StudyOSItem;order:number;onStart:(item:StudyOSItem)=>void;onDone:(id:string)=>void;disabled:boolean}) {
  const uiText=useUiText();
+  const fa = getUiLanguage() === 'fa';
   return <article className="studyos-plan-row">
     <div className="studyos-plan-index">{toNum(order)}</div>
     <span className={`studyos-plan-icon type-${item.kind}`}><FocusGlyph kind={item.kind}/></span>
     <div className="studyos-plan-copy"><strong>{item.title}</strong><small>{item.subtitle}</small></div>
     <span className="studyos-plan-length"><Clock3 size={13}/>{mins(item.minutes)}</span>
     <div className="studyos-plan-actions">
-      {item.kind === 'task' && item.taskId && <button type="button" className="studyos-icon-button" onClick={()=>onDone(item.taskId!)} title={uiText("علامت‌گذاری به‌عنوان انجام‌شده")} aria-label={`تکمیل ${item.title}`}><Check size={18}/></button>}
-      <button type="button" className="studyos-small-cta" onClick={()=>onStart(item)} aria-label={`شروع تمرکز برای ${item.title}`}>{uiText(disabled ? 'تایمر فعال' : 'شروع')}<Play size={14}/></button>
+      {item.kind === 'task' && item.taskId && <button type="button" className="studyos-icon-button" onClick={()=>onDone(item.taskId!)} title={uiText("علامت‌گذاری به‌عنوان انجام‌شده")} aria-label={`${fa ? 'تکمیل' : 'Complete'} ${item.title}`}><Check size={18}/></button>}
+      <button type="button" className="studyos-small-cta" onClick={()=>onStart(item)} aria-label={`${fa ? 'شروع تمرکز برای' : 'Start focus for'} ${item.title}`}>{uiText(disabled ? 'تایمر فعال' : 'شروع')}<Play size={14}/></button>
     </div>
   </article>;
 }
@@ -104,15 +105,15 @@ export default function StudyOSPage() {
   return <div className="page studyos-page" dir={language==='fa'?'rtl':'ltr'}>
     <header className="studyos-head">
       <div className="studyos-kicker"><span className="studyos-live-dot"/> {uiText("STUDY OS")} <span className="studyos-separator">/</span> {todayFormat}</div>
-      <div className="studyos-hero-row"><div><h1>{uiText("اتاق فرمان مطالعه")} <span>✦</span></h1><p>{uiText("با زمان محدودت هوشمندتر پیش برو؛ اولویت بعدی، مرورهای ضروری و آمادگی امتحان‌ها همه در یک جا.")}</p></div><button className="studyos-hero-start" onClick={()=>active?navigate('/timer'):focusItems[0]?startFocus(focusItems[0]):navigate('/timer')}><Play size={19} fill="currentColor"/> {active?'ادامه جلسه':'شروع تمرکز'} <ChevronLeft size={18}/></button></div>
+      <div className="studyos-hero-row"><div><h1>{uiText("اتاق فرمان مطالعه")} <span>✦</span></h1><p>{uiText("با زمان محدودت هوشمندتر پیش برو؛ اولویت بعدی، مرورهای ضروری و آمادگی امتحان‌ها همه در یک جا.")}</p></div><button className="studyos-hero-start" onClick={()=>active?navigate('/timer'):focusItems[0]?startFocus(focusItems[0]):navigate('/timer')}><Play size={19} fill="currentColor"/> {uiText(active?'ادامه جلسه':'شروع تمرکز')} <ChevronLeft size={18}/></button></div>
       <div className="studyos-ambient" aria-hidden="true"/>
     </header>
 
     <section className="studyos-stats" aria-label={uiText("خلاصه وضعیت مطالعه")}>
       <article><span><Focus size={17}/> {uiText("برنامه پیشنهادی")}</span><strong>{toNum(snapshot.plan.length)} <em>{uiText("بخش")}</em></strong><small>{mins(snapshot.allocated)} {uiText("از")} {mins(snapshot.capacity)}</small></article>
       <article><span><Flame size={17}/> {uiText("فعالیت این هفته")}</span><strong>{toNum(snapshot.activeDays)} <em>{uiText("روز")}</em></strong><small>{uiText("در هفت روز اخیر")}</small></article>
-      <article><span><Clock3 size={17}/> {uiText("تمرکز هفتگی")}</span><strong>{toNum(Math.round(snapshot.weeklySeconds/60))} <em>{uiText("دقیقه")}</em></strong><small>{delta===null?'هنوز دوره مقایسه نداریم':`${delta>=0?'+':''}${toNum(delta)}٪ نسبت به هفته قبل`}</small></article>
-      <article><span><CalendarClock size={17}/> {uiText("امتحان بعدی")}</span><strong>{snapshot.upcoming.length?toNum(snapshot.upcoming[0].daysLeft):'—'} <em>{snapshot.upcoming.length?'روز':'بدون تاریخ'}</em></strong><small>{snapshot.upcoming[0]?.title??'در Planner امتحان ثبت کن'}</small></article>
+      <article><span><Clock3 size={17}/> {uiText("تمرکز هفتگی")}</span><strong>{toNum(Math.round(snapshot.weeklySeconds/60))} <em>{uiText("دقیقه")}</em></strong><small>{delta===null?uiText('هنوز دوره مقایسه نداریم'):`${delta>=0?'+':''}${toNum(delta)}% ${language==='fa'?'نسبت به هفته قبل':'vs previous week'}`}</small></article>
+      <article><span><CalendarClock size={17}/> {uiText("امتحان بعدی")}</span><strong>{snapshot.upcoming.length?toNum(snapshot.upcoming[0].daysLeft):'—'} <em>{uiText(snapshot.upcoming.length?'روز':'بدون تاریخ')}</em></strong><small>{snapshot.upcoming[0]?.title??uiText('در Planner امتحان ثبت کن')}</small></article>
     </section>
 
     <nav className="studyos-tabs" aria-label={uiText("بخش‌های StudyOS")}>{tabs.map(({id,name,Icon})=><button type="button" key={id} className={tab===id?'is-active':''} aria-current={tab===id?'page':undefined} onClick={()=>setTab(id)}><Icon size={17}/><span>{name}</span></button>)}</nav>
@@ -139,7 +140,7 @@ export default function StudyOSPage() {
     </section>}
 
     {tab==='exams' && <section className="studyos-panel studyos-wide"><div className="studyos-panel-heading"><div><span className="studyos-overline">{uiText("EXAM RADAR")}</span><h2>{uiText("آمادگی امتحان‌ها")}</h2><p>{uiText("زمان باقی‌مانده و حجم مطالعه لازم را با توجه به هدفی که خودت ثبت کرده‌ای ببین.")}</p></div><CalendarClock size={24}/></div>
-      {snapshot.upcoming.length?<div className="studyos-exam-grid">{snapshot.upcoming.map(e=><article key={e.id} className="studyos-exam"><div className="studyos-exam-top"><span>{uiText(e.daysLeft<=3?'نزدیک':e.daysLeft<=7?'این هفته':'در راه')}</span><strong>{toNum(e.daysLeft)} <small>{uiText("روز مانده")}</small></strong></div><h3>{e.title}</h3><p>{formatAppDate(e.date,settings,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p><div className="studyos-exam-stats"><div><small>{uiText("مطالعه ۳۰ روز اخیر")}{e.subjectId?` ${uiText('برای این درس')}`:''}</small><strong>{mins(e.studiedMinutes)}</strong></div><div><small>{uiText("هدف باقی‌مانده")}</small><strong>{e.remainingMinutes===null?uiText('تعریف نشده'):mins(e.remainingMinutes)}</strong></div></div><div className="studyos-exam-bottom"><span>{e.dailyMinutes===null?uiText('برای محاسبه سرعت لازم، هدف ساعات امتحان را ثبت کن.'):e.remainingMinutes===0?uiText('هدف زمانی ثبت‌شده تکمیل شده.'):`${uiText('میانگین موردنیاز:')} ${mins(e.dailyMinutes)} ${uiText('در روز')}`}</span>{e.subjectId&&<button onClick={()=>startFocus({id:`exam:${e.id}`,kind:'exam',title:e.title,subtitle:'آمادگی امتحان',subjectId:e.subjectId,minutes:25,score:1})}>{uiText("تمرکز")} <Play size={14}/></button>}</div></article>)}</div>:<div className="studyos-empty"><CalendarClock size={32}/><strong>{uiText("امتحان پیش‌رو ثبت نشده")}</strong><p>{uiText("تاریخ امتحان‌ها را در Planner اضافه کن تا اینجا برنامه واقعی دریافت کنی.")}</p><button onClick={()=>navigate('/planner')}>{uiText("افزودن امتحان")} <ChevronLeft size={15}/></button></div>}
+      {snapshot.upcoming.length?<div className="studyos-exam-grid">{snapshot.upcoming.map(e=><article key={e.id} className="studyos-exam"><div className="studyos-exam-top"><span>{uiText(e.daysLeft<=3?'نزدیک':e.daysLeft<=7?'این هفته':'در راه')}</span><strong>{toNum(e.daysLeft)} <small>{uiText("روز مانده")}</small></strong></div><h3>{e.title}</h3><p>{formatAppDate(e.date,settings,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p><div className="studyos-exam-stats"><div><small>{uiText("مطالعه ۳۰ روز اخیر")}{e.subjectId?` ${uiText('برای این درس')}`:''}</small><strong>{mins(e.studiedMinutes)}</strong></div><div><small>{uiText("هدف باقی‌مانده")}</small><strong>{e.remainingMinutes===null?uiText('تعریف نشده'):mins(e.remainingMinutes)}</strong></div></div><div className="studyos-exam-bottom"><span>{e.dailyMinutes===null?uiText('برای محاسبه سرعت لازم، هدف ساعات امتحان را ثبت کن.'):e.remainingMinutes===0?uiText('هدف زمانی ثبت‌شده تکمیل شده.'):`${uiText('میانگین موردنیاز:')} ${mins(e.dailyMinutes)} ${uiText('در روز')}`}</span>{e.subjectId&&<button onClick={()=>startFocus({id:`exam:${e.id}`,kind:'exam',title:e.title,subtitle:uiText('آمادگی امتحان'),subjectId:e.subjectId,minutes:25,score:1})}>{uiText("تمرکز")} <Play size={14}/></button>}</div></article>)}</div>:<div className="studyos-empty"><CalendarClock size={32}/><strong>{uiText("امتحان پیش‌رو ثبت نشده")}</strong><p>{uiText("تاریخ امتحان‌ها را در Planner اضافه کن تا اینجا برنامه واقعی دریافت کنی.")}</p><button onClick={()=>navigate('/planner')}>{uiText("افزودن امتحان")} <ChevronLeft size={15}/></button></div>}
       <p className="studyos-note">{uiText("محاسبه هدف باقی‌مانده بر اساس مطالعه ثبت‌شده همان درس در ۳۰ روز اخیر است؛ این یک تخمین برنامه‌ریزی است، نه پیش‌بینی نمره امتحان.")}</p>
     </section>}
 

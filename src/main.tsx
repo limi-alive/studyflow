@@ -20,6 +20,7 @@ import './iran-v13-8.css';
 import './studyos-v14.css';
 import './clean-v14.css';
 import './i18n-v14-1.css';
+import './focus-natural-v14-2.css';
 import { getUiLanguage } from './lib/uiLanguage';
 document.documentElement.lang = getUiLanguage();
 document.documentElement.dir = getUiLanguage() === 'fa' ? 'rtl' : 'ltr';

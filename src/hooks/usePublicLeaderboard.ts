@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { cloudEnabled, supabase } from '../lib/supabase';
 import { useAuthIdentity } from './useAuthIdentity';
 import { useTimePulse } from './useTimePulse';
-import { utcMonthBoundsAt } from '../utils/leaderboardPeriod';
+import { jalaliLeaderboardBoundsAt } from '../utils/leaderboardPeriod';
 
 export type PublicLeaderboardRow = {
   username: string | null;
@@ -18,7 +18,7 @@ type Result = { monthKey: string; userId: string | null; rows: PublicLeaderboard
 export function usePublicLeaderboard() {
   const identity = useAuthIdentity();
   const nowMs = useTimePulse();
-  const range = utcMonthBoundsAt(nowMs);
+  const range = jalaliLeaderboardBoundsAt(nowMs);
   const [result, setResult] = useState<Result>({ monthKey: '', userId: null, rows: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +115,7 @@ export function usePublicLeaderboard() {
     refresh,
     signedIn: isSignedIn,
     periodKey: range.monthKey,
+    periodStartAt: range.start,
     nextResetAt: range.nextResetAt,
     remainingMs: range.remainingMs,
     lastUpdatedAt

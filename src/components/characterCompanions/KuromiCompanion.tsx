@@ -40,6 +40,7 @@ export function KuromiCompanion({state,motion,preview=false}:Props){
         <path d="M164 132C173 113 188 104 203 102C194 117 188 132 187 149Z" fill="#2b2730"/><path d="M276 132C267 113 252 104 237 102C246 117 252 132 253 149Z" fill="#2b2730"/>
         <g className="kuromi-face">
           <g className="character-pupils"><ellipse cx="191" cy="140" rx="7" ry="11" fill="#382a35"/><ellipse cx="249" cy="140" rx="7" ry="11" fill="#382a35"/><circle cx="189" cy="136" r="2" fill="#fff" opacity=".9"/><circle cx="247" cy="136" r="2" fill="#fff" opacity=".9"/></g>
+          <g className="character-eyelids kuromi-eyelids" aria-hidden="true"><ellipse cx="191" cy="140" rx="12" ry="14" fill="#fbf4f7"/><ellipse cx="249" cy="140" rx="12" ry="14" fill="#fbf4f7"/><path d="M180 141Q191 150 202 141M238 141Q249 150 260 141" fill="none" stroke="#382a35" strokeWidth="3.5" strokeLinecap="round"/></g>
           <path className="kuromi-mouth" d="M199 166Q220 179 241 166" fill="none" stroke="#382a35" strokeWidth="4" strokeLinecap="round"/>
           <ellipse cx="174" cy="158" rx="13" ry="6" fill="#f6b4c8" opacity=".65"/><ellipse cx="266" cy="158" rx="13" ry="6" fill="#f6b4c8" opacity=".65"/>
         </g>

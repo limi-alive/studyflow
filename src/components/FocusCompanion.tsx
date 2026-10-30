@@ -1,4 +1,4 @@
-import { useUiText } from '../lib/uiLanguage';
+import { useUiLanguage, useUiText } from '../lib/uiLanguage';
 import { useRef, type CSSProperties, type PointerEvent } from 'react';
 import type { CompanionMotion, FocusCompanionId } from '../hooks/useCompanionPreferences';
 import { companionMeta } from './companionMeta';
@@ -20,15 +20,16 @@ type Props = {
 
 export function FocusCompanion({variant,state,motion='balanced',intro=false,subject,preview=false,level=1}:Props){
  const uiText=useUiText();
+  const fa = useUiLanguage() === 'fa';
   const rootRef = useRef<HTMLDivElement>(null);
   const meta = companionMeta.find(item=>item.id===variant) ?? companionMeta[0];
   const caption = state==='running'
-    ? `${meta.name} is studying${subject ? ` · ${subject}` : ''}`
+    ? `${meta.name} ${fa ? 'در حال مطالعه است' : 'is studying'}${subject ? ` · ${subject}` : ''}`
     : state==='paused'
-      ? `${meta.name} is waiting`
+      ? `${meta.name} ${fa ? 'منتظر شروع دوباره است' : 'is waiting'}`
       : state==='celebrate'
-        ? `${meta.name}: session complete!`
-        : `${meta.name} is ready`;
+        ? `${meta.name}: ${fa ? 'جلسه تمام شد!' : 'session complete!'}`
+        : `${meta.name} ${fa ? 'آماده است' : 'is ready'}`;
 
   const scene = variant==='buttercup'
     ? <ButtercupCompanion state={state} motion={motion} preview={preview}/>
