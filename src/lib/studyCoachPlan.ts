@@ -25,7 +25,7 @@ const isTime = (v: string): boolean => /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 export function parseCoachPlan(raw: unknown): CoachPlanItem[] {
   if (!raw || typeof raw !== 'object' || !('tasks' in raw)) throw new Error('invalid_plan');
   const tasks = (raw as {tasks?:unknown}).tasks;
-  if (!Array.isArray(tasks) || tasks.length < 1 || tasks.length > 12) throw new Error('invalid_plan');
+  if (!Array.isArray(tasks) || tasks.length < 1 || tasks.length > 24) throw new Error('invalid_plan');
   const result: CoachPlanItem[] = tasks.map(row => {
     if (!row || typeof row !== 'object') throw new Error('invalid_plan');
     const x = row as Record<string, unknown>;
@@ -52,7 +52,13 @@ export function parseCoachPlan(raw: unknown): CoachPlanItem[] {
 export function coachPlanDeadline(item: CoachPlanItem): string | null {
   if (!item.date) return null;
   const time = item.endTime ?? item.startTime;
-  if (!time) return null;
+  if (!time) {
+    // A date-only Planner task is due at the end of that local calendar day.
+    // This is a due-date marker, not an invented study appointment.
+    const endOfDay = new Date(`${item.date}T23:59:00`);
+    if (Number.isNaN(endOfDay.getTime())) throw new Error('invalid_plan');
+    return endOfDay.toISOString();
+  }
   const local = new Date(`${item.date}T${time}:00`);
   if (Number.isNaN(local.getTime())) throw new Error('invalid_plan');
   // Reject nonexistent local wall-clock times (e.g. DST spring forward).
@@ -73,7 +79,7 @@ export function buildCoachPlanTasks(items: CoachPlanItem[], userId: string, subj
   return items.filter(x => x.kind === 'study').map((x): StudyTask => {
     const subject = x.subject && active.find(s => normalizeSubject(s.name) === normalizeSubject(x.subject));
     const title = subject || !x.subject ? x.title : `${x.subject}: ${x.title}`.slice(0,150);
-    const detail = [x.date && x.startTime && `${x.date} ${x.startTime}${x.endTime ? `–${x.endTime}` : ''}`, x.notes].filter(Boolean).join(' · ');
+    const detail = [x.date && x.startTime && `${x.date} ${x.startTime}${x.endTime ? `–${x.endTime}` : ''}`, x.date && !x.startTime && 'Date-only task: 23:59 is a Planner due-date marker, not a scheduled meeting time.', x.notes].filter(Boolean).join(' · ');
     return {
       id:crypto.randomUUID(), userId, subjectId:subject ? subject.id : null, topicId:null,
       title, description:detail || undefined, estimatedMinutes:x.minutes,
@@ -86,7 +92,7 @@ export function buildCoachPlanTasks(items: CoachPlanItem[], userId: string, subj
 export async function saveCoachPlan(items: CoachPlanItem[], userId: string): Promise<number> {
   const subjects = await db.subjects.where('userId').equals(userId).toArray();
   const tasks = buildCoachPlanTasks(items, userId, subjects);
-  if (!tasks.length || tasks.length > 12) throw new Error('invalid_plan');
+  if (!tasks.length || tasks.length > 24) throw new Error('invalid_plan');
   // Single IndexedDB transaction ensures no partial import. No history, rewards, or sessions modified.
   await db.transaction('rw', db.tasks, async () => { await db.tasks.bulkAdd(tasks); });
   try { requestSync(userId); } catch { /* saved locally; sync can recover on the next app cycle */ }
