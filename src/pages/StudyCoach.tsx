@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BrainCircuit, CalendarClock, ChartNoAxesCombined, ChevronLeft, Clock3, Info, Leaf, Play, RefreshCcw, ShieldCheck, Sparkles, Zap, MessageCircle, Send, Trash2 } from 'lucide-react';
+import { ArrowRight, BrainCircuit, CalendarClock, ChartNoAxesCombined, ChevronLeft, Clock3, Info, Leaf, Play, RefreshCcw, ShieldCheck, Sparkles, Zap, MessageCircle } from 'lucide-react';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useUiLanguage } from '../lib/uiLanguage';
 import { useTimePulse } from '../hooks/useTimePulse';
 import { db } from '../lib/db';
 import { useTimerStore } from '../stores/timerStore';
 import { anonymousCoachContext, buildCoachSnapshot, type CoachIntent } from '../utils/studyCoach';
-import { getStudyCoachEndpoint, requestStudyCoachReply, type CoachChatMessage } from '../lib/studyCoachChat';
 import '../study-coach-v15.css';
 
 const INTENTS: {id:CoachIntent; icon:typeof Zap; fa:string; en:string}[] = [
@@ -39,65 +38,16 @@ export default function StudyCoachPage(){
   const [generated,setGenerated]=useState('');
   const [generating,setGenerating]=useState(false);
   const [modelMessage,setModelMessage]=useState('');
-  const [chatMessages,setChatMessages]=useState<CoachChatMessage[]>([]);
-  const [chatInput,setChatInput]=useState('');
-  const [chatSending,setChatSending]=useState(false);
-  const [chatHint,setChatHint]=useState('');
-  const [cloudEndpoint,setCloudEndpoint]=useState<string | null>(null);
-  const [shareSummary,setShareSummary]=useState(false);
-  const chatAbort=useRef<AbortController | null>(null);
-  const sendingRef=useRef(false);
   const loading=tasks===undefined||subjects===undefined||sessions===undefined||exams===undefined;
   useEffect(()=>{
-    chatAbort.current?.abort();sendingRef.current=false;
-    setChatMessages([]);setChatInput('');setChatHint('');setShareSummary(false);
     setIntent('next');setGenerated('');setModelMessage('');
     try {
       const value=Number(localStorage.getItem(`studyflow.coach.capacity.${userId}`));
       setCapacity(CAPACITIES.includes(value as typeof CAPACITIES[number])?value:90);
     } catch{setCapacity(90);}
   },[userId]);
-  useEffect(()=>{let active=true;void getStudyCoachEndpoint().then(value=>{if(active)setCloudEndpoint(value);});return()=>{active=false;};},[]);
-  useEffect(()=>()=>{chatAbort.current?.abort();},[]);
   const snapshot=useMemo(()=>buildCoachSnapshot({userId,tasks:tasks??[],subjects:subjects??[],sessions:sessions??[],exams:exams??[],now:new Date(now),capacityMinutes:capacity,language:lang}),[userId,tasks,subjects,sessions,exams,now,capacity,lang]);
   const advice=snapshot.responses[intent];
-  const fallbackIntent=(question:string):CoachIntent=>{
-    if(/(?:امتحان|آزمون|exam|test)/i.test(question))return 'exam';
-    if(/(?:برنامه|schedule|plan|امروز|today)/i.test(question))return 'plan';
-    if(/(?:هفته|روند|پیشرفت|progress|week)/i.test(question))return 'momentum';
-    if(/(?:خسته|استراحت|فشار|burnout|rest|tired)/i.test(question))return 'rest';
-    return 'next';
-  };
-  const sendChat=async(event:FormEvent<HTMLFormElement>)=>{
-    event.preventDefault();
-    const question=chatInput.trim();
-    if(!question||sendingRef.current)return;
-    sendingRef.current=true;setChatSending(true);setChatInput('');setChatHint('');
-    const nextMessages:CoachChatMessage[]=[...chatMessages,{role:'user',content:question}];
-    setChatMessages(nextMessages);
-    const fallback=()=>{
-      const answer=snapshot.responses[fallbackIntent(question)];
-      setChatMessages(prev=>[...prev,{role:'assistant',content:`${answer.title}\n${answer.body}`}]);
-    };
-    try {
-      if(!cloudEndpoint){
-        fallback();
-        setChatHint(fa?'پاسخ فعلی از موتور محلی StudyFlow است؛ سرور AI هنوز تنظیم نشده.':'This answer comes from the offline StudyFlow coach; cloud AI is not configured.');
-        return;
-      }
-      const controller=new AbortController();chatAbort.current=controller;
-      const numericContext=shareSummary?anonymousCoachContext(snapshot):undefined;
-      const result=await requestStudyCoachReply({endpoint:cloudEndpoint,messages:nextMessages,language:fa?'fa':'en',numericContext,signal:controller.signal});
-      if(!controller.signal.aborted){
-        setChatMessages(prev=>[...prev,{role:'assistant',content:result.reply}]);
-        setChatHint(fa?'پاسخ هوش مصنوعی ممکن است خطا داشته باشد.':'AI suggestions can be inaccurate.');
-      }
-    }catch(error){
-      if((error as Error).name==='AbortError')return;
-      fallback();
-      setChatHint(fa?'سرویس ابری در دسترس نیست؛ پاسخ جایگزین از مربی آفلاین نمایش داده شد.':'Cloud AI is unavailable; showing offline coaching instead.');
-    }finally{chatAbort.current=null;sendingRef.current=false;setChatSending(false);}
-  };
   const changeCapacity=(value:number)=>{setCapacity(value);try{localStorage.setItem(`studyflow.coach.capacity.${userId}`,String(value));}catch{/* private browser mode */}};
   const startFocus=()=>{
     if(active){navigate('/timer');return;}
@@ -135,22 +85,10 @@ export default function StudyCoachPage(){
       <div><small>{fa?'روزهای فعال':'Active days'}</small><strong>{snapshot.activeDays.toLocaleString(fa?'fa-IR':'en-US')}</strong><span>{fa?'از ۷ روز اخیر':'of the last 7'}</span></div>
       <div><small>{fa?'برنامه پیشنهادی':'Suggested today'}</small><strong>{snapshot.allocated.toLocaleString(fa?'fa-IR':'en-US')}</strong><span>{fa?'دقیقه':'minutes'}</span></div>
     </div>
-    <section className="study-coach-chat study-coach-surface" aria-label={fa?'گفتگو با هوش مصنوعی':'AI coach chat'}>
-      <div className="study-coach-section-top"><div><span className="study-coach-section-label">{fa?'گفتگوی آزاد':'OPEN CHAT'}</span><h2><MessageCircle size={22} aria-hidden="true"/> {fa?'از مربی هوشمند بپرس':'Ask your study coach'}</h2></div><button type="button" className="study-coach-chat-clear" disabled={!chatMessages.length||chatSending} title={fa?'پاک کردن گفتگو':'Clear chat'} onClick={()=>{setChatMessages([]);setChatHint('');}}><Trash2 size={17}/></button></div>
-      <p className="study-coach-chat-description">{cloudEndpoint?(fa?'گفتگو با Qwen؛ بدون سقف روزانه پیام در خود اپ. ظرفیت سرویس ابری مستقل است.':'Chat with Qwen. StudyFlow does not set a daily message quota; cloud capacity is separate.'):(fa?'مربی محلی آماده است. پس از تنظیم سرور، چت مولد Qwen فعال می‌شود.':'Offline coaching is ready. Generative Qwen chat activates after cloud setup.')}</p>
-      <div className="study-coach-chat-thread" role="log" aria-live="polite" aria-label={fa?'پیام‌های گفتگو':'Chat messages'}>
-        {chatMessages.length===0&&<p className="study-coach-chat-empty">{fa?'مثلاً بپرس: «برای امتحان فردا چطور برنامه‌ریزی کنم؟»':'Try: “How should I plan for my next exam?”'}</p>}
-        {chatMessages.map((message,index)=><div key={index} className={`study-coach-chat-bubble ${message.role==='user'?'is-user':'is-coach'}`}><span>{message.role==='user'?(fa?'تو':'You'):(fa?'مربی':'Coach')}</span><p>{message.content}</p></div>)}
-        {chatSending&&<div className="study-coach-chat-wait" role="status">{fa?'در حال پاسخ…':'Thinking…'}</div>}
-      </div>
-      {chatHint&&<p className="study-coach-chat-hint" role="status">{chatHint}</p>}
-      <form className="study-coach-chat-compose" onSubmit={event=>void sendChat(event)}>
-        <label className="study-coach-chat-visually-hidden" htmlFor="study-coach-chat-input">{fa?'پیام شما':'Your message'}</label>
-        <input id="study-coach-chat-input" dir="auto" value={chatInput} onChange={e=>setChatInput(e.target.value)} maxLength={1600} disabled={chatSending} placeholder={fa?'درباره درس، برنامه یا تمرکزت بپرس…':'Ask about studying, planning, or focus…'}/>
-        <button type="submit" disabled={!chatInput.trim()||chatSending}><Send size={18}/>{fa?'ارسال':'Send'}</button>
-      </form>
-      {cloudEndpoint&&<label className="study-coach-chat-consent"><input type="checkbox" checked={shareSummary} onChange={e=>setShareSummary(e.target.checked)}/>{fa?'اجازه می‌دهم فقط خلاصه آماری بدون نام مطالعه‌ام همراه پیام برای AI ارسال شود.':'Send anonymized numeric study summary with my messages (optional).'}</label>}
-      <p className="study-coach-chat-disclaimer">{fa?'متن پیام‌ها در صورت فعال بودن سرور AI برای پردازش ارسال می‌شود. از ارسال اطلاعات حساس خودداری کن. تاریخچه گفتگو در فضای ابری StudyFlow ذخیره نمی‌شود.':'When enabled, chat text is sent to the AI service for processing. Avoid sensitive details. StudyFlow does not save this chat to its cloud database.'}</p>
+    <section className="study-coach-surface study-coach-open-widget" aria-label={fa?'چت با مربی هوشمند':'Chat with AI coach'}>
+      <MessageCircle size={25} aria-hidden="true"/>
+      <div><h2>{fa?'گفتگو با مربی هوشمند':'Chat with your AI coach'}</h2><p>{fa?'چت را از دکمه شناور در هر صفحه باز کن؛ گفتگو هنگام جابه‌جایی بین صفحات باقی می‌ماند.':'Use the floating button to open chat from any page. Your conversation stays open while navigating.'}</p></div>
+      <button type="button" onClick={()=>window.dispatchEvent(new Event('studyflow:open-ai-chat'))}>{fa?'باز کردن چت':'Open AI chat'}</button>
     </section>
     <div className="study-coach-layout">
       <section className="study-coach-surface" aria-label={fa?'گفتگو با مربی':'Coach guidance'}>
