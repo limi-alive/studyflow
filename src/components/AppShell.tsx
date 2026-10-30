@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SyncBadge } from './SyncBadge';
 import { BackgroundSyncNotice } from './BackgroundSyncNotice';
+import { StudyCoachChatWidget } from './StudyCoachChatWidget';
 import { AuthGate } from './AuthGate';
 import { SidebarRewardCard } from './SidebarRewardCard';
 import { DashboardRewardCard } from './DashboardRewardCard';
@@ -143,6 +144,7 @@ export function AppShell() {
 
     {quick && <div className="modal-backdrop" onClick={() => setQuick(false)}><div className="modal quick-modal" onClick={event => event.stopPropagation()}><div className="modal-grabber"/><div className="eyebrow">{fa ? 'دسترسی سریع' : 'Quick actions'}</div><h2>{fa ? 'بعدی چیه؟' : 'What’s next?'}</h2><p className="subtle">{fa ? 'بدون گشتن بین صفحه‌ها، سریع شروع کن.' : 'Start fast without digging through menus.'}</p><div className="quick-grid"><button className="quick-action primary" onClick={() => go('/timer')}><Clock3/><span><strong>{fa ? 'شروع مطالعه' : 'Start focus'}</strong><small>{fa ? 'تایمر را باز کن' : 'Open the timer'}</small></span></button><button className="quick-action" onClick={() => go('/planner')}><CalendarDays/><span><strong>{fa ? 'افزودن کار' : 'Add task'}</strong><small>{fa ? 'برای امروز برنامه بریز' : 'Plan your day'}</small></span></button><button className="quick-action" onClick={() => go('/subjects')}><BookOpen/><span><strong>{fa ? 'افزودن درس' : 'Add subject'}</strong><small>{fa ? 'ساختار مطالعه' : 'Organize study'}</small></span></button><button className="quick-action" onClick={() => go('/coach')}><Sparkles/><span><strong>{fa?'مربی مطالعه':'Study Coach'}</strong><small>{fa?'راهنمای رایگان و خصوصی':'Free private guidance'}</small></span></button><button className="quick-action" onClick={() => go('/studyos')}><BrainCircuit/><span><strong>{fa ? 'اتاق فرمان' : 'StudyOS'}</strong><small>{fa ? 'برنامه هوشمند امروز' : 'Smart daily plan'}</small></span></button><button className="quick-action" onClick={() => go('/progress')}><TrendingUp/><span><strong>{fa?'پیشرفت':'Progress'}</strong><small>{fa?'گزارش‌ها و چالش‌ها':'Recaps and challenges'}</small></span></button><button className="quick-action" onClick={() => go('/history')}><History/><span><strong>{fa?'سابقه':'History'}</strong><small>{fa?'جلسه‌های قبلی':'Past sessions'}</small></span></button><button className="quick-action" onClick={() => go('/search')}><Search/><span><strong>{fa?'جستجو':'Search'}</strong><small>{fa?'در همه بخش‌ها':'Across your study space'}</small></span></button></div></div></div>}
     <BackgroundSyncNotice userId={userId} enabled={identity.signedIn}/>
+    <StudyCoachChatWidget/>
     <AuthGate/>
   </div>;
 }
