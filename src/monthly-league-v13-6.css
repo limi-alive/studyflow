@@ -1,0 +1,6 @@
+/* A compact, accessible leaderboard refresh control; no build-version selectors. */
+.global-leaderboard-card .league-foot-v1364 { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:7px; line-height:1.35; }
+.global-leaderboard-card .league-foot-v1364 button { border:1px solid var(--border); border-radius:9px; padding:5px 9px; background:var(--surface2); color:var(--text); font:inherit; font-size:10px; cursor:pointer; }
+.global-leaderboard-card .league-foot-v1364 button:hover:not(:disabled), .global-leaderboard-card .league-foot-v1364 button:focus-visible { border-color:var(--accent); outline-offset:2px; }
+.global-leaderboard-card .league-foot-v1364 button:disabled { opacity:.5; cursor:progress; }
+@media (max-width: 380px) { .global-leaderboard-card .league-foot-v1364 { font-size:9px; } }

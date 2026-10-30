@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useTimePulse } from './useTimePulse';
 import { db } from '../lib/db';
 import { markAccountPreferencesDirty } from '../lib/accountPreferences';
 import { calculateMonthlyReward, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
@@ -30,7 +31,7 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   const sessionsQuery = useLiveQuery(() => db.sessions.where('userId').equals(userId).filter(row => !row.deletedAt).toArray(), [userId]);
   const sessions = useMemo(() => sessionsQuery ?? [], [sessionsQuery]);
   const [ledger, setLedger] = useState<RewardLedger>(() => readLedger(userId));
-  const now = new Date();
+  const now = new Date(useTimePulse());
   const key = monthKey(now, calendarType);
 
   useEffect(() => setLedger(readLedger(userId)), [userId]);

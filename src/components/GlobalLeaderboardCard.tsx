@@ -6,6 +6,10 @@ type BoardData = {
   loading: boolean;
   error: string | null;
   signedIn: boolean;
+  refresh?: () => Promise<void>;
+  periodKey?: string;
+  nextResetAt?: string;
+  lastUpdatedAt?: string | null;
 };
 
 function nameOf(row: PublicLeaderboardRow) {
@@ -44,6 +48,9 @@ export function GlobalLeaderboardCard({ board, variant = 'sidebar' }: { board: B
       : <div className="global-leaderboard-empty">No study sessions yet.</div>}
 
     {me && !leaders.some(row => row.is_me) && <div className="global-leaderboard-me"><span>Your rank</span><strong>#{me.rank_no} · {hours(Number(me.period_seconds))}</strong></div>}
-    <div className="global-leaderboard-foot">Only rank + study time are shared.</div>
+    <div className="global-leaderboard-foot league-foot-v1364">
+      <span>Monthly ranking · resets on 1st (UTC)</span>
+      <button type="button" onClick={() => void board.refresh?.()} disabled={board.loading} title="Refresh monthly leaderboard" aria-label="Refresh leaderboard">Refresh</button>
+    </div>
   </section>;
 }
