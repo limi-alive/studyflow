@@ -1,3 +1,4 @@
+import { useUiText } from '../lib/uiLanguage';
 import { createPortal } from 'react-dom';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { AtSign, CheckCircle2, Eye, EyeOff, KeyRound, LoaderCircle, LockKeyhole, Mail, ShieldCheck, Sparkles, UserPlus, X } from 'lucide-react';
@@ -41,6 +42,7 @@ function authErrorMessage(message: string) {
 }
 
 export function AuthGate() {
+ const uiText=useUiText();
   const dialogRef = useRef<HTMLDivElement>(null);
   const identity = useAuthIdentity();
   const [mode, setMode] = useState<Mode>('signin');
@@ -257,75 +259,75 @@ export function AuthGate() {
 
   if (!shouldOpen) return null;
 
-  return createPortal(<div ref={dialogRef} tabIndex={-1} className="auth-gate-backdrop" role="dialog" aria-modal="true" aria-label="StudyFlow account">
+  return createPortal(<div ref={dialogRef} tabIndex={-1} className="auth-gate-backdrop" role="dialog" aria-modal="true" aria-label={uiText("StudyFlow account")}>
     <div className="auth-gate-shell">
       <section className="auth-gate-brand-panel">
         <div className="auth-gate-orb auth-gate-orb-one" aria-hidden="true"/>
         <div className="auth-gate-orb auth-gate-orb-two" aria-hidden="true"/>
-        <span className="auth-gate-brand"><span><Sparkles size={18}/></span> StudyFlow</span>
+        <span className="auth-gate-brand"><span><Sparkles size={18}/></span> {uiText("StudyFlow")}</span>
         <div className="auth-gate-brand-copy">
-          <span className="auth-gate-kicker">YOUR PRIVATE STUDY SPACE</span>
-          <h1>One account.<br/>Your progress only.</h1>
-          <p>Sessions, subjects, rewards and settings stay separated by your account ID. You can still use StudyFlow offline.</p>
+          <span className="auth-gate-kicker">{uiText("YOUR PRIVATE STUDY SPACE")}</span>
+          <h1>{uiText("One account.")}<br/>{uiText("Your progress only.")}</h1>
+          <p>{uiText("Sessions, subjects, rewards and settings stay separated by your account ID. You can still use StudyFlow offline.")}</p>
         </div>
         <div className="auth-gate-proof">
-          <span><ShieldCheck size={17}/><b>Private data</b><small>RLS isolates each account</small></span>
-          <span><AtSign size={17}/><b>Unique username</b><small>No duplicates</small></span>
-          <span><KeyRound size={17}/><b>Secure password</b><small>Handled by Supabase Auth</small></span>
+          <span><ShieldCheck size={17}/><b>{uiText("Private data")}</b><small>{uiText("RLS isolates each account")}</small></span>
+          <span><AtSign size={17}/><b>{uiText("Unique username")}</b><small>{uiText("No duplicates")}</small></span>
+          <span><KeyRound size={17}/><b>{uiText("Secure password")}</b><small>{uiText("Handled by Supabase Auth")}</small></span>
         </div>
       </section>
 
       <section className="auth-gate-form-panel">
-        {manualOpen && <button className="auth-gate-close" type="button" onClick={() => setManualOpen(false)} aria-label="Close"><X size={18}/></button>}
-        {!canUseCloud && <div className="auth-cloud-warning"><LockKeyhole size={18}/><div><strong>Cloud account is not configured yet.</strong><span>Add the Supabase URL and anon key, then reload. Offline mode still works.</span></div></div>}
+        {manualOpen && <button className="auth-gate-close" type="button" onClick={() => setManualOpen(false)} aria-label={uiText("Close")}><X size={18}/></button>}
+        {!canUseCloud && <div className="auth-cloud-warning"><LockKeyhole size={18}/><div><strong>{uiText("Cloud account is not configured yet.")}</strong><span>{uiText("Add the Supabase URL and anon key, then reload. Offline mode still works.")}</span></div></div>}
 
         {mode === 'signin' && <>
-          <div className="auth-form-heading"><span className="auth-form-icon"><LockKeyhole size={19}/></span><div><small>WELCOME BACK</small><h2>Sign in</h2></div></div>
+          <div className="auth-form-heading"><span className="auth-form-icon"><LockKeyhole size={19}/></span><div><small>{uiText("WELCOME BACK")}</small><h2>{uiText("Sign in")}</h2></div></div>
           <form className="auth-form" onSubmit={signIn}>
-            <label><span>Email</span><div className="auth-input-wrap"><Mail size={16}/><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required/></div></label>
-            <label><span>Password</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" autoComplete="current-password" required/><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
-            <button className="auth-primary-button" disabled={busy || !canUseCloud}>{busy ? <LoaderCircle className="spin" size={17}/> : <LockKeyhole size={17}/>} Sign in</button>
+            <label><span>{uiText("Email")}</span><div className="auth-input-wrap"><Mail size={16}/><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={uiText("you@example.com")} autoComplete="email" required/></div></label>
+            <label><span>{uiText("Password")}</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder={uiText("Your password")} autoComplete="current-password" required/><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
+            <button className="auth-primary-button" disabled={busy || !canUseCloud}>{busy ? <LoaderCircle className="spin" size={17}/> : <LockKeyhole size={17}/>} {uiText("Sign in")}</button>
           </form>
-          <button className="auth-text-button" type="button" onClick={() => { setMode('forgot'); setStatus(''); setSuccess(''); }}>Forgot password?</button>
-          <div className="auth-divider"><span>or</span></div>
-          <button className="auth-secondary-button" type="button" onClick={() => { setMode('signup'); setStatus(''); setSuccess(''); setPassword(''); }}> <UserPlus size={17}/> Create a new account</button>
+          <button className="auth-text-button" type="button" onClick={() => { setMode('forgot'); setStatus(''); setSuccess(''); }}>{uiText("Forgot password?")}</button>
+          <div className="auth-divider"><span>{uiText("or")}</span></div>
+          <button className="auth-secondary-button" type="button" onClick={() => { setMode('signup'); setStatus(''); setSuccess(''); setPassword(''); }}> <UserPlus size={17}/> {uiText("Create a new account")}</button>
         </>}
 
         {mode === 'signup' && <>
-          <div className="auth-form-heading"><span className="auth-form-icon"><UserPlus size={19}/></span><div><small>NEW STUDYFLOW ID</small><h2>Create account</h2></div></div>
+          <div className="auth-form-heading"><span className="auth-form-icon"><UserPlus size={19}/></span><div><small>{uiText("NEW STUDYFLOW ID")}</small><h2>{uiText("Create account")}</h2></div></div>
           <form className="auth-form" onSubmit={signUp}>
-            <label><span>Username</span><div className={`auth-input-wrap username ${usernameState}`}><AtSign size={16}/><input value={username} onChange={e => { setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')); setUsernameState('idle'); }} maxLength={24} placeholder="your_username" autoComplete="username" required/><button type="button" className="username-check-button" onClick={() => void checkUsername()}>{usernameState === 'checking' ? <LoaderCircle className="spin" size={15}/> : usernameState === 'available' ? <CheckCircle2 size={15}/> : 'Check'}</button></div><small className="auth-field-note">3–24 characters · letters, numbers and underscore</small></label>
-            <label><span>Email</span><div className="auth-input-wrap"><Mail size={16}/><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required/></div></label>
-            <label><span>Password</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="8+ characters" autoComplete="new-password" required/><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
-            <label><span>Confirm password</span><div className="auth-input-wrap"><ShieldCheck size={16}/><input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat password" autoComplete="new-password" required/></div></label>
-            <button className="auth-primary-button" disabled={busy || !canUseCloud}>{busy ? <LoaderCircle className="spin" size={17}/> : <UserPlus size={17}/>} Create private account</button>
+            <label><span>{uiText("Username")}</span><div className={`auth-input-wrap username ${usernameState}`}><AtSign size={16}/><input value={username} onChange={e => { setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')); setUsernameState('idle'); }} maxLength={24} placeholder={uiText("your_username")} autoComplete="username" required/><button type="button" className="username-check-button" onClick={() => void checkUsername()}>{usernameState === 'checking' ? <LoaderCircle className="spin" size={15}/> : usernameState === 'available' ? <CheckCircle2 size={15}/> : 'Check'}</button></div><small className="auth-field-note">{uiText("3–24 characters · letters, numbers and underscore")}</small></label>
+            <label><span>{uiText("Email")}</span><div className="auth-input-wrap"><Mail size={16}/><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={uiText("you@example.com")} autoComplete="email" required/></div></label>
+            <label><span>{uiText("Password")}</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder={uiText("8+ characters")} autoComplete="new-password" required/><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
+            <label><span>{uiText("Confirm password")}</span><div className="auth-input-wrap"><ShieldCheck size={16}/><input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder={uiText("Repeat password")} autoComplete="new-password" required/></div></label>
+            <button className="auth-primary-button" disabled={busy || !canUseCloud}>{busy ? <LoaderCircle className="spin" size={17}/> : <UserPlus size={17}/>} {uiText("Create private account")}</button>
           </form>
-          <button className="auth-text-button" type="button" onClick={() => { setMode('signin'); setStatus(''); setSuccess(''); }}>Already have an account? Sign in</button>
+          <button className="auth-text-button" type="button" onClick={() => { setMode('signin'); setStatus(''); setSuccess(''); }}>{uiText("Already have an account? Sign in")}</button>
         </>}
 
         {mode === 'forgot' && <>
-          <div className="auth-form-heading"><span className="auth-form-icon"><Mail size={19}/></span><div><small>RECOVER ACCESS</small><h2>Reset password</h2></div></div>
-          <p className="auth-form-copy">Enter the email used for this account. Supabase will send a secure recovery link.</p>
+          <div className="auth-form-heading"><span className="auth-form-icon"><Mail size={19}/></span><div><small>{uiText("RECOVER ACCESS")}</small><h2>{uiText("Reset password")}</h2></div></div>
+          <p className="auth-form-copy">{uiText("Enter the email used for this account. Supabase will send a secure recovery link.")}</p>
           <form className="auth-form" onSubmit={requestReset}>
-            <label><span>Email</span><div className="auth-input-wrap"><Mail size={16}/><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required/></div></label>
-            <button className="auth-primary-button" disabled={busy || !canUseCloud}>{busy ? <LoaderCircle className="spin" size={17}/> : <Mail size={17}/>} Send recovery link</button>
+            <label><span>{uiText("Email")}</span><div className="auth-input-wrap"><Mail size={16}/><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={uiText("you@example.com")} autoComplete="email" required/></div></label>
+            <button className="auth-primary-button" disabled={busy || !canUseCloud}>{busy ? <LoaderCircle className="spin" size={17}/> : <Mail size={17}/>} {uiText("Send recovery link")}</button>
           </form>
-          <button className="auth-text-button" type="button" onClick={() => { setMode('signin'); setStatus(''); setSuccess(''); }}>Back to sign in</button>
+          <button className="auth-text-button" type="button" onClick={() => { setMode('signin'); setStatus(''); setSuccess(''); }}>{uiText("Back to sign in")}</button>
         </>}
 
         {mode === 'new-password' && <>
-          <div className="auth-form-heading"><span className="auth-form-icon"><KeyRound size={19}/></span><div><small>SECURE RECOVERY</small><h2>Choose a new password</h2></div></div>
+          <div className="auth-form-heading"><span className="auth-form-icon"><KeyRound size={19}/></span><div><small>{uiText("SECURE RECOVERY")}</small><h2>{uiText("Choose a new password")}</h2></div></div>
           <form className="auth-form" onSubmit={updateRecoveredPassword}>
-            <label><span>New password</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="8+ characters" autoComplete="new-password" required/></div></label>
-            <label><span>Confirm password</span><div className="auth-input-wrap"><ShieldCheck size={16}/><input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat password" autoComplete="new-password" required/></div></label>
-            <button className="auth-primary-button" disabled={busy}>{busy ? <LoaderCircle className="spin" size={17}/> : <CheckCircle2 size={17}/>} Save new password</button>
+            <label><span>{uiText("New password")}</span><div className="auth-input-wrap"><KeyRound size={16}/><input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder={uiText("8+ characters")} autoComplete="new-password" required/></div></label>
+            <label><span>{uiText("Confirm password")}</span><div className="auth-input-wrap"><ShieldCheck size={16}/><input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder={uiText("Repeat password")} autoComplete="new-password" required/></div></label>
+            <button className="auth-primary-button" disabled={busy}>{busy ? <LoaderCircle className="spin" size={17}/> : <CheckCircle2 size={17}/>} {uiText("Save new password")}</button>
           </form>
         </>}
 
-        {status && <div className="auth-message error">{status}</div>}
-        {success && <div className="auth-message success"><CheckCircle2 size={16}/>{success}</div>}
+        {status && <div className="auth-message error">{uiText(status)}</div>}
+        {success && <div className="auth-message success"><CheckCircle2 size={16}/>{uiText(success)}</div>}
 
-        {mode !== 'new-password' && <button className="auth-offline-button" type="button" onClick={continueOffline}>Continue offline <span>Local data stays on this device</span></button>}
+        {mode !== 'new-password' && <button className="auth-offline-button" type="button" onClick={continueOffline}>{uiText("Continue offline")} <span>{uiText("Local data stays on this device")}</span></button>}
       </section>
     </div>
   </div>, document.body);

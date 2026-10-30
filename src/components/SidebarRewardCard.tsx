@@ -1,3 +1,4 @@
+import { useUiText } from '../lib/uiLanguage';
 import { ArrowUpRight, Banknote, Gift, Sparkles } from 'lucide-react';
 import { useMonthlyReward } from '../hooks/useMonthlyReward';
 
@@ -13,25 +14,26 @@ function compactToman(value: number) {
 }
 
 export function SidebarRewardCard({ userId, calendarType, onOpenDetails }: Props) {
+ const uiText=useUiText();
   const reward = useMonthlyReward(userId, calendarType);
   const percent = Math.max(0, Math.min(100, reward.progress * 100));
   const blockHours = reward.monthlyHours % reward.hoursPerReward;
   const remainingHours = Math.max(0, reward.nextMilestoneSeconds / 3600);
   const ready = reward.unpaidBlocks > 0;
 
-  return <button type="button" className={`sidebar-reward-card ${ready ? 'is-ready' : ''}`} onClick={onOpenDetails} aria-label="Open monthly reward details">
+  return <button type="button" className={`sidebar-reward-card ${ready ? 'is-ready' : ''}`} onClick={onOpenDetails} aria-label={uiText("Open monthly reward details")}>
     <span className="sidebar-reward-glow" aria-hidden="true"/>
     <span className="sidebar-reward-top">
       <span className="sidebar-reward-icon"><Gift size={15}/></span>
-      <span className="sidebar-reward-label">Monthly reward</span>
+      <span className="sidebar-reward-label">{uiText("Monthly reward")}</span>
       <ArrowUpRight size={14}/>
     </span>
-    <span className="sidebar-reward-value"><Banknote size={16}/><strong>{compactToman(reward.earnedToman)}</strong><small> Toman earned</small></span>
+    <span className="sidebar-reward-value"><Banknote size={16}/><strong>{compactToman(reward.earnedToman)}</strong><small> {uiText("Toman earned")}</small></span>
     <span className="sidebar-reward-progress" aria-hidden="true"><i style={{ width: `${percent}%` }}/></span>
     <span className="sidebar-reward-meta">
-      <span><b>{blockHours.toFixed(1)}h</b> / {reward.hoursPerReward}h</span>
-      <span>{ready ? <><Sparkles size={12}/> {compactToman(reward.outstandingToman)} Toman ready</> : <><b>{remainingHours.toFixed(1)}h</b> to +5M</>}</span>
-      <span><b>{new Intl.NumberFormat('en-US').format(Math.round(reward.tomanPerHour))}</b> / hour</span>
+      <span><b>{blockHours.toFixed(1)}{uiText("h")}</b> / {reward.hoursPerReward}{uiText("h")}</span>
+      <span>{ready ? <><Sparkles size={12}/> {compactToman(reward.outstandingToman)} {uiText("Toman ready")}</> : <><b>{remainingHours.toFixed(1)}{uiText("h")}</b> {uiText("to +5M")}</>}</span>
+      <span><b>{new Intl.NumberFormat('en-US').format(Math.round(reward.tomanPerHour))}</b> {uiText("/ hour")}</span>
     </span>
   </button>;
 }

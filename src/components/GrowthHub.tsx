@@ -1,3 +1,4 @@
+import { useUiText, useUiLanguage, formatUiNumber } from '../lib/uiLanguage';
 import { useMemo, useState } from 'react';
 import { ArrowRight, Check, CheckCircle2, Copy, Flame, Share2, Sparkles, Trophy, UsersRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -16,14 +17,14 @@ function hoursLabel(seconds: number) {
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
 
-function makeShareImage(summary: SprintSummary): Promise<File> {
+function makeShareImage(summary: SprintSummary, language:'fa'|'en'): Promise<File> {
   const canvas = document.createElement('canvas');
   canvas.width = 1080;
   canvas.height = 1350;
   const ctx = canvas.getContext('2d');
   if (!ctx) return Promise.reject(new Error('Canvas is not available'));
   const { width: w, height: h } = canvas;
-  const persianDates = jalaliRange(summary.days.map(day => day.key));
+  const persianDates = language==='fa'?jalaliRange(summary.days.map(day=>day.key)):summary.days.map(day=>new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric'}).format(new Date(`${day.key}T12:00:00`))).filter((_,i,a)=>i===0||i===a.length-1).join(' to ');
   const gradient = ctx.createLinearGradient(0, 0, w, h);
   gradient.addColorStop(0, '#111222');
   gradient.addColorStop(.55, '#17142a');
@@ -44,26 +45,26 @@ function makeShareImage(summary: SprintSummary): Promise<File> {
   };
   ctx.fillStyle = '#f6edff'; ctx.font = 'bold 38px system-ui'; ctx.fillText('✦  StudyFlow', 90, 124);
   rounded(88,192,904,2,1,'rgba(255,255,255,.14)');
-  ctx.fillStyle = '#b5a7cb'; ctx.font='600 31px system-ui'; ctx.fillText('MY FOCUS RECAP', 92, 292);
+  ctx.fillStyle = '#b5a7cb'; ctx.font='600 31px system-ui'; ctx.fillText(language==='fa'?'گزارش تمرکز من':'MY FOCUS RECAP', 92, 292);
   ctx.fillStyle='#faf6ff'; ctx.font='bold 112px system-ui'; ctx.fillText(hoursLabel(summary.totalSeconds), 88, 430);
-  ctx.fillStyle='#c9bdd8'; ctx.font='35px system-ui'; ctx.fillText('of intentional study in the last 7 days',92,505);
-  ctx.font='30px system-ui'; ctx.fillText('Jalali dates / تاریخ شمسی',92,545);
+  ctx.fillStyle='#c9bdd8'; ctx.font='35px system-ui'; ctx.fillText(language==='fa'?'مطالعه هدفمند در ۷ روز اخیر':'of intentional study in the last 7 days',92,505);
+  ctx.font='30px system-ui'; ctx.fillText(language==='fa'?'تاریخ شمسی':'Study period',92,545);
 
   rounded(88,570,904,363,36,'rgba(255,255,255,.075)');
-  ctx.fillStyle='#f6e6ff'; ctx.font='bold 38px system-ui'; ctx.fillText('7-DAY FOCUS SPRINT',123,650);
+  ctx.fillStyle='#f6e6ff'; ctx.font='bold 38px system-ui'; ctx.fillText(language==='fa'?'چالش ۷ روز تمرکز':'7-DAY FOCUS SPRINT',123,650);
   for (let i=0;i<7;i++) {
     const d=summary.days[i];
     const x=122+i*121;
     rounded(x,696,103,113,21,d.complete?'#a780ff':'#302b43');
     ctx.fillStyle=d.complete?'#1b122f':'#baa9cc';
     ctx.font='bold 31px system-ui'; ctx.textAlign='center'; ctx.fillText(d.complete?'✓':'·',x+51,760); ctx.textAlign='left';
-    ctx.font='24px system-ui';ctx.fillStyle='#ded3ed';ctx.textAlign='center';ctx.fillText(jalaliLabel(d.key,{weekday:'short'}),x+51,847);ctx.textAlign='left';
+    ctx.font='24px system-ui';ctx.fillStyle='#ded3ed';ctx.textAlign='center';ctx.fillText(new Intl.DateTimeFormat(language==='fa'?'fa-IR-u-ca-persian':'en-US',{weekday:'short'}).format(new Date(`${d.key}T12:00:00`)),x+51,847);ctx.textAlign='left';
   }
-  ctx.font='600 29px system-ui';ctx.fillStyle='#ded3ed';ctx.fillText(`${summary.completedDays} / 7 days completed`,122,892);
+  ctx.font='600 29px system-ui';ctx.fillStyle='#ded3ed';ctx.fillText(language==='fa'?`${formatUiNumber(summary.completedDays)} از ۷ روز کامل`:`${summary.completedDays} / 7 days completed`,122,892);
   ctx.font='24px system-ui';ctx.fillStyle='#ccb9e6';ctx.fillText(persianDates,122,925);
 
-  ctx.fillStyle='#f8e6fc';ctx.font='bold 42px system-ui';ctx.fillText('Small steps. Strong focus.',93,1063);
-  ctx.fillStyle='#b9abc8';ctx.font='30px system-ui';ctx.fillText('Start your own focus journey',93,1131);
+  ctx.fillStyle='#f8e6fc';ctx.font='bold 42px system-ui';ctx.fillText(language==='fa'?'قدم‌های کوچک، تمرکز بزرگ':'Small steps. Strong focus.',93,1063);
+  ctx.fillStyle='#b9abc8';ctx.font='30px system-ui';ctx.fillText(language==='fa'?'مسیر تمرکز خودت را شروع کن':'Start your own focus journey',93,1131);
   rounded(91,1184,898,85,25,'#9b78f3');
   ctx.fillStyle='#100b1b';ctx.font='bold 31px system-ui';ctx.textAlign='center';ctx.fillText('limi-alive.github.io/studyflow',540,1238);ctx.textAlign='left';
 
@@ -85,12 +86,14 @@ async function saveImage(file: File) {
 }
 
 export function GrowthHub({ sessions, settings }: { sessions: StudySession[]; settings?: UserSettings }) {
+ const uiText=useUiText();
+  const language=useUiLanguage();
   const navigate = useNavigate();
   const nowMs = useTimePulse();
   const summary = useMemo(() => studySprint(sessions, new Date(nowMs)), [sessions, nowMs]);
   const [message, setMessage] = useState('');
   const [sharing, setSharing] = useState(false);
-  const fa = settings?.language === 'fa';
+  const fa = language === 'fa';
 
   async function enableJalaliCalendar() {
     if (!settings) return;
@@ -105,7 +108,7 @@ export function GrowthHub({ sessions, settings }: { sessions: StudySession[]; se
     if (sharing || !summary.totalSeconds) return;
     setSharing(true); setMessage('');
     try {
-      const file = await makeShareImage(summary);
+      const file = await makeShareImage(summary, language);
       const text = shareSummaryText(summary, fa ? 'fa' : 'en');
       const shareData: ShareData = { title: 'My StudyFlow focus recap', text, files: [file] };
       if (navigator.share && navigator.canShare?.({files:[file]})) {
@@ -141,14 +144,14 @@ export function GrowthHub({ sessions, settings }: { sessions: StudySession[]; se
     <div className="growth-sprint-card">
       <div className="growth-topline"><span className="growth-eyebrow"><Flame size={14}/>{localText(settings,'7-DAY FOCUS SPRINT','چالش ۷ روزه تمرکز')}</span><span className="growth-count">{summary.completedDays}<small>/7</small></span></div>
       <h2>{localText(settings,'Build a focus streak','ریتم مطالعه‌ات را بساز')}</h2>
-      <div className="growth-jalali-period" lang="fa" dir="rtl">{jalaliRange(summary.days.map(day => day.key))}</div>
-      {settings?.calendarType === 'gregorian' && <button className="growth-jalali-switch" type="button" onClick={() => void enableJalaliCalendar()}>فعال‌کردن تقویم شمسی برای همه تاریخ‌های اپ</button>}
+      <div className="growth-jalali-period" >{language==='fa'?jalaliRange(summary.days.map(day => day.key)):summary.days.map(day=>new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric'}).format(new Date(`${day.key}T12:00:00`))).filter((_,i,a)=>i===0||i===a.length-1).join(' to ')}</div>
+      {settings?.calendarType === 'gregorian' && <button className="growth-jalali-switch" type="button" onClick={() => void enableJalaliCalendar()}>{uiText("فعال‌کردن تقویم شمسی برای همه تاریخ‌های اپ")}</button>}
       <p>{localText(settings,'Focus for 25 minutes a day. Each day you finish lights up your journey.','هر روز ۲۵ دقیقه مطالعه کن تا یک خانه از مسیرت روشن شود.')}</p>
       <div className="growth-week" role="list" aria-label={localText(settings,'Last seven days (Jalali)','هفت روز اخیر به تاریخ شمسی')}>
         {summary.days.map(day => <div className={`growth-day ${day.complete ? 'is-done' : ''}`} role="listitem" key={day.key} aria-label={`${jalaliLabel(day.key)}: ${day.complete?'completed':'not completed'}`}>
           <span>{day.complete ? <Check size={17} strokeWidth={3}/> : <span className="growth-day-dot"/>}</span>
-          <small lang="fa" dir="rtl">{jalaliLabel(day.key,{weekday:'short'})}</small>
-          <small className="growth-jalali-day" lang="fa">{jalaliLabel(day.key,{day:'numeric'})}</small>
+          <small >{new Intl.DateTimeFormat(language==='fa'?'fa-IR-u-ca-persian':'en-US',{weekday:'short'}).format(new Date(`${day.key}T12:00:00`))}</small>
+          <small className="growth-jalali-day" >{new Intl.DateTimeFormat(language==='fa'?'fa-IR-u-ca-persian':'en-US',{day:'numeric'}).format(new Date(`${day.key}T12:00:00`))}</small>
         </div>)}
       </div>
       <div className="growth-statsline"><span><CheckCircle2 size={14}/>{fa ? jalaliNumber(summary.completedDays) : summary.completedDays} {localText(settings,'days reached','روز موفق')}</span><span>{hoursLabel(summary.totalSeconds)} {localText(settings,'this week','این هفته')}</span></div>
@@ -159,14 +162,14 @@ export function GrowthHub({ sessions, settings }: { sessions: StudySession[]; se
       <span className="growth-eyebrow">{localText(settings,'YOUR STORY • THEIR INSPIRATION','پیشرفت تو • انگیزه دوستانت')}</span>
       <h2>{localText(settings,'Make progress shareable','پیشرفتت را به اشتراک بگذار')}</h2>
       <p>{localText(settings,'Turn your focus time into a beautiful recap card, or invite a friend to study with you.','از زمان مطالعه‌ات یک کارت زیبا بساز یا دوستانت را دعوت کن.')}</p>
-      <div className="growth-highlight"><strong>{hoursLabel(summary.totalSeconds)}</strong><span>{localText(settings,'focused in the last 7 days','تمرکز در هفت روز اخیر')}</span><small className="growth-highlight-date" lang="fa" dir="rtl">{jalaliRange(summary.days.map(day => day.key))}</small></div>
+      <div className="growth-highlight"><strong>{hoursLabel(summary.totalSeconds)}</strong><span>{localText(settings,'focused in the last 7 days','تمرکز در هفت روز اخیر')}</span><small className="growth-highlight-date" >{language==='fa'?jalaliRange(summary.days.map(day => day.key)):summary.days.map(day=>new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric'}).format(new Date(`${day.key}T12:00:00`))).filter((_,i,a)=>i===0||i===a.length-1).join(' to ')}</small></div>
       <div className="growth-share-actions">
-        <button type="button" onClick={() => void shareProgress()} disabled={!summary.totalSeconds || sharing} aria-label="Share focus recap"><Share2 size={16}/>{sharing?localText(settings,'Preparing...','در حال آماده‌سازی...'):localText(settings,'Share recap','اشتراک گزارش')}</button>
+        <button type="button" onClick={() => void shareProgress()} disabled={!summary.totalSeconds || sharing} aria-label={uiText("Share focus recap")}><Share2 size={16}/>{sharing?localText(settings,'Preparing...','در حال آماده‌سازی...'):localText(settings,'Share recap','اشتراک گزارش')}</button>
         <button type="button" onClick={() => void inviteFriends()}><UsersRound size={16}/>{localText(settings,'Invite','دعوت دوستان')}</button>
       </div>
       <small className="growth-privacy">{localText(settings,'Only totals are shared when you choose. Your subjects and notes stay private.','فقط با انتخاب خودت آمار کلی منتشر می‌شود؛ درس‌ها و یادداشت‌ها خصوصی می‌مانند.')}</small>
-      <a className="growth-share-link" href={APP_LINK} target="_blank" rel="noopener noreferrer"><Copy size={12}/> limi-alive.github.io/studyflow</a>
-      {message && <div className="growth-message" role="status">{message}</div>}
+      <a className="growth-share-link" href={APP_LINK} target="_blank" rel="noopener noreferrer"><Copy size={12}/> {uiText("limi-alive.github.io/studyflow")}</a>
+      {message && <div className="growth-message" role="status">{uiText(message)}</div>}
     </div>
   </section>;
 }

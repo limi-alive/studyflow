@@ -1,10 +1,11 @@
+import { useUiText } from '../lib/uiLanguage';
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, BarChart3, BookOpen, Crown, RefreshCw, ShieldCheck, Timer, Trophy, UsersRound } from 'lucide-react';
 import { Card } from '../components/Card';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { supabase } from '../lib/supabase';
 import { formatDuration } from '../utils/time';
-import { persianDateLabel } from '../utils/persianCalendar';
+import { formatAppDate } from '../lib/locale';
 
 type Period = 'today' | 'week' | 'month' | 'all';
 type OverviewRow = {
@@ -42,9 +43,10 @@ function rangeFor(period: Period) {
 
 function displayName(row: OverviewRow) { return row.display_name || row.username || `User ${row.user_id.slice(0, 6)}`; }
 function compactHours(seconds: number) { return `${(Math.max(0, seconds) / 3600).toFixed(seconds >= 36000 ? 0 : 1)}h`; }
-function dateLabel(iso: string | null) { return iso ? persianDateLabel(iso, {month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'No sessions yet'; }
+function dateLabel(iso: string | null) { return iso ? formatAppDate(iso,undefined, {month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'No sessions yet'; }
 
 export default function AdminPage() {
+ const uiText=useUiText();
   const access = useAdminAccess();
   const [period, setPeriod] = useState<Period>('month');
   const [rows, setRows] = useState<OverviewRow[]>([]);
@@ -99,42 +101,42 @@ export default function AdminPage() {
   }), [rows]);
   const selected = rows.find(row => row.user_id === selectedId) ?? null;
 
-  if (access.loading) return <div className="page admin-page"><div className="admin-access-state"><RefreshCw className="spin"/> Checking admin access…</div></div>;
-  if (!access.isAdmin) return <div className="page admin-page"><Card className="admin-denied"><ShieldCheck size={28}/><h1>Admin access only</h1><p>This account is not in the StudyFlow admin allowlist. Admin rights can only be granted from Supabase SQL, never from the browser.</p>{access.error && <small>{access.error}</small>}</Card></div>;
+  if (access.loading) return <div className="page admin-page"><div className="admin-access-state"><RefreshCw className="spin"/> {uiText("Checking admin access…")}</div></div>;
+  if (!access.isAdmin) return <div className="page admin-page"><Card className="admin-denied"><ShieldCheck size={28}/><h1>{uiText("Admin access only")}</h1><p>{uiText("This account is not in the StudyFlow admin allowlist. Admin rights can only be granted from Supabase SQL, never from the browser.")}</p>{access.error && <small>{access.error}</small>}</Card></div>;
 
   return <div className="page admin-page">
-    <header className="page-header admin-header"><div><div className="eyebrow">PRIVATE CONTROL ROOM</div><h1>Admin Center</h1><p className="subtle">Read-only study analytics across StudyFlow accounts. Online changes sync automatically; offline activity appears after that user reconnects. Private notes and passwords are never shown here.</p></div><button className="button" onClick={() => setRefreshToken(value => value + 1)}><RefreshCw size={16}/> Refresh</button></header>
+    <header className="page-header admin-header"><div><div className="eyebrow">{uiText("PRIVATE CONTROL ROOM")}</div><h1>{uiText("Admin Center")}</h1><p className="subtle">{uiText("Read-only study analytics across StudyFlow accounts. Online changes sync automatically; offline activity appears after that user reconnects. Private notes and passwords are never shown here.")}</p></div><button className="button" onClick={() => setRefreshToken(value => value + 1)}><RefreshCw size={16}/> {uiText("Refresh")}</button></header>
 
-    <div className="admin-periods" role="tablist" aria-label="Admin analytics period">{(['today','week','month','all'] as Period[]).map(item => <button key={item} className={period===item?'active':''} onClick={() => setPeriod(item)}>{item === 'today' ? 'Today' : item === 'week' ? 'This week' : item === 'month' ? 'This month' : 'All time'}</button>)}</div>
+    <div className="admin-periods" role="tablist" aria-label={uiText("Admin analytics period")}>{(['today','week','month','all'] as Period[]).map(item => <button key={item} className={period===item?'active':''} onClick={() => setPeriod(item)}>{uiText(item === 'today' ? 'Today' : item === 'week' ? 'This week' : item === 'month' ? 'This month' : 'All time')}</button>)}</div>
 
     <div className="admin-summary-grid">
-      <Card><UsersRound/><span>Accounts</span><strong>{summary.users}</strong><small>{summary.active} active in period</small></Card>
-      <Card><Timer/><span>Study time</span><strong>{compactHours(summary.seconds)}</strong><small>Across all users</small></Card>
-      <Card><Activity/><span>Sessions</span><strong>{summary.sessions}</strong><small>Completed in period</small></Card>
-      <Card><Trophy/><span>Leader</span><strong>{rows[0] ? displayName(rows[0]) : '—'}</strong><small>{rows[0] ? compactHours(Number(rows[0].period_seconds)) : 'No activity yet'}</small></Card>
+      <Card><UsersRound/><span>{uiText("Accounts")}</span><strong>{summary.users}</strong><small>{summary.active} {uiText("active in period")}</small></Card>
+      <Card><Timer/><span>{uiText("Study time")}</span><strong>{compactHours(summary.seconds)}</strong><small>{uiText("Across all users")}</small></Card>
+      <Card><Activity/><span>{uiText("Sessions")}</span><strong>{summary.sessions}</strong><small>{uiText("Completed in period")}</small></Card>
+      <Card><Trophy/><span>{uiText("Leader")}</span><strong>{rows[0] ? displayName(rows[0]) : '—'}</strong><small>{rows[0] ? compactHours(Number(rows[0].period_seconds)) : uiText('No activity yet')}</small></Card>
     </div>
 
     {message && <div className="admin-message">{message}</div>}
 
     <div className="admin-layout">
       <Card className="admin-leaderboard">
-        <div className="admin-card-head"><div><div className="eyebrow">LEADERBOARD</div><h2>Who is studying most?</h2></div><BarChart3 size={20}/></div>
-        {loading ? <div className="admin-empty">Loading ranking…</div> : rows.length ? <div className="admin-ranking-list">{rows.map(row => <button key={row.user_id} onClick={() => setSelectedId(row.user_id)} className={selectedId===row.user_id?'selected':''}>
+        <div className="admin-card-head"><div><div className="eyebrow">{uiText("LEADERBOARD")}</div><h2>{uiText("Who is studying most?")}</h2></div><BarChart3 size={20}/></div>
+        {loading ? <div className="admin-empty">{uiText("Loading ranking…")}</div> : rows.length ? <div className="admin-ranking-list">{rows.map(row => <button key={row.user_id} onClick={() => setSelectedId(row.user_id)} className={selectedId===row.user_id?'selected':''}>
           <span className={`admin-rank rank-${row.rank_no}`}>{row.rank_no <= 3 ? <Crown size={15}/> : '#'}{row.rank_no > 3 ? row.rank_no : ''}</span>
-          <span className="admin-user-copy"><strong>{displayName(row)}</strong><small>@{row.username || 'no_username'} · {row.session_count} sessions</small></span>
-          <span className="admin-user-time"><strong>{compactHours(Number(row.period_seconds))}</strong><small>{compactHours(Number(row.all_time_seconds))} total</small></span>
-        </button>)}</div> : <div className="admin-empty">No accounts found.</div>}
+          <span className="admin-user-copy"><strong>{displayName(row)}</strong><small>@{row.username || 'no_username'} · {row.session_count} {uiText("sessions")}</small></span>
+          <span className="admin-user-time"><strong>{compactHours(Number(row.period_seconds))}</strong><small>{compactHours(Number(row.all_time_seconds))} {uiText("total")}</small></span>
+        </button>)}</div> : <div className="admin-empty">{uiText("No accounts found.")}</div>}
       </Card>
 
       <div className="admin-detail-stack">
         <Card className="admin-user-detail">
-          <div className="admin-card-head"><div><div className="eyebrow">USER DETAIL</div><h2>{selected ? displayName(selected) : 'Select a user'}</h2></div><BookOpen size={20}/></div>
-          {selected && <><div className="admin-user-kpis"><div><span>Rank</span><strong>#{selected.rank_no}</strong></div><div><span>Period</span><strong>{compactHours(Number(selected.period_seconds))}</strong></div><div><span>All time</span><strong>{compactHours(Number(selected.all_time_seconds))}</strong></div></div><p className="subtle">Last study: {dateLabel(selected.last_study_at)}</p></>}
+          <div className="admin-card-head"><div><div className="eyebrow">{uiText("USER DETAIL")}</div><h2>{selected ? displayName(selected) : uiText('Select a user')}</h2></div><BookOpen size={20}/></div>
+          {selected && <><div className="admin-user-kpis"><div><span>{uiText("Rank")}</span><strong>#{selected.rank_no}</strong></div><div><span>{uiText("Period")}</span><strong>{compactHours(Number(selected.period_seconds))}</strong></div><div><span>{uiText("All time")}</span><strong>{compactHours(Number(selected.all_time_seconds))}</strong></div></div><p className="subtle">{uiText("Last study:")} {dateLabel(selected.last_study_at)}</p></>}
         </Card>
 
-        <Card className="admin-subjects"><div className="admin-card-head"><div><div className="eyebrow">SUBJECT MIX</div><h2>What they studied</h2></div></div>{subjects.length ? <div className="admin-subject-list">{subjects.map((item, index) => { const max = Math.max(...subjects.map(s => Number(s.study_seconds)), 1); return <div key={`${item.subject_id ?? 'none'}-${index}`}><div><strong>{item.subject_name}</strong><span>{compactHours(Number(item.study_seconds))} · {item.session_count} sessions</span></div><i><b style={{width:`${Math.max(4,Number(item.study_seconds)/max*100)}%`}}/></i></div>; })}</div> : <div className="admin-empty">No subject activity in this period.</div>}</Card>
+        <Card className="admin-subjects"><div className="admin-card-head"><div><div className="eyebrow">{uiText("SUBJECT MIX")}</div><h2>{uiText("What they studied")}</h2></div></div>{subjects.length ? <div className="admin-subject-list">{subjects.map((item, index) => { const max = Math.max(...subjects.map(s => Number(s.study_seconds)), 1); return <div key={`${item.subject_id ?? 'none'}-${index}`}><div><strong>{item.subject_name}</strong><span>{compactHours(Number(item.study_seconds))} · {item.session_count} {uiText("sessions")}</span></div><i><b style={{width:`${Math.max(4,Number(item.study_seconds)/max*100)}%`}}/></i></div>; })}</div> : <div className="admin-empty">{uiText("No subject activity in this period.")}</div>}</Card>
 
-        <Card className="admin-recent"><div className="admin-card-head"><div><div className="eyebrow">RECENT ACTIVITY</div><h2>Latest sessions</h2></div></div>{recent.length ? <div className="admin-session-list">{recent.map(item => <div key={item.session_id}><span><strong>{item.subject_name}</strong><small>{dateLabel(item.end_time)} · {item.timer_type}</small></span><b>{formatDuration(Number(item.study_seconds))}</b></div>)}</div> : <div className="admin-empty">No sessions yet.</div>}</Card>
+        <Card className="admin-recent"><div className="admin-card-head"><div><div className="eyebrow">{uiText("RECENT ACTIVITY")}</div><h2>{uiText("Latest sessions")}</h2></div></div>{recent.length ? <div className="admin-session-list">{recent.map(item => <div key={item.session_id}><span><strong>{item.subject_name}</strong><small>{dateLabel(item.end_time)} · {item.timer_type}</small></span><b>{formatDuration(Number(item.study_seconds))}</b></div>)}</div> : <div className="admin-empty">{uiText("No sessions yet.")}</div>}</Card>
       </div>
     </div>
   </div>;

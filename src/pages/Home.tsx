@@ -1,3 +1,4 @@
+import { useUiText } from '../lib/uiLanguage';
 import { useMemo, type CSSProperties } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +14,7 @@ import { currentStreak, dailySeries, totalStudySeconds } from '../utils/stats';
 import { formatDuration, startOfLocalDay } from '../utils/time';
 
 export default function HomePage() {
+ const uiText=useUiText();
   const { userId } = useCurrentUser();
   const settings = useSettings(userId);
   const navigate = useNavigate();
@@ -80,7 +82,7 @@ export default function HomePage() {
         <Card className="analytics-hero">
           <div className="analytics-heading">
             <div><div className="eyebrow">{localText(settings,'Statistics','آمار')}</div><h2>{localText(settings,'Your focus rhythm','ریتم تمرکز تو')}</h2></div>
-            <div className="range-tabs"><button className="active">Days</button><button onClick={()=>navigate('/stats')}>Weeks</button><button onClick={()=>navigate('/stats')}>Months</button></div>
+            <div className="range-tabs"><button className="active">{uiText("Days")}</button><button onClick={()=>navigate('/stats')}>{uiText("Weeks")}</button><button onClick={()=>navigate('/stats')}>{uiText("Months")}</button></div>
           </div>
           <div className="date-strip">{series.map((item,index)=>{const date=new Date(`${item.date}T12:00:00`);return <div className={`date-chip ${index===series.length-1?'active':''}`} key={item.date}><strong>{formatAppDate(date,settings,{day:'2-digit'})}</strong><span>{formatAppDate(date,settings,{weekday:'short'})}</span></div>;})}</div>
           <TrendChart points={chartPoints}/>
@@ -106,7 +108,7 @@ export default function HomePage() {
 
         <Card className="mini-stat-card"><div className="mini-stat-icon purple"><Flame/></div><div><span className="subtle">{localText(settings,'Active days','روزهای فعال')}</span><strong>{activeDays}</strong></div><ArrowUpRight size={18}/></Card>
         <Card className="mini-stat-card"><div className="mini-stat-icon yellow"><Trophy/></div><div><span className="subtle">{localText(settings,'Best day','بهترین روز')}</span><strong>{bestDay.seconds ? formatDuration(bestDay.seconds) : '—'}</strong></div><ArrowUpRight size={18}/></Card>
-        <Card className="mini-stat-card"><div className="mini-stat-icon green"><Zap/></div><div><span className="subtle">{localText(settings,'All-time','کل زمان')}</span><strong>{allTimeHours}h</strong></div><ArrowUpRight size={18}/></Card>
+        <Card className="mini-stat-card"><div className="mini-stat-icon green"><Zap/></div><div><span className="subtle">{localText(settings,'All-time','کل زمان')}</span><strong>{allTimeHours}{uiText("h")}</strong></div><ArrowUpRight size={18}/></Card>
 
         <Card className="next-up-card">
           <div className="section-title"><div><div className="eyebrow">{localText(settings,'Next up','بعدی')}</div><strong>{localText(settings,'Today’s queue','صف امروز')}</strong></div><button className="icon-button" onClick={()=>navigate('/planner')}><CalendarCheck2 size={17}/></button></div>

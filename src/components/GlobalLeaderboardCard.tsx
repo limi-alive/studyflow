@@ -1,6 +1,7 @@
+import { useUiText } from '../lib/uiLanguage';
 import { Crown, Medal, RefreshCw, Trophy } from 'lucide-react';
 import type { PublicLeaderboardRow } from '../hooks/usePublicLeaderboard';
-import { persianDateLabel } from '../utils/persianCalendar';
+import { formatAppDate } from '../lib/locale';
 
 type BoardData = {
   rows: PublicLeaderboardRow[];
@@ -29,29 +30,30 @@ function RankMark({ rank }: { rank: number }) {
 }
 
 export function GlobalLeaderboardCard({ board, variant = 'sidebar' }: { board: BoardData; variant?: 'sidebar' | 'dashboard' }) {
+ const uiText=useUiText();
   const leaders = board.rows.slice(0, 3);
   const me = board.rows.find(row => row.is_me);
 
-  return <section className={`global-leaderboard-card global-leaderboard-${variant}`} aria-label="StudyFlow monthly leaderboard">
+  return <section className={`global-leaderboard-card global-leaderboard-${variant}`} aria-label={uiText("StudyFlow monthly leaderboard")}>
     <div className="global-leaderboard-head">
       <span className="global-leaderboard-icon"><Trophy size={15}/></span>
-      <div><small>THIS MONTH</small><strong>Study League</strong></div>
+      <div><small>{uiText("THIS MONTH")}</small><strong>{uiText("Study League")}</strong></div>
       {board.loading && <RefreshCw className="spin" size={13}/>}
     </div>
 
-    {!board.signedIn ? <div className="global-leaderboard-empty">Sign in to join the monthly ranking.</div>
-      : board.error ? <div className="global-leaderboard-empty">Leaderboard update required.</div>
+    {!board.signedIn ? <div className="global-leaderboard-empty">{uiText("Sign in to join the monthly ranking.")}</div>
+      : board.error ? <div className="global-leaderboard-empty">{uiText("Leaderboard update required.")}</div>
       : leaders.length ? <div className="global-leaderboard-list">{leaders.map(row => <div key={`${row.rank_no}-${row.username ?? row.display_name}`} className={`global-leaderboard-row rank-${row.rank_no}${row.is_me ? ' is-me' : ''}`}>
           <span className="global-leaderboard-rank"><RankMark rank={Number(row.rank_no)}/></span>
-          <span className="global-leaderboard-user"><strong>{nameOf(row)}</strong><small>{row.is_me ? 'You' : `@${row.username || 'studyflow'}`}</small></span>
+          <span className="global-leaderboard-user"><strong>{nameOf(row)}</strong><small>{row.is_me ? uiText('You') : `@${row.username || 'studyflow'}`}</small></span>
           <span className="global-leaderboard-time">{hours(Number(row.period_seconds))}</span>
         </div>)}</div>
-      : <div className="global-leaderboard-empty">No study sessions yet.</div>}
+      : <div className="global-leaderboard-empty">{uiText("No study sessions yet.")}</div>}
 
-    {me && !leaders.some(row => row.is_me) && <div className="global-leaderboard-me"><span>Your rank</span><strong>#{me.rank_no} · {hours(Number(me.period_seconds))}</strong></div>}
+    {me && !leaders.some(row => row.is_me) && <div className="global-leaderboard-me"><span>{uiText("Your rank")}</span><strong>#{me.rank_no} · {hours(Number(me.period_seconds))}</strong></div>}
     <div className="global-leaderboard-foot league-foot-v1364">
-      <span dir="rtl" lang="fa">پایان دوره رتبه‌بندی: {board.nextResetAt ? persianDateLabel(new Date(new Date(board.nextResetAt).getTime()-1)) : "—"} (دوره فعلی میلادی)</span>
-      <button type="button" onClick={() => void board.refresh?.()} disabled={board.loading} title="Refresh monthly leaderboard" aria-label="Refresh leaderboard">Refresh</button>
+      <span >{uiText("پایان دوره رتبه‌بندی:")} {board.nextResetAt ? formatAppDate(new Date(new Date(board.nextResetAt).getTime()-1)) : "—"} {uiText("(دوره فعلی میلادی)")}</span>
+      <button type="button" onClick={() => void board.refresh?.()} disabled={board.loading} title={uiText("Refresh monthly leaderboard")} aria-label={uiText("Refresh leaderboard")}>{uiText("Refresh")}</button>
     </div>
   </section>;
 }

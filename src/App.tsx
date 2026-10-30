@@ -1,3 +1,4 @@
+import { useUiText } from './lib/uiLanguage';
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
@@ -19,9 +20,10 @@ const ProgressPage = lazy(() => import('./pages/Progress'));
 const StudyOSPage = lazy(() => import('./pages/StudyOS'));
 
 function RouteFallback() {
+ const uiText=useUiText();
   return <div className="route-fallback" role="status" aria-live="polite">
     <span className="route-fallback-mark"><Sparkles size={20}/></span>
-    <div className="route-fallback-copy"><strong>Opening StudyFlow</strong><small>Getting this view ready...</small></div>
+    <div className="route-fallback-copy"><strong>{uiText("Opening StudyFlow")}</strong><small>{uiText("Getting this view ready...")}</small></div>
     <span className="route-fallback-line"/>
   </div>;
 }

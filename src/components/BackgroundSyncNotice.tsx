@@ -1,3 +1,4 @@
+import { useUiText } from '../lib/uiLanguage';
 import { Check, CloudOff, RefreshCw, RotateCw, TriangleAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { syncAll } from '../lib/sync';
@@ -6,6 +7,7 @@ type SyncUiState = 'idle' | 'syncing' | 'synced' | 'failed' | 'offline';
 type SyncEventDetail = { userId?: string; state?: SyncUiState; ok?: boolean; error?: string };
 
 export function BackgroundSyncNotice({ userId, enabled }: { userId: string; enabled: boolean }) {
+ const uiText=useUiText();
   const [state, setState] = useState<SyncUiState>('idle');
   const [visible, setVisible] = useState(false);
   const showTimer = useRef<number | null>(null);
@@ -81,6 +83,6 @@ export function BackgroundSyncNotice({ userId, enabled }: { userId: string; enab
   return <div className={`background-sync-toast is-${state}`} role="status" aria-live="polite">
     <span className="background-sync-icon"><Icon size={16} className={state === 'syncing' ? 'spin' : ''}/></span>
     <span className="background-sync-copy"><strong>{title}</strong><small>{copy}</small></span>
-    {state === 'failed' && <button type="button" onClick={() => void syncAll(userId)} aria-label="Retry sync"><RotateCw size={15}/></button>}
+    {state === 'failed' && <button type="button" onClick={() => void syncAll(userId)} aria-label={uiText("Retry sync")}><RotateCw size={15}/></button>}
   </div>;
 }
