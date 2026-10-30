@@ -9,7 +9,7 @@ export async function requestCoachPlan(params: {
   language: 'fa' | 'en';
   today: string;
   signal?: AbortSignal;
-}): Promise<CoachPlanItem[]> {
+}): Promise<{items: CoachPlanItem[]; estimated: boolean}> {
   if (!supabase) throw new Error('login_required');
   const {data} = await supabase.auth.getSession();
   if (!data.session?.access_token) throw new Error('login_required');
@@ -29,5 +29,6 @@ export async function requestCoachPlan(params: {
     if (response.status === 429 || response.status >= 500) throw new Error('provider_unavailable');
     throw new Error('network_error');
   }
-  return parseCoachPlan(await response.json());
+  const payload = await response.json();
+  return {items: parseCoachPlan(payload), estimated: payload?.draftSource === 'estimated'};
 }
