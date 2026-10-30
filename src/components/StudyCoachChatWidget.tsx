@@ -8,6 +8,7 @@ import { anonymousCoachContext, buildCoachSnapshot } from '../utils/studyCoach';
 import { getStudyCoachEndpoint, requestStudyCoachReply, type CoachChatMessage } from '../lib/studyCoachChat';
 import { selectCoachReplyLanguage } from '../lib/studyCoachLanguage';
 import { requestCoachPlan } from '../lib/studyCoachPlanApi';
+import { buildPlanImportContext, isPlanIntakeResponse } from '../lib/studyCoachPlanContext';
 import { saveCoachPlan, todayLocalIso, type CoachPlanItem } from '../lib/studyCoachPlan';
 import '../study-coach-chat-widget.css';
 
@@ -23,7 +24,7 @@ export function StudyCoachChatWidget() {
   const [sending, setSending] = useState(false);
   const [endpoint, setEndpoint] = useState<string | null>(null);
   const [status, setStatus] = useState('');
-  const [planPreview, setPlanPreview] = useState<{sourceIndex:number; items:CoachPlanItem[]; selected:number[]} | null>(null);
+  const [planPreview, setPlanPreview] = useState<{sourceIndex:number; items:CoachPlanItem[]; selected:number[]; estimated:boolean} | null>(null);
   const [planBusy, setPlanBusy] = useState(false);
   const [planStatus, setPlanStatus] = useState('');
   const [importedMessages, setImportedMessages] = useState<number[]>([]);
@@ -165,17 +166,17 @@ export function StudyCoachChatWidget() {
   const extractPlan = async (sourceIndex: number) => {
     if (!endpoint || planBusyRef.current || importedMessages.includes(sourceIndex)) return;
     const response = messages[sourceIndex];
-    const question = messages.slice(0, sourceIndex).reverse().find(m => m.role === 'user')?.content;
+    const question = buildPlanImportContext(messages, sourceIndex);
     if (!question || response?.role !== 'assistant') return;
     const accountAtStart = userId;
     const controller = new AbortController();
     planAbortRef.current?.abort(); planAbortRef.current = controller;
     planBusyRef.current = true; setPlanBusy(true); setPlanStatus(''); setPlanPreview(null);
     try {
-      const items = await requestCoachPlan({endpoint,userPrompt:question,assistantReply:response.content,
+      const {items, estimated} = await requestCoachPlan({endpoint,userPrompt:question,assistantReply:response.content,
         language:selectCoachReplyLanguage(question,messages.slice(0,sourceIndex),language),today:todayLocalIso(),signal:controller.signal});
       if (!controller.signal.aborted && accountRef.current === accountAtStart) {
-        setPlanPreview({sourceIndex,items,selected:items.flatMap((item,i)=>item.kind === 'study' ? [i] : [])});
+        setPlanPreview({sourceIndex,items,estimated,selected:items.flatMap((item,i)=>item.kind === 'study' ? [i] : [])});
       }
     } catch (error) {
       if (controller.signal.aborted || accountRef.current !== accountAtStart) return;
@@ -222,7 +223,7 @@ export function StudyCoachChatWidget() {
           <div className="sf-ai-chat-welcome"><span className="sf-ai-chat-welcome-icon"><BrainCircuit size={20}/></span><p>{greeting}</p></div>
           {messages.map((message, index) => <div key={index} className={`sf-ai-chat-message ${message.role === 'user' ? 'from-user' : 'from-ai'}`}>
             <p dir="auto">{message.content}</p>
-            {message.role === 'assistant' && <button type="button" className="sf-ai-plan-extract" disabled={planBusy || importedMessages.includes(index)} onClick={()=>void extractPlan(index)}>
+            {message.role === 'assistant' && !isPlanIntakeResponse(message.content) && <button type="button" className="sf-ai-plan-extract" disabled={planBusy || importedMessages.includes(index)} onClick={()=>void extractPlan(index)}>
               {importedMessages.includes(index) ? <><Check size={14}/>{fa ? 'به برنامه‌ریز اضافه شد' : 'Added to Planner'}</> : <><CalendarPlus2 size={14}/>{fa ? 'افزودن برنامه به Planner' : 'Add plan to Planner'}</>}
             </button>}
           </div>)}
@@ -233,6 +234,7 @@ export function StudyCoachChatWidget() {
           {planBusy && <div role="status" className="sf-ai-chat-status">{fa ? 'در حال آماده‌سازی برنامه…' : 'Preparing study plan…'}</div>}
           {planPreview && <div className="sf-ai-plan-preview" role="region" aria-label={fa ? 'پیش‌نمایش برنامه' : 'Plan preview'}>
             <strong>{fa ? 'پیش‌نمایش قبل از ذخیره' : 'Review before saving'}</strong>
+            {planPreview.estimated && <small role="status">{fa ? 'این برنامه تقریبی است؛ مدل نتوانست زمان‌بندی دقیق بدهد. لطفاً درس‌ها و مدت‌ها را پیش از ذخیره بررسی کن.' : 'This is an estimated draft. Review subjects and durations before saving.'}</small>}
             <small>{fa ? 'فقط کارهای انتخاب‌شده ذخیره می‌شوند. زمان استراحت فقط جهت اطلاع نمایش داده می‌شود.' : 'Only selected study tasks will be saved. Breaks are shown for reference.'}</small>
             <div className="sf-ai-plan-items">
               {planPreview.items.map((item,i)=><label key={i} className="sf-ai-plan-row" dir="auto">
