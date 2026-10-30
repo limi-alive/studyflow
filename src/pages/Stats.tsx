@@ -6,21 +6,24 @@ import { TrendChart } from '../components/TrendChart';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
 import { formatAppDate } from '../lib/locale';
+import { startOfPersianMonth, startOfPersianYear } from '../utils/persianCalendar';
+import { useTimePulse } from '../hooks/useTimePulse';
 import { db } from '../lib/db';
 import { averageSessionSeconds, dailySeries, longestStreak, totalStudySeconds } from '../utils/stats';
 import { formatDuration } from '../utils/time';
 
 type Range='today'|'week'|'month'|'year'|'all';
-function cutoffFor(range:Range){const d=new Date();if(range==='today')d.setHours(0,0,0,0);else if(range==='week')d.setDate(d.getDate()-6);else if(range==='month')d.setDate(d.getDate()-29);else if(range==='year')d.setFullYear(d.getFullYear()-1);else return 0;return d.getTime();}
+function cutoffFor(range:Range, nowMs:number){const d=new Date(nowMs);if(range==='today')d.setHours(0,0,0,0);else if(range==='week')d.setDate(d.getDate()-6);else if(range==='month')return startOfPersianMonth(d).getTime();else if(range==='year')return startOfPersianYear(d).getTime();else return 0;return d.getTime();}
 
 export default function StatsPage(){
   const {userId}=useCurrentUser();
+  const nowMs=useTimePulse();
   const settings=useSettings(userId);
   const allQuery=useLiveQuery(()=>db.sessions.where('userId').equals(userId).filter(x=>!x.deletedAt).toArray(),[userId]);
   const all=useMemo(()=>allQuery??[],[allQuery]);
   const subjects=useLiveQuery(()=>db.subjects.where('userId').equals(userId).toArray(),[userId])??[];
   const [range,setRange]=useState<Range>('month');
-  const sessions=useMemo(()=>{const c=cutoffFor(range);return all.filter(s=>new Date(s.endTime).getTime()>=c);},[all,range]);
+  const sessions=useMemo(()=>{const c=cutoffFor(range,nowMs);return all.filter(s=>new Date(s.endTime).getTime()>=c);},[all,range,nowMs]);
   const days=range==='today'?1:range==='week'?7:range==='month'?30:range==='year'?90:30;
   const series=dailySeries(sessions,days);
   const total=totalStudySeconds(sessions);

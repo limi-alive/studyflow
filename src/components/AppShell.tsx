@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, CalendarDays, Clock3, Home, Settings, UserRound, History, Plus, Search, Command, Sparkles, LogIn, LogOut, ShieldCheck } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, Clock3, Home, Settings, UserRound, History, Plus, Search, TrendingUp, Command, Sparkles, LogIn, LogOut, ShieldCheck, BrainCircuit } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SyncBadge } from './SyncBadge';
@@ -35,15 +35,15 @@ export function AppShell() {
     ['/', Home, fa ? 'خانه' : 'Home'], ['/timer', Clock3, fa ? 'تایمر' : 'Timer'], ['/planner', CalendarDays, fa ? 'برنامه' : 'Planner'], ['/stats', BarChart3, fa ? 'آمار' : 'Stats'], ['/profile', UserRound, fa ? 'من' : 'Me']
   ] as const;
   const desktopBase = [
-    ['/', Home, fa ? 'خانه' : 'Dashboard'], ['/timer', Clock3, fa ? 'تایمر' : 'Focus'], ['/planner', CalendarDays, fa ? 'برنامه' : 'Planner'], ['/stats', BarChart3, fa ? 'آمار' : 'Analytics'], ['/subjects', BookOpen, fa ? 'درس‌ها' : 'Subjects'], ['/history', History, fa ? 'سابقه' : 'History'], ['/search', Search, fa ? 'جستجو' : 'Search']
+    ['/', Home, fa ? 'خانه' : 'Dashboard'], ['/studyos', BrainCircuit, fa ? 'اتاق فرمان' : 'StudyOS'], ['/timer', Clock3, fa ? 'تایمر' : 'Focus'], ['/planner', CalendarDays, fa ? 'برنامه' : 'Planner'], ['/stats', BarChart3, fa ? 'آمار' : 'Analytics'], ['/subjects', BookOpen, fa ? 'درس‌ها' : 'Subjects'], ['/history', History, fa ? 'سابقه' : 'History'], ['/progress', TrendingUp, fa ? 'پیشرفت' : 'Progress'], ['/search', Search, fa ? 'جستجو' : 'Search']
   ] as const;
   const desktop = admin.isAdmin ? [...desktopBase, ['/admin', ShieldCheck, fa ? 'مدیریت' : 'Admin'] as const] : desktopBase;
   const routePath = resolvedRoutePath(location.pathname);
   const routeKey = routePath === '/' ? 'dashboard' : routePath.slice(1).split('/')[0] || 'dashboard';
   const routeLabel: Record<string, string> = fa ? {
-    dashboard: 'خانه', timer: 'تمرکز', planner: 'برنامه', stats: 'آمار', profile: 'پروفایل', settings: 'تنظیمات', subjects: 'درس‌ها', history: 'سابقه', search: 'جستجو', admin: 'مدیریت'
+    dashboard: 'خانه', studyos:'اتاق فرمان', progress:'پیشرفت', timer: 'تمرکز', planner: 'برنامه', stats: 'آمار', profile: 'پروفایل', settings: 'تنظیمات', subjects: 'درس‌ها', history: 'سابقه', search: 'جستجو', admin: 'مدیریت'
   } : {
-    dashboard: 'Dashboard', timer: 'Focus', planner: 'Planner', stats: 'Analytics', profile: 'Profile', settings: 'Settings', subjects: 'Subjects', history: 'History', search: 'Search', admin: 'Admin'
+    dashboard: 'Dashboard', studyos:'StudyOS', progress:'Progress', timer: 'Focus', planner: 'Planner', stats: 'Analytics', profile: 'Profile', settings: 'Settings', subjects: 'Subjects', history: 'History', search: 'Search', admin: 'Admin'
   };
 
   useEffect(() => {
@@ -122,7 +122,7 @@ export function AppShell() {
     {routeKey !== 'timer' && routeKey !== 'stats' && <button className="fab" onClick={() => setQuick(true)} aria-label={fa ? 'افزودن سریع' : 'Quick add'}><Plus size={22}/></button>}
     <nav className="bottom-nav" aria-label="Main navigation">{mobile.map(([to, Icon, label]) => <NavLink key={to} to={to} end={to === '/'}><span className="nav-icon"><Icon size={21}/></span><small>{label}</small></NavLink>)}</nav>
 
-    {quick && <div className="modal-backdrop" onClick={() => setQuick(false)}><div className="modal quick-modal" onClick={event => event.stopPropagation()}><div className="modal-grabber"/><div className="eyebrow">{fa ? 'دسترسی سریع' : 'Quick actions'}</div><h2>{fa ? 'بعدی چیه؟' : 'What’s next?'}</h2><p className="subtle">{fa ? 'بدون گشتن بین صفحه‌ها، سریع شروع کن.' : 'Start fast without digging through menus.'}</p><div className="quick-grid"><button className="quick-action primary" onClick={() => go('/timer')}><Clock3/><span><strong>{fa ? 'شروع مطالعه' : 'Start focus'}</strong><small>{fa ? 'تایمر را باز کن' : 'Open the timer'}</small></span></button><button className="quick-action" onClick={() => go('/planner')}><CalendarDays/><span><strong>{fa ? 'افزودن کار' : 'Add task'}</strong><small>{fa ? 'برای امروز برنامه بریز' : 'Plan your day'}</small></span></button><button className="quick-action" onClick={() => go('/subjects')}><BookOpen/><span><strong>{fa ? 'افزودن درس' : 'Add subject'}</strong><small>{fa ? 'ساختار مطالعه' : 'Organize study'}</small></span></button><button className="quick-action" onClick={() => go('/search')}><Search/><span><strong>{fa ? 'جستجو' : 'Search'}</strong><small>{fa ? 'هرچیزی را پیدا کن' : 'Find anything'}</small></span></button></div></div></div>}
+    {quick && <div className="modal-backdrop" onClick={() => setQuick(false)}><div className="modal quick-modal" onClick={event => event.stopPropagation()}><div className="modal-grabber"/><div className="eyebrow">{fa ? 'دسترسی سریع' : 'Quick actions'}</div><h2>{fa ? 'بعدی چیه؟' : 'What’s next?'}</h2><p className="subtle">{fa ? 'بدون گشتن بین صفحه‌ها، سریع شروع کن.' : 'Start fast without digging through menus.'}</p><div className="quick-grid"><button className="quick-action primary" onClick={() => go('/timer')}><Clock3/><span><strong>{fa ? 'شروع مطالعه' : 'Start focus'}</strong><small>{fa ? 'تایمر را باز کن' : 'Open the timer'}</small></span></button><button className="quick-action" onClick={() => go('/planner')}><CalendarDays/><span><strong>{fa ? 'افزودن کار' : 'Add task'}</strong><small>{fa ? 'برای امروز برنامه بریز' : 'Plan your day'}</small></span></button><button className="quick-action" onClick={() => go('/subjects')}><BookOpen/><span><strong>{fa ? 'افزودن درس' : 'Add subject'}</strong><small>{fa ? 'ساختار مطالعه' : 'Organize study'}</small></span></button><button className="quick-action" onClick={() => go('/studyos')}><BrainCircuit/><span><strong>{fa ? 'اتاق فرمان' : 'StudyOS'}</strong><small>{fa ? 'برنامه هوشمند امروز' : 'Smart daily plan'}</small></span></button></div></div></div>}
     <BackgroundSyncNotice userId={userId} enabled={identity.signedIn}/>
     <AuthGate/>
   </div>;

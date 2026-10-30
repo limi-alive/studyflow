@@ -15,7 +15,11 @@ import './admin-v13.css';
 import './mobile-v13-4.css';
 import './monthly-league-v13-6.css';
 import './growth-v13-7.css';
+import './iran-v13-8.css';
 import './ux-v13-5.css';
+import './iran-v13-8.css';
+import './studyos-v14.css';
+import './clean-v14.css';
 
 registerSW({ immediate: true });
 

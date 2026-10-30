@@ -1,12 +1,12 @@
 import { useMemo, type CSSProperties } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUpRight, BookOpen, CalendarCheck2, Flame, Play, Target, Clock3, Zap, Trophy, CheckCircle2, Sparkles, TimerReset } from 'lucide-react';
+import { ArrowUpRight, BookOpen, CalendarCheck2, Flame, Play, Target, Clock3, Zap, Trophy, CheckCircle2, Sparkles, TimerReset, BrainCircuit } from 'lucide-react';
 import { Card } from '../components/Card';
-import { GrowthHub } from '../components/GrowthHub';
 import { TrendChart } from '../components/TrendChart';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
+import { useTimePulse } from '../hooks/useTimePulse';
 import { formatAppDate, localText } from '../lib/locale';
 import { db } from '../lib/db';
 import { currentStreak, dailySeries, totalStudySeconds } from '../utils/stats';
@@ -16,6 +16,7 @@ export default function HomePage() {
   const { userId } = useCurrentUser();
   const settings = useSettings(userId);
   const navigate = useNavigate();
+  const nowMs = useTimePulse();
   const sessionsQuery = useLiveQuery(() => db.sessions.where('userId').equals(userId).filter(x => !x.deletedAt).toArray(), [userId]);
   const sessions = useMemo(() => sessionsQuery ?? [], [sessionsQuery]);
   const goals = useLiveQuery(() => db.goals.where('userId').equals(userId).filter(x => !x.deletedAt && x.period === 'daily').toArray(), [userId]) ?? [];
@@ -23,14 +24,14 @@ export default function HomePage() {
   const subjectsQuery = useLiveQuery(() => db.subjects.where('userId').equals(userId).filter(x => !x.deletedAt && !x.archived).toArray(), [userId]);
   const subjects = useMemo(() => subjectsQuery ?? [], [subjectsQuery]);
   const exams = useLiveQuery(() => db.exams.where('userId').equals(userId).filter(x => !x.deletedAt).sortBy('date'), [userId]) ?? [];
-  const todayStart = startOfLocalDay().getTime();
+  const todayStart = startOfLocalDay(new Date(nowMs)).getTime();
   const today = sessions.filter(s => new Date(s.endTime).getTime() >= todayStart);
   const todaySeconds = dailySeries(sessions, 1)[0]?.seconds ?? 0;
   const series = dailySeries(sessions, 7);
   const previous = dailySeries(sessions.filter(s => new Date(s.startTime).getTime() < todayStart - 6 * 86400000), 7);
   const goalSeconds = ((goals[0]?.target ?? 300) as number) * 60;
   const progress = Math.min(100, (todaySeconds / Math.max(goalSeconds, 1)) * 100);
-  const activeDays = new Set(sessions.map(s=>new Date(s.startTime).toLocaleDateString())).size;
+  const activeDays = new Set(sessions.map(s=>new Date(s.startTime).toDateString())).size;
   const allTimeHours = Math.round(totalStudySeconds(sessions)/3600);
   const weeklySeconds = series.reduce((sum, item) => sum + item.seconds, 0);
   const weekStartMs = todayStart - 6 * 86400000;
@@ -47,12 +48,12 @@ export default function HomePage() {
     value: item.seconds,
     compare: previous[index]?.seconds ?? Math.round(item.seconds * .82)
   }));
-  const nextExam = exams.find(exam => new Date(exam.date).getTime() > Date.now());
-  const examDays = nextExam ? Math.max(0, Math.ceil((new Date(nextExam.date).getTime()-Date.now())/86400000)) : null;
+  const nextExam = exams.find(exam => new Date(exam.date).getTime() > nowMs);
+  const examDays = nextExam ? Math.max(0, Math.ceil((new Date(nextExam.date).getTime()-nowMs)/86400000)) : null;
 
   return <div className="page dashboard-page">
     <header className="dashboard-topbar">
-      <div><div className="eyebrow">{formatAppDate(new Date(), settings, {weekday:'long',month:'long',day:'numeric'})}</div><h1>{localText(settings,'Dashboard','داشبورد')}</h1></div>
+      <div><div className="eyebrow">{formatAppDate(new Date(nowMs), settings, {weekday:'long',month:'long',day:'numeric'})}</div><h1>{localText(settings,'Dashboard','داشبورد')}</h1></div>
       <div className="dashboard-top-actions"><span className="live-chip"><span className="status-dot"/> {localText(settings,'Ready to focus','آماده تمرکز')}</span><button className="button primary compact" onClick={()=>navigate('/timer')}><Play size={17}/>{localText(settings,'Start session','شروع جلسه')}</button></div>
     </header>
 
@@ -67,7 +68,12 @@ export default function HomePage() {
       <button className="study-pulse-action" type="button" onClick={()=>navigate('/timer')}><TimerReset size={17}/><span><strong>{localText(settings,'Focus now','الان تمرکز کن')}</strong><small>{localText(settings,'Open timer','باز کردن تایمر')}</small></span><ArrowUpRight size={16}/></button>
     </section>
 
-    <GrowthHub sessions={sessions} settings={settings}/>
+    <button type="button" className="studyos-dashboard-link" onClick={()=>navigate('/studyos')}>
+      <span className="studyos-dashboard-copy"><span className="studyos-dashboard-icon"><BrainCircuit size={23}/></span><span><strong>{localText(settings,'StudyOS — Your learning command center','اتاق فرمان مطالعه — StudyOS')}</strong><small>{localText(settings,'A smart daily plan, exam radar, review and insights','برنامه امروز، مرور درس‌ها، رادار امتحان و تحلیل پیشرفت')}</small></span></span><ArrowUpRight size={21}/>
+    </button>
+    <button type="button" className="studyos-progress-link" onClick={()=>navigate('/progress')}>
+      <span><strong>{localText(settings,'Weekly recap & challenges','گزارش هفتگی و چالش‌ها')}</strong><small>{localText(settings,'See your progress, share a recap, or set a 7-day goal','پیشرفتت را ببین، کارت مطالعه بساز یا چالش هفتگی انتخاب کن')}</small></span><ArrowUpRight size={18}/>
+    </button>
 
     <div className="dashboard-grid">
       <section className="dashboard-main-column">

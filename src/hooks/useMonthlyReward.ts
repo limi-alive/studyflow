@@ -23,8 +23,14 @@ function monthKey(date: Date, calendarType: 'gregorian' | 'jalali') {
 }
 
 function monthLabel(date: Date, calendarType: 'gregorian' | 'jalali') {
-  const locale = calendarType === 'jalali' ? 'en-US-u-ca-persian-nu-latn' : 'en-US';
-  return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long' }).format(date);
+  const label = (value: Date) => new Intl.DateTimeFormat('fa-IR-u-ca-persian', {year:'numeric',month:'long',day:'numeric'}).format(value);
+  if (calendarType === 'gregorian') {
+    // Preserve the original Gregorian accounting period, represent its dates in Jalali.
+    const begin = new Date(date.getFullYear(), date.getMonth(), 1, 12);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 12);
+    return `${label(begin)} تا ${label(end)}`;
+  }
+  return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{year:'numeric',month:'long'}).format(date);
 }
 
 export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'jalali' = 'gregorian') {

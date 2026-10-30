@@ -15,6 +15,8 @@ const SettingsPage = lazy(() => import('./pages/Settings'));
 const LoginPage = lazy(() => import('./pages/Login'));
 const SearchPage = lazy(() => import('./pages/Search'));
 const AdminPage = lazy(() => import('./pages/Admin'));
+const ProgressPage = lazy(() => import('./pages/Progress'));
+const StudyOSPage = lazy(() => import('./pages/StudyOS'));
 
 function RouteFallback() {
   return <div className="route-fallback" role="status" aria-live="polite">
@@ -32,6 +34,7 @@ export default function App() {
       <Route index element={<HomeGate/>}/>
       <Route path="timer" element={<TimerPage/>}/>
       <Route path="planner" element={<PlannerPage/>}/>
+      <Route path="studyos" element={<StudyOSPage/>}/>
       <Route path="stats" element={<StatsPage/>}/>
       <Route path="subjects" element={<SubjectsPage/>}/>
       <Route path="history" element={<HistoryPage/>}/>
@@ -39,6 +42,7 @@ export default function App() {
       <Route path="settings" element={<SettingsPage/>}/>
       <Route path="search" element={<SearchPage/>}/>
       <Route path="admin" element={<AdminPage/>}/>
+      <Route path="progress" element={<ProgressPage/>}/>
     </Route>
   </Routes></Suspense>;
 }
