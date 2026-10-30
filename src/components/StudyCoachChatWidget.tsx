@@ -6,6 +6,7 @@ import { useUiLanguage } from '../lib/uiLanguage';
 import { db } from '../lib/db';
 import { anonymousCoachContext, buildCoachSnapshot } from '../utils/studyCoach';
 import { getStudyCoachEndpoint, requestStudyCoachReply, type CoachChatMessage } from '../lib/studyCoachChat';
+import { selectCoachReplyLanguage } from '../lib/studyCoachLanguage';
 import '../study-coach-chat-widget.css';
 
 /** Mounted once above route transitions: the conversation stays open while navigating. */
@@ -100,6 +101,9 @@ export function StudyCoachChatWidget() {
     event.preventDefault();
     const question = draft.trim();
     if (!question || busyRef.current) return;
+    // Reply language follows the student's message, not the UI language.
+    // Explicit requests such as "فارسی حرف بزن" persist for this conversation.
+    const replyLanguage = selectCoachReplyLanguage(question, messages, language);
     if (!endpoint) {
       setStatus(fa ? 'سرور هوش مصنوعی تنظیم نشده است. برای راهنمایی آفلاین به بخش مربی مطالعه برو.' : 'AI endpoint is not configured. Offline study guidance is still available in Study Coach.');
       return;
@@ -122,10 +126,10 @@ export function StudyCoachChatWidget() {
         if (controller.signal.aborted) return;
         numericContext = anonymousCoachContext(buildCoachSnapshot({
           userId, tasks, subjects, sessions, exams, now: new Date(),
-          capacityMinutes: 90, language
+          capacityMinutes: 90, language: replyLanguage
         }));
       }
-      const result = await requestStudyCoachReply({ endpoint, messages: next, language: fa ? 'fa' : 'en', numericContext, signal: controller.signal });
+      const result = await requestStudyCoachReply({ endpoint, messages: next, language: replyLanguage, numericContext, signal: controller.signal });
       if (!controller.signal.aborted && lastAccountRef.current === accountAtStart) {
         setMessages(previous => [...previous, { role: 'assistant', content: result.reply }]);
       }
