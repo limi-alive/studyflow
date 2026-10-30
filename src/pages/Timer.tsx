@@ -1,4 +1,4 @@
-import { useUiText } from '../lib/uiLanguage';
+import { useUiText, useUiLanguage } from '../lib/uiLanguage';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AlertTriangle, Brain, Coins, Flame, Hourglass, Keyboard, Maximize2, Minimize2, Pause, Play, RotateCcw, Shield, Sparkles, Square, Target, TimerReset } from 'lucide-react';
@@ -12,6 +12,7 @@ import { requestSync } from '../lib/sync';
 import { useTimerStore } from '../stores/timerStore';
 import type { TimerType } from '../types';
 import { formatDuration, timerElapsedSeconds } from '../utils/time';
+import { focusTaskDefaults, selectablePlannerTasks } from '../utils/focusPlan';
 import { FocusCompanion } from '../components/FocusCompanion';
 import { SessionSummary } from '../components/SessionSummary';
 
@@ -26,6 +27,7 @@ const distractionReasons = ['Phone','Messages','Noise','Thought','Social','Other
 
 export default function TimerPage() {
  const uiText=useUiText();
+ const fa = useUiLanguage() === 'fa';
   const { userId } = useCurrentUser();
   const settings = useSettings(userId);
   const { companion, motion } = useCompanionPreferences(userId);
@@ -34,10 +36,13 @@ export default function TimerPage() {
   const notified = useRef<string | null>(null);
   const subjectRows = useLiveQuery(() => db.subjects.where('userId').equals(userId).filter(x=>!x.archived&&!x.deletedAt).toArray(), [userId]);
   const subjects = useMemo(() => subjectRows ?? [], [subjectRows]);
+  const taskRows = useLiveQuery(() => db.tasks.where('userId').equals(userId).toArray(), [userId]);
+  const focusTasks = useMemo(() => selectablePlannerTasks(taskRows ?? [], userId), [taskRows, userId]);
   const { active, start, pause, resume, addTime, restart, clear } = useTimerStore();
   const [tick, setTick] = useState(Date.now());
   const [mode, setMode] = useState<TimerType>('stopwatch');
   const [subjectId, setSubjectId] = useState<string>('');
+  const [taskId, setTaskId] = useState<string>('');
   const [duration, setDuration] = useState(25);
   const [intent, setIntent] = useState('');
   const [startBurst, setStartBurst] = useState(false);
@@ -79,6 +84,20 @@ export default function TimerPage() {
   }, [active, pause, resume]);
 
   const selected = useMemo(()=>subjects.find(s=>s.id===(active?.subjectId ?? subjectId)),[subjects,active,subjectId]);
+  const chosenTask = useMemo(() => focusTasks.find(task => task.id === (active?.taskId ?? taskId)), [focusTasks, active, taskId]);
+
+  const chooseTask = (id: string) => {
+    setTaskId(id);
+    const task = focusTasks.find(item => item.id === id);
+    if (!task) { setIntent(''); return; }
+    const defaults = focusTaskDefaults(task);
+    setSubjectId(defaults.subjectId);
+    setDuration(defaults.duration);
+    setMode('countdown');
+    setIntent(defaults.intent);
+  };
+
+  useEffect(() => { setTaskId(''); setSubjectId(''); setIntent(''); }, [userId]);
 
   const begin = () => {
     if (settings?.haptics && 'vibrate' in navigator) navigator.vibrate([30, 40, 30]);
@@ -88,7 +107,9 @@ export default function TimerPage() {
     setDistractionOpen(false);
     setZen(preferences.autoZen);
     window.setTimeout(() => setStartBurst(false), 1250);
-    start({ userId, subjectId: subjectId || null, timerType: mode, durationSeconds: mode==='stopwatch'||mode==='deep-focus' ? null : duration*60 });
+    const task = focusTasks.find(item => item.id === taskId);
+    start({ userId, subjectId: task?.subjectId ?? (subjectId || null), taskId: task?.id ?? null,
+      timerType: mode, durationSeconds: mode==='stopwatch'||mode==='deep-focus' ? null : duration*60 });
   };
 
   const finish = async () => {
@@ -155,7 +176,7 @@ export default function TimerPage() {
 
   return <div className={`page timer-stage mode-${activeMode} ${active ? 'timer-active' : ''} ${startBurst ? 'timer-start-burst' : ''}`}>
     <div className="timer-backdrop-orb timer-orb-one"/><div className="timer-backdrop-orb timer-orb-two"/>
-    <div className="timer-heading"><div className="eyebrow">{active ? selected?.name ?? 'Focus session' : 'Focus studio'}</div><span className={`focus-state ${companionState}`}>{completed?'Complete':active?.state==='paused'?'Paused':active?'Focusing':'Ready'}</span></div>
+    <div className="timer-heading"><div className="eyebrow">{active ? chosenTask?.title ?? selected?.name ?? 'Focus session' : 'Focus studio'}</div><span className={`focus-state ${companionState}`}>{completed?'Complete':active?.state==='paused'?'Paused':active?'Focusing':'Ready'}</span></div>
 
     {!active && <div className="focus-progress-hud">
       <div><span className="hud-icon"><Target size={15}/></span><span><small>{uiText("Level")}</small><strong>{focusProgress.level}</strong></span></div>
@@ -171,14 +192,18 @@ export default function TimerPage() {
     {!active && <div className="timer-setup">
       <div className="mode-picker">{modeMeta.map(({id,label,hint,icon:Icon})=><button key={id} className={`mode-card ${mode===id?'active':''}`} onClick={()=>setMode(id)}><span className="mode-icon"><Icon size={20}/></span><span><strong>{label}</strong><small>{hint}</small></span></button>)}</div>
       <div className="setup-fields">
-        <label><span>{uiText("Subject")}</span><select className="input" value={subjectId} onChange={e=>setSubjectId(e.target.value)}><option value="">{uiText("No subject")}</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+        <label><span>{fa ? 'کارهای برنامه‌ریز' : 'Planner task'}</span><select className="input" value={focusTasks.some(task => task.id === taskId) ? taskId : ''} onChange={e=>chooseTask(e.target.value)} aria-label={fa ? 'انتخاب فعالیت مطالعه از برنامه‌ریز' : 'Select a Planner task'}>
+          <option value="">{fa ? 'تمرکز آزاد (بدون فعالیت)' : 'Free focus (no Planner task)'}</option>
+          {focusTasks.map(task=><option key={task.id} value={task.id}>{task.title} · {task.estimatedMinutes ?? 25} {fa ? 'دقیقه' : 'min'}</option>)}
+        </select></label>
+        <label><span>{uiText("Subject")}</span><select className="input" value={subjectId} onChange={e=>{setSubjectId(e.target.value);setTaskId('');}}><option value="">{uiText("No subject")}</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
         {(mode==='countdown'||mode==='pomodoro') && <label><span>{uiText("Minutes")}</span><input className="input" type="number" min="1" max="240" value={duration} onChange={e=>setDuration(Number(e.target.value)||25)} aria-label={uiText("Minutes")}/></label>}
         {preferences.promptIntent && <label className="session-intent-field"><span>{uiText("Session intention")}</span><input className="input" value={intent} maxLength={90} onChange={event=>setIntent(event.target.value)} placeholder={uiText("What will make this session a win?")}/></label>}
       </div>
     </div>}
 
     {active && <div className="focus-active-context">
-      <div className="focus-intention"><Target size={14}/><span>{intent.trim() || selected?.name || 'Stay with one thing'}</span></div>
+      <div className="focus-intention"><Target size={14}/><span>{chosenTask?.title || intent.trim() || selected?.name || 'Stay with one thing'}</span></div>
       <div className="focus-live-tools">
         <button className={`focus-tool ${zen?'active':''}`} onClick={()=>setZen(value=>!value)} title={uiText("Zen mode (Z)")}>{zen?<Minimize2 size={15}/>:<Maximize2 size={15}/>}<span>{uiText("Zen")}</span></button>
         <div className="distraction-wrap"><button className={`focus-tool ${distractions?'warn':''}`} onClick={()=>setDistractionOpen(value=>!value)}><AlertTriangle size={15}/><span>{uiText("Distracted")} {distractions ? `· ${distractions}` : ''}</span></button>{distractionOpen&&<div className="distraction-menu"><strong>{uiText("What pulled you away?")}</strong><div>{distractionReasons.map(reason=><button key={reason} onClick={()=>logDistraction(reason)}>{reason}</button>)}</div></div>}</div>
