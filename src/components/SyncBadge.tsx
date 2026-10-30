@@ -1,3 +1,4 @@
+import { useUiText } from '../lib/uiLanguage';
 import { Check, Cloud, CloudOff, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { syncAll } from '../lib/sync';
@@ -6,6 +7,7 @@ import { cloudEnabled } from '../lib/supabase';
 type SyncState = 'offline'|'synced'|'syncing'|'failed';
 
 export function SyncBadge({ userId, enabled = true }: { userId: string; enabled?: boolean }) {
+ const uiText=useUiText();
   const [state, setState] = useState<SyncState>(navigator.onLine ? 'synced' : 'offline');
   const running = useRef(false);
 
@@ -56,7 +58,7 @@ export function SyncBadge({ userId, enabled = true }: { userId: string; enabled?
 
   const Icon = state === 'offline' ? CloudOff : state === 'syncing' ? RefreshCw : state === 'failed' ? TriangleAlert : Check;
   const label = enabled ? state : 'local';
-  return <button className={`sync-badge is-${state}`} onClick={() => enabled && void syncAll(userId)} title="Sync status">
+  return <button className={`sync-badge is-${state}`} onClick={() => enabled && void syncAll(userId)} title={uiText("Sync status")}>
     <Icon size={14} className={state === 'syncing' ? 'spin' : ''}/><span>{label}</span>{state === 'synced' && <Cloud size={11} className="sync-cloud-mini"/>}
   </button>;
 }

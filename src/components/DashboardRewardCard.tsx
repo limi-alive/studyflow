@@ -1,3 +1,4 @@
+import { useUiText } from '../lib/uiLanguage';
 import { ArrowRight, Banknote, Gift, Sparkles } from 'lucide-react';
 import { useMonthlyReward } from '../hooks/useMonthlyReward';
 
@@ -13,38 +14,39 @@ function compactToman(value: number) {
 }
 
 export function DashboardRewardCard({ userId, calendarType, onOpenDetails }: Props) {
+ const uiText=useUiText();
   const reward = useMonthlyReward(userId, calendarType);
   const percent = Math.max(0, Math.min(100, reward.progress * 100));
   const blockHours = reward.monthlyHours % reward.hoursPerReward;
   const remainingHours = Math.max(0, reward.nextMilestoneSeconds / 3600);
   const ready = reward.unpaidBlocks > 0;
 
-  return <section className={`dashboard-reward-card ${ready ? 'is-ready' : ''}`} aria-label="Monthly study reward">
+  return <section className={`dashboard-reward-card ${ready ? 'is-ready' : ''}`} aria-label={uiText("Monthly study reward")}>
     <span className="dashboard-reward-orb dashboard-reward-orb-one" aria-hidden="true" />
     <span className="dashboard-reward-orb dashboard-reward-orb-two" aria-hidden="true" />
     <div className="dashboard-reward-head">
-      <div className="dashboard-reward-title"><span><Gift size={16}/></span><div><small>MONTHLY STUDY REWARD</small><strong>{reward.monthLabel}</strong></div></div>
-      <button type="button" onClick={onOpenDetails}>Details <ArrowRight size={14}/></button>
+      <div className="dashboard-reward-title"><span><Gift size={16}/></span><div><small>{uiText("MONTHLY STUDY REWARD")}</small><strong>{reward.monthLabel}</strong></div></div>
+      <button type="button" onClick={onOpenDetails}>{uiText("Details")} <ArrowRight size={14}/></button>
     </div>
 
     <div className="dashboard-reward-body">
       <div className="dashboard-reward-amount">
-        <span><Banknote size={17}/> Earned this month</span>
-        <strong>{compactToman(reward.earnedToman)} <em>Toman</em></strong>
-        <small>Every 28 study hours unlocks another 5M Toman.</small>
+        <span><Banknote size={17}/> {uiText("Earned this month")}</span>
+        <strong>{compactToman(reward.earnedToman)} <em>{uiText("Toman")}</em></strong>
+        <small>{uiText("Every 28 study hours unlocks another 5M Toman.")}</small>
       </div>
       <div className="dashboard-reward-next">
-        <span>{ready ? <><Sparkles size={14}/> Reward ready</> : 'Next 5M reward'}</span>
+        <span>{ready ? <><Sparkles size={14}/> {uiText("Reward ready")}</> : 'Next 5M reward'}</span>
         <strong>{ready ? `${compactToman(reward.outstandingToman)} Toman` : `${remainingHours.toFixed(1)}h left`}</strong>
-        <small>{reward.monthlyHours.toFixed(1)}h studied this month</small>
+        <small>{reward.monthlyHours.toFixed(1)}{uiText("h studied this month")}</small>
       </div>
     </div>
 
-    <div className="dashboard-reward-rate"><span><b>{new Intl.NumberFormat('en-US').format(Math.round(reward.tomanPerHour))}</b> Toman / study hour</span><span>Live study value <b>{new Intl.NumberFormat('en-US').format(reward.studyValueToman)} Toman</b></span></div>
+    <div className="dashboard-reward-rate"><span><b>{new Intl.NumberFormat('en-US').format(Math.round(reward.tomanPerHour))}</b> {uiText("Toman / study hour")}</span><span>{uiText("Live study value")} <b>{new Intl.NumberFormat('en-US').format(reward.studyValueToman)} {uiText("Toman")}</b></span></div>
 
     <div className="dashboard-reward-progress-row">
       <div className="dashboard-reward-progress"><i style={{ width: `${percent}%` }}/></div>
-      <span>{blockHours.toFixed(1)} / {reward.hoursPerReward}h</span>
+      <span>{blockHours.toFixed(1)} / {reward.hoursPerReward}{uiText("h")}</span>
     </div>
   </section>;
 }

@@ -31,6 +31,7 @@ export type StudyOSInput = {
   sessions: StudySession[];
   now: Date;
   capacityMinutes: number;
+  language?: 'fa' | 'en';
 };
 
 const DAY = 86_400_000;
@@ -82,6 +83,7 @@ export function sessionDays(sessions: StudySession[], now: Date, days = 14): num
 
 export function buildStudyOS(input: StudyOSInput) {
   const {now, capacityMinutes, userId} = input;
+  const en = input.language === 'en';
   const capacity = Math.max(15, Math.min(360, countMinutes(capacityMinutes) || 90));
   const tasks = input.tasks.filter(t => t.userId === userId && !t.deletedAt && !['completed', 'archived', 'skipped'].includes(t.status));
   const subjects = input.subjects.filter(s => s.userId === userId && !s.deletedAt && !s.archived);
@@ -119,7 +121,7 @@ export function buildStudyOS(input: StudyOSInput) {
     items.push({
       id: `task:${task.id}`, kind: 'task', taskId: task.id, subjectId: task.subjectId ?? null,
       title: task.title,
-      subtitle: Number.isFinite(days) ? (days < 0 ? 'مهلت گذشته' : days === 0 ? 'موعد امروز' : `${days} روز تا موعد`) : (task.subjectId ? subjectNames.get(task.subjectId) ?? 'تکلیف' : 'تکلیف بدون موعد'),
+      subtitle: Number.isFinite(days) ? (days < 0 ? (en ? 'Overdue' : 'مهلت گذشته') : days === 0 ? (en ? 'Due today' : 'موعد امروز') : (en ? `${days} days until due` : `${days} روز تا موعد`)) : (task.subjectId ? subjectNames.get(task.subjectId) ?? (en?'Task':'تکلیف') : (en?'Task without deadline':'تکلیف بدون موعد')),
       minutes: Math.max(10, Math.min(60, countMinutes(task.estimatedMinutes ?? 30) || 30)),
       score: 30 + urgent + Math.min(10, safe(task.priority, 1) * 3) + examBoost,
       dueAt: task.deadline ?? undefined
@@ -132,14 +134,14 @@ export function buildStudyOS(input: StudyOSInput) {
     // Review suggestion is based on inactivity only; it does not claim to estimate memory retention.
     if (record && daysSince < 3) continue;
     if (!record && hasTask) continue;
-    items.push({id:`review:${subject.id}`,kind:'review',title:`مرور ${subject.name}`,subjectId:subject.id,
-      subtitle: record ? `${daysSince} روز از آخرین مطالعه` : 'این درس هنوز جلسه ثبت‌شده ندارد',
+    items.push({id:`review:${subject.id}`,kind:'review',title:en?`Review ${subject.name}`:`مرور ${subject.name}`,subjectId:subject.id,
+      subtitle: record ? (en?`${daysSince} days since last study`:`${daysSince} روز از آخرین مطالعه`) : (en?'No study sessions recorded':'این درس هنوز جلسه ثبت‌شده ندارد'),
       minutes: 20, score: record ? Math.min(88, 24 + daysSince * 5) : 32 + Math.min(10, Math.max(0, subject.priority) * 2)});
   }
   for (const exam of upcoming.filter(e => e.daysLeft <= 14 && e.subjectId && !tasks.some(t => t.subjectId === e.subjectId))) {
     if (items.some(item => item.kind === 'review' && item.subjectId === exam.subjectId)) continue;
-    items.push({id:`exam:${exam.id}`,kind:'exam',title:`آمادگی ${exam.title}`,subjectId:exam.subjectId,
-      subtitle: `${exam.daysLeft} روز تا آزمون`, minutes:Math.max(20,Math.min(45,exam.dailyMinutes ?? 30)),score:exam.daysLeft<=3?105:67});
+    items.push({id:`exam:${exam.id}`,kind:'exam',title:en?`Prepare for ${exam.title}`:`آمادگی ${exam.title}`,subjectId:exam.subjectId,
+      subtitle: en?`${exam.daysLeft} days until exam`:`${exam.daysLeft} روز تا آزمون`, minutes:Math.max(20,Math.min(45,exam.dailyMinutes ?? 30)),score:exam.daysLeft<=3?105:67});
   }
   items.sort((a,b) => b.score-a.score || a.id.localeCompare(b.id));
   const plan: StudyOSItem[] = [];

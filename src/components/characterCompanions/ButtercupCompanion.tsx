@@ -1,11 +1,13 @@
+import { useUiText } from '../../lib/uiLanguage';
 import type { CompanionState } from '../FocusCompanion';
 import type { CompanionMotion } from '../../hooks/useCompanionPreferences';
 
 type Props = { state: CompanionState; motion: CompanionMotion; preview?: boolean };
 
 export function ButtercupCompanion({state,motion,preview=false}:Props){
+ const uiText=useUiText();
   return <div className={`character-stage buttercup-stage state-${state} motion-${motion} ${preview?'is-preview':''}`}>
-    <svg viewBox="0 0 460 320" role="img" aria-label="Buttercup focus companion" className="character-svg">
+    <svg viewBox="0 0 460 320" role="img" aria-label={uiText("Buttercup focus companion")} className="character-svg">
       <defs>
         <filter id="butterGlowV9" x="-45%" y="-45%" width="190%" height="190%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         <filter id="butterShadowV9" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="12" stdDeviation="10" floodColor="#071407" floodOpacity=".32"/></filter>

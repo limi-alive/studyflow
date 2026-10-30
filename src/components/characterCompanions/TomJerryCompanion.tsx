@@ -1,11 +1,13 @@
+import { useUiText } from '../../lib/uiLanguage';
 import type { CompanionState } from '../FocusCompanion';
 import type { CompanionMotion } from '../../hooks/useCompanionPreferences';
 
 type Props = { state: CompanionState; motion: CompanionMotion; preview?: boolean };
 
 export function TomJerryCompanion({state,motion,preview=false}:Props){
+ const uiText=useUiText();
   return <div className={`character-stage tomjerry-stage state-${state} motion-${motion} ${preview?'is-preview':''}`}>
-    <svg viewBox="0 0 500 330" role="img" aria-label="Tom and Jerry focus companion" className="character-svg">
+    <svg viewBox="0 0 500 330" role="img" aria-label={uiText("Tom and Jerry focus companion")} className="character-svg">
       <defs>
         <filter id="tjShadowV9" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="11" stdDeviation="10" floodColor="#120c08" floodOpacity=".28"/></filter>
         <linearGradient id="tjDeskV9" x1="0" x2="1"><stop stopColor="#7b5238"/><stop offset=".55" stopColor="#a86e45"/><stop offset="1" stopColor="#c28b5d"/></linearGradient>

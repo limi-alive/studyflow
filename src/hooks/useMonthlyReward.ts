@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useTimePulse } from './useTimePulse';
 import { db } from '../lib/db';
 import { markAccountPreferencesDirty } from '../lib/accountPreferences';
+import { getUiLanguage } from '../lib/uiLanguage';
 import { calculateMonthlyReward, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
 
 type RewardLedger = Record<string, number>;
@@ -23,14 +24,15 @@ function monthKey(date: Date, calendarType: 'gregorian' | 'jalali') {
 }
 
 function monthLabel(date: Date, calendarType: 'gregorian' | 'jalali') {
-  const label = (value: Date) => new Intl.DateTimeFormat('fa-IR-u-ca-persian', {year:'numeric',month:'long',day:'numeric'}).format(value);
+  const fa=getUiLanguage()==='fa';
+  const label = (value: Date) => new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-gregory', {year:'numeric',month:'long',day:'numeric'}).format(value);
   if (calendarType === 'gregorian') {
     // Preserve the original Gregorian accounting period, represent its dates in Jalali.
     const begin = new Date(date.getFullYear(), date.getMonth(), 1, 12);
     const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 12);
-    return `${label(begin)} تا ${label(end)}`;
+    return `${label(begin)} ${fa?'تا':'to'} ${label(end)}`;
   }
-  return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{year:'numeric',month:'long'}).format(date);
+  return new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-persian-nu-latn',{year:'numeric',month:'long'}).format(date);
 }
 
 export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'jalali' = 'gregorian') {

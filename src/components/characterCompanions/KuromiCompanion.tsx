@@ -1,11 +1,13 @@
+import { useUiText } from '../../lib/uiLanguage';
 import type { CompanionState } from '../FocusCompanion';
 import type { CompanionMotion } from '../../hooks/useCompanionPreferences';
 
 type Props = { state: CompanionState; motion: CompanionMotion; preview?: boolean };
 
 export function KuromiCompanion({state,motion,preview=false}:Props){
+ const uiText=useUiText();
   return <div className={`character-stage kuromi-stage state-${state} motion-${motion} ${preview?'is-preview':''}`}>
-    <svg viewBox="0 0 460 320" role="img" aria-label="Kuromi focus companion" className="character-svg">
+    <svg viewBox="0 0 460 320" role="img" aria-label={uiText("Kuromi focus companion")} className="character-svg">
       <defs>
         <filter id="kuromiShadowV9" x="-35%" y="-35%" width="170%" height="190%"><feDropShadow dx="0" dy="13" stdDeviation="11" floodColor="#09070d" floodOpacity=".32"/></filter>
         <filter id="kuromiSoftGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>

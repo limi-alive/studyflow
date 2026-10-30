@@ -1,3 +1,4 @@
+import { useUiText } from '../lib/uiLanguage';
 import { useEffect, useId, useRef, useState } from 'react';
 import { axisTickIndices, chartX, finiteChartValue } from '../utils/chartLayout';
 
@@ -7,6 +8,7 @@ type Props = { points: TrendPoint[]; height?: number; compact?: boolean };
 
 /** The axis uses the SAME x-coordinates as the data, not a separate flex row. */
 export function TrendChart({ points, height = 270, compact = false }: Props) {
+ const uiText=useUiText();
   const root = useRef<HTMLDivElement>(null);
   const id = useId().replace(/:/g, '');
   const [width, setWidth] = useState(640);
@@ -45,7 +47,7 @@ export function TrendChart({ points, height = 270, compact = false }: Props) {
   return <div ref={root} className={`trend-chart sf-trend${compact ? ' compact' : ''}`}>
     <div className="sf-trend__plot" style={{ height: plotHeight }}>
       <svg className="sf-trend__svg" preserveAspectRatio="none" viewBox={`0 0 ${width} ${plotHeight}`} width={width} height={plotHeight} role="img" aria-labelledby={`${id}-title`}>
-        <title id={`${id}-title`}>Study time by date. {empty ? 'No study time in this period.' : `${points.length} data points.`}</title>
+        <title id={`${id}-title`}>{uiText("Study time by date.")} {empty ? 'No study time in this period.' : `${points.length} data points.`}</title>
         <defs><linearGradient id={`${id}-fill`} x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="var(--accent)" stopOpacity=".28"/>
           <stop offset="100%" stopColor="var(--accent)" stopOpacity=".015"/>
@@ -54,9 +56,9 @@ export function TrendChart({ points, height = 270, compact = false }: Props) {
         {points.length > 1 && <polygon points={area} fill={`url(#${id}-fill)`}/>}
         {hasCompare && points.length > 1 && <polyline points={compareLine} className="sf-trend__compare"/>}
         {points.length > 1 && <polyline points={line} className="sf-trend__line"/>}
-        {points.map((point, index) => (points.length <= 14 || ticks.includes(index)) && <circle key={index} cx={chartX(index, points.length, width)} cy={y(values[index])} r="3" className="sf-trend__dot"><title>{point.label}: {Math.round(values[index] / 60)} min</title></circle>)}
+        {points.map((point, index) => (points.length <= 14 || ticks.includes(index)) && <circle key={index} cx={chartX(index, points.length, width)} cy={y(values[index])} r="3" className="sf-trend__dot"><title>{point.label}: {Math.round(values[index] / 60)} {uiText("min")}</title></circle>)}
       </svg>
-      {empty && !compact && <span className="sf-trend__empty">Your study sessions will appear here.</span>}
+      {empty && !compact && <span className="sf-trend__empty">{uiText("Your study sessions will appear here.")}</span>}
     </div>
     {!compact && <div className="sf-trend__axis" aria-hidden="true">
       {ticks.map(index => <span key={index} title={points[index].label} data-point-index={index} style={{ left: `${chartX(index, points.length, width) / width * 100}%`, maxWidth: labelWidth }}>{points[index].label}</span>)}

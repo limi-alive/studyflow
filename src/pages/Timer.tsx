@@ -1,3 +1,4 @@
+import { useUiText } from '../lib/uiLanguage';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AlertTriangle, Brain, Coins, Flame, Hourglass, Keyboard, Maximize2, Minimize2, Pause, Play, RotateCcw, Shield, Sparkles, Square, Target, TimerReset } from 'lucide-react';
@@ -24,6 +25,7 @@ const modeMeta: Array<{id:TimerType;label:string;hint:string;icon:typeof TimerRe
 const distractionReasons = ['Phone','Messages','Noise','Thought','Social','Other'] as const;
 
 export default function TimerPage() {
+ const uiText=useUiText();
   const { userId } = useCurrentUser();
   const settings = useSettings(userId);
   const { companion, motion } = useCompanionPreferences(userId);
@@ -156,10 +158,10 @@ export default function TimerPage() {
     <div className="timer-heading"><div className="eyebrow">{active ? selected?.name ?? 'Focus session' : 'Focus studio'}</div><span className={`focus-state ${companionState}`}>{completed?'Complete':active?.state==='paused'?'Paused':active?'Focusing':'Ready'}</span></div>
 
     {!active && <div className="focus-progress-hud">
-      <div><span className="hud-icon"><Target size={15}/></span><span><small>Level</small><strong>{focusProgress.level}</strong></span></div>
-      <div className="hud-xp"><span><small>{focusProgress.xp} XP</small><strong>{focusProgress.xpToNextLevel} to next</strong></span><i><b style={{width:`${focusProgress.levelProgress*100}%`}}/></i></div>
-      <div><span className="hud-icon streak"><Flame size={15}/></span><span><small>Streak</small><strong>{focusProgress.streak} days</strong></span></div>
-      <div><span className="hud-icon coins"><Coins size={15}/></span><span><small>Coins</small><strong>{focusProgress.coins}</strong></span></div>
+      <div><span className="hud-icon"><Target size={15}/></span><span><small>{uiText("Level")}</small><strong>{focusProgress.level}</strong></span></div>
+      <div className="hud-xp"><span><small>{focusProgress.xp} {uiText("XP")}</small><strong>{focusProgress.xpToNextLevel} {uiText("to next")}</strong></span><i><b style={{width:`${focusProgress.levelProgress*100}%`}}/></i></div>
+      <div><span className="hud-icon streak"><Flame size={15}/></span><span><small>{uiText("Streak")}</small><strong>{focusProgress.streak} {uiText("days")}</strong></span></div>
+      <div><span className="hud-icon coins"><Coins size={15}/></span><span><small>{uiText("Coins")}</small><strong>{focusProgress.coins}</strong></span></div>
     </div>}
 
     <div className="focus-visual">
@@ -169,40 +171,40 @@ export default function TimerPage() {
     {!active && <div className="timer-setup">
       <div className="mode-picker">{modeMeta.map(({id,label,hint,icon:Icon})=><button key={id} className={`mode-card ${mode===id?'active':''}`} onClick={()=>setMode(id)}><span className="mode-icon"><Icon size={20}/></span><span><strong>{label}</strong><small>{hint}</small></span></button>)}</div>
       <div className="setup-fields">
-        <label><span>Subject</span><select className="input" value={subjectId} onChange={e=>setSubjectId(e.target.value)}><option value="">No subject</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
-        {(mode==='countdown'||mode==='pomodoro') && <label><span>Minutes</span><input className="input" type="number" min="1" max="240" value={duration} onChange={e=>setDuration(Number(e.target.value)||25)} aria-label="Minutes"/></label>}
-        {preferences.promptIntent && <label className="session-intent-field"><span>Session intention</span><input className="input" value={intent} maxLength={90} onChange={event=>setIntent(event.target.value)} placeholder="What will make this session a win?"/></label>}
+        <label><span>{uiText("Subject")}</span><select className="input" value={subjectId} onChange={e=>setSubjectId(e.target.value)}><option value="">{uiText("No subject")}</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+        {(mode==='countdown'||mode==='pomodoro') && <label><span>{uiText("Minutes")}</span><input className="input" type="number" min="1" max="240" value={duration} onChange={e=>setDuration(Number(e.target.value)||25)} aria-label={uiText("Minutes")}/></label>}
+        {preferences.promptIntent && <label className="session-intent-field"><span>{uiText("Session intention")}</span><input className="input" value={intent} maxLength={90} onChange={event=>setIntent(event.target.value)} placeholder={uiText("What will make this session a win?")}/></label>}
       </div>
     </div>}
 
     {active && <div className="focus-active-context">
       <div className="focus-intention"><Target size={14}/><span>{intent.trim() || selected?.name || 'Stay with one thing'}</span></div>
       <div className="focus-live-tools">
-        <button className={`focus-tool ${zen?'active':''}`} onClick={()=>setZen(value=>!value)} title="Zen mode (Z)">{zen?<Minimize2 size={15}/>:<Maximize2 size={15}/>}<span>Zen</span></button>
-        <div className="distraction-wrap"><button className={`focus-tool ${distractions?'warn':''}`} onClick={()=>setDistractionOpen(value=>!value)}><AlertTriangle size={15}/><span>Distracted {distractions ? `· ${distractions}` : ''}</span></button>{distractionOpen&&<div className="distraction-menu"><strong>What pulled you away?</strong><div>{distractionReasons.map(reason=><button key={reason} onClick={()=>logDistraction(reason)}>{reason}</button>)}</div></div>}</div>
-        <span className="focus-score-live"><Shield size={14}/> Score {focusProgress.averageScore || '—'}</span>
+        <button className={`focus-tool ${zen?'active':''}`} onClick={()=>setZen(value=>!value)} title={uiText("Zen mode (Z)")}>{zen?<Minimize2 size={15}/>:<Maximize2 size={15}/>}<span>{uiText("Zen")}</span></button>
+        <div className="distraction-wrap"><button className={`focus-tool ${distractions?'warn':''}`} onClick={()=>setDistractionOpen(value=>!value)}><AlertTriangle size={15}/><span>{uiText("Distracted")} {distractions ? `· ${distractions}` : ''}</span></button>{distractionOpen&&<div className="distraction-menu"><strong>{uiText("What pulled you away?")}</strong><div>{distractionReasons.map(reason=><button key={reason} onClick={()=>logDistraction(reason)}>{reason}</button>)}</div></div>}</div>
+        <span className="focus-score-live"><Shield size={14}/> {uiText("Score")} {focusProgress.averageScore || '—'}</span>
       </div>
     </div>}
 
     <div className="timer-core">
-      <div className="timer-display" role="timer" aria-live="off" aria-label="Study timer" dir="ltr">{formatDuration(display)}</div>
+      <div className="timer-display" role="timer" aria-live="off" aria-label={uiText("Study timer")} dir="ltr">{formatDuration(display)}</div>
       {active?.durationSeconds ? <div className="progress timer-progress"><div style={{width:`${Math.min(100, elapsed/active.durationSeconds*100)}%`}}/></div> : <div className="timer-tickline"><span/><span/><span/><span/><span/></div>}
       <div className="timer-actions">
         <div className="timer-main-actions">
-        {!active && <button className="button primary focus-launch" onClick={begin}><Play/> Start focus</button>}
-        {active?.state==='running' && <button className="button pause-button" onClick={pause}><Pause/> Pause</button>}
-        {active?.state==='paused' && <button className="button primary" onClick={resume}><Play/> Resume</button>}
-        {active && <button className="button" onClick={()=>void finish()}><Square/> Finish</button>}
+        {!active && <button className="button primary focus-launch" onClick={begin}><Play/> {uiText("Start focus")}</button>}
+        {active?.state==='running' && <button className="button pause-button" onClick={pause}><Pause/> {uiText("Pause")}</button>}
+        {active?.state==='paused' && <button className="button primary" onClick={resume}><Play/> {uiText("Resume")}</button>}
+        {active && <button className="button" onClick={()=>void finish()}><Square/> {uiText("Finish")}</button>}
         </div>
         {active && <div className="timer-secondary-actions">
-        {active?.durationSeconds && <button className="button ghost" onClick={()=>addTime(300)}>+5 min</button>}
-        {active && <button className="icon-button" onClick={restartSession} aria-label="Restart"><RotateCcw size={18}/></button>}
-        {active && <button className="button ghost quiet-danger" onClick={discard}>Discard</button>}
+        {active?.durationSeconds && <button className="button ghost" onClick={()=>addTime(300)}>{uiText("+5 min")}</button>}
+        {active && <button className="icon-button" onClick={restartSession} aria-label={uiText("Restart")}><RotateCcw size={18}/></button>}
+        {active && <button className="button ghost quiet-danger" onClick={discard}>{uiText("Discard")}</button>}
         </div>}
       </div>
-      {active && preferences.showShortcutHints && <div className="focus-shortcuts"><Keyboard size={13}/><span><kbd>Space</kbd> pause / resume</span><span><kbd>Z</kbd> zen mode</span></div>}
+      {active && preferences.showShortcutHints && <div className="focus-shortcuts"><Keyboard size={13}/><span><kbd>{uiText("Space")}</kbd> {uiText("pause / resume")}</span><span><kbd>{uiText("Z")}</kbd> {uiText("zen mode")}</span></div>}
     </div>
-    {active && <div className="session-safety"><span className="status-dot"/> Session is saved locally and survives refresh or app restart.</div>}
+    {active && <div className="session-safety"><span className="status-dot"/> {uiText("Session is saved locally and survives refresh or app restart.")}</div>}
 
     {lastSummary && <SessionSummary
       insight={lastSummary}

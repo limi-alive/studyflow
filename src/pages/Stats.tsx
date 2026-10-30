@@ -1,3 +1,4 @@
+import { useUiText } from '../lib/uiLanguage';
 import { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Activity, CalendarDays, Clock3, Flame, Sparkles, Trophy } from 'lucide-react';
@@ -16,6 +17,7 @@ type Range='today'|'week'|'month'|'year'|'all';
 function cutoffFor(range:Range, nowMs:number){const d=new Date(nowMs);if(range==='today')d.setHours(0,0,0,0);else if(range==='week')d.setDate(d.getDate()-6);else if(range==='month')return startOfPersianMonth(d).getTime();else if(range==='year')return startOfPersianYear(d).getTime();else return 0;return d.getTime();}
 
 export default function StatsPage(){
+ const uiText=useUiText();
   const {userId}=useCurrentUser();
   const nowMs=useTimePulse();
   const settings=useSettings(userId);
@@ -38,17 +40,17 @@ export default function StatsPage(){
   const subjectMax=Math.max(...subjectRows.map(row=>row.seconds),1);
 
   return <div className="page stats-dashboard">
-    <header className="dashboard-topbar"><div><div className="eyebrow">Deep analytics</div><h1>Statistics</h1></div><div className="range-tabs range-tabs-large">{(['today','week','month','year','all'] as Range[]).map(r=><button key={r} className={range===r?'active':''} onClick={()=>setRange(r)}>{r}</button>)}</div></header>
+    <header className="dashboard-topbar"><div><div className="eyebrow">{uiText("Deep analytics")}</div><h1>{uiText("Statistics")}</h1></div><div className="range-tabs range-tabs-large">{(['today','week','month','year','all'] as Range[]).map(r=><button key={r} className={range===r?'active':''} onClick={()=>setRange(r)}>{r}</button>)}</div></header>
     <div className="stats-layout">
       <section className="stats-main">
-        <Card className="analytics-hero stats-chart-card"><div className="analytics-heading"><div><div className="eyebrow">Study activity</div><h2>{formatDuration(total)} focused</h2></div><span className="live-chip"><Activity size={15}/> live from your sessions</span></div><TrendChart points={chartPoints}/><div className="chart-legend"><span><i className="legend-solid"/> Focus time</span><span><i className="legend-dashed"/> Rolling baseline</span></div></Card>
-        <Card className="subject-breakdown-card"><div className="section-title"><div><div className="eyebrow">Distribution</div><strong>Subject breakdown</strong></div><Sparkles size={18}/></div><div className="subject-breakdown-list">{subjectRows.length?subjectRows.map((subject,index)=><div className="subject-breakdown-row" key={subject.id}><span className="subject-rank">0{index+1}</span><span className="subject-color" style={{background:subject.color}}/><strong>{subject.name}</strong><div className="subject-meter"><i style={{width:`${Math.max(4,subject.seconds/subjectMax*100)}%`,background:subject.color}}/></div><span>{formatDuration(subject.seconds)}</span></div>):<div className="empty small">No subject data yet.</div>}</div></Card>
+        <Card className="analytics-hero stats-chart-card"><div className="analytics-heading"><div><div className="eyebrow">{uiText("Study activity")}</div><h2>{formatDuration(total)} {uiText("focused")}</h2></div><span className="live-chip"><Activity size={15}/> {uiText("live from your sessions")}</span></div><TrendChart points={chartPoints}/><div className="chart-legend"><span><i className="legend-solid"/> {uiText("Focus time")}</span><span><i className="legend-dashed"/> {uiText("Rolling baseline")}</span></div></Card>
+        <Card className="subject-breakdown-card"><div className="section-title"><div><div className="eyebrow">{uiText("Distribution")}</div><strong>{uiText("Subject breakdown")}</strong></div><Sparkles size={18}/></div><div className="subject-breakdown-list">{subjectRows.length?subjectRows.map((subject,index)=><div className="subject-breakdown-row" key={subject.id}><span className="subject-rank">0{index+1}</span><span className="subject-color" style={{background:subject.color}}/><strong>{subject.name}</strong><div className="subject-meter"><i style={{width:`${Math.max(4,subject.seconds/subjectMax*100)}%`,background:subject.color}}/></div><span>{formatDuration(subject.seconds)}</span></div>):<div className="empty small">{uiText("No subject data yet.")}</div>}</div></Card>
       </section>
       <aside className="stats-rail">
-        <Card className="insight-card"><span className="insight-icon purple"><Clock3/></span><small>Total focus</small><strong>{formatDuration(total)}</strong><span>{sessions.length} sessions</span></Card>
-        <Card className="insight-card"><span className="insight-icon yellow"><Trophy/></span><small>Best day</small><strong>{best.seconds?formatDuration(best.seconds):'—'}</strong><span>{best.date !== '—' ? formatAppDate(new Date(`${best.date}T12:00:00`),settings) : '—'}</span></Card>
-        <Card className="insight-card"><span className="insight-icon green"><Flame/></span><small>Longest streak</small><strong>{streak} days</strong><span>{activeDays} active days</span></Card>
-        <Card className="insight-card"><span className="insight-icon blue"><CalendarDays/></span><small>Average session</small><strong>{formatDuration(average)}</strong><span>per focus block</span></Card>
+        <Card className="insight-card"><span className="insight-icon purple"><Clock3/></span><small>{uiText("Total focus")}</small><strong>{formatDuration(total)}</strong><span>{sessions.length} {uiText("sessions")}</span></Card>
+        <Card className="insight-card"><span className="insight-icon yellow"><Trophy/></span><small>{uiText("Best day")}</small><strong>{best.seconds?formatDuration(best.seconds):'—'}</strong><span>{best.date !== '—' ? formatAppDate(new Date(`${best.date}T12:00:00`),settings) : '—'}</span></Card>
+        <Card className="insight-card"><span className="insight-icon green"><Flame/></span><small>{uiText("Longest streak")}</small><strong>{streak} {uiText("days")}</strong><span>{activeDays} {uiText("active days")}</span></Card>
+        <Card className="insight-card"><span className="insight-icon blue"><CalendarDays/></span><small>{uiText("Average session")}</small><strong>{formatDuration(average)}</strong><span>{uiText("per focus block")}</span></Card>
       </aside>
     </div>
   </div>;
