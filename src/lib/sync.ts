@@ -3,7 +3,7 @@ import { db } from './db';
 import { cloudEnabled, supabase } from './supabase';
 import { syncAccountPreferences } from './accountPreferences';
 import type { BaseRecord, UserSettings } from '../types';
-import { localIsNewer, remoteShouldReplaceLocal, updatedAtMs } from '../utils/syncConflict';
+import { localIsNewer, remoteShouldReplaceLocal, sameSessionContent, updatedAtMs } from '../utils/syncConflict';
 
 const snake = (key: string) => key.replace(/[A-Z]/g, c => `_${c.toLowerCase()}`);
 const camel = (key: string) => key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
@@ -17,11 +17,6 @@ async function authenticatedFor(userId: string) {
   if (!supabase) return false;
   const { data: { user } } = await supabase.auth.getUser();
   return user?.id === userId;
-}
-
-function sameSession(a: Record<string, unknown>, b: Record<string, unknown>) {
-  return ['userId','startTime','endTime','studySeconds','activeSegments','deletedAt'].every(key =>
-    JSON.stringify(a[key] ?? null) === JSON.stringify(b[key] ?? null));
 }
 
 async function syncTable<T extends BaseRecord>(cloudName: string, table: Table<T, string>, userId: string) {
@@ -43,7 +38,7 @@ async function syncTable<T extends BaseRecord>(cloudName: string, table: Table<T
       continue;
     }
     if (cloudName === 'study_sessions' && local.syncStatus !== 'synced' &&
-        !sameSession(local as unknown as Record<string, unknown>, incoming as unknown as Record<string, unknown>))
+        !sameSessionContent(local as unknown as Record<string, unknown>, incoming as unknown as Record<string, unknown>))
       return { ok: false as const, count, error: 'session-conflict-needs-review' };
     if (remoteShouldReplaceLocal(local.updatedAt, incoming.updatedAt, local.syncStatus)) {
       await table.put(incoming);
@@ -56,7 +51,7 @@ async function syncTable<T extends BaseRecord>(cloudName: string, table: Table<T
   for (const row of dirty) {
     const remote = remoteById.get(row.id);
     if (cloudName === 'study_sessions' && remote) {
-      if (!sameSession(row as unknown as Record<string, unknown>, remote as unknown as Record<string, unknown>))
+      if (!sameSessionContent(row as unknown as Record<string, unknown>, remote as unknown as Record<string, unknown>))
         return { ok: false as const, count, error: 'session-conflict-needs-review' };
       await db.transaction('rw', table, async () => {
         const latest = await table.get(row.id);

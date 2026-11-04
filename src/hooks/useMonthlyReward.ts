@@ -4,7 +4,7 @@ import { useTimePulse } from './useTimePulse';
 import { db } from '../lib/db';
 import { markAccountPreferencesDirty } from '../lib/accountPreferences';
 import { getUiLanguage } from '../lib/uiLanguage';
-import { calculateMonthlyReward, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
+import { calculateMonthlyReward, reservedPaidBlocks, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
 import { monthlyPeriodAt, creditedSecondsInPeriod } from '../utils/monthlyAccounting';
 
 type RewardLedger = Record<string, number>;
@@ -12,7 +12,8 @@ type RewardLedger = Record<string, number>;
 function ledgerKey(userId: string) { return `studyflow.rewardLedger.${userId}`; }
 
 function readLedger(userId: string): RewardLedger {
-  try { return JSON.parse(localStorage.getItem(ledgerKey(userId)) || '{}') as RewardLedger; }
+  try { const value: unknown = JSON.parse(localStorage.getItem(ledgerKey(userId)) || '{}');
+    return value && typeof value === 'object' && !Array.isArray(value) ? value as RewardLedger : {}; }
   catch { return {}; }
 }
 
@@ -21,7 +22,7 @@ function monthLabel(date: Date, calendarType: 'gregorian' | 'jalali') {
   const bounds = monthlyPeriodAt(date);
   const label = (value: Date) => new Intl.DateTimeFormat(calendarType==='gregorian' ? (fa?'fa-IR-u-ca-gregory':'en-US-u-ca-gregory') : (fa?'fa-IR-u-ca-persian':'en-US-u-ca-persian'), {year:'numeric',month:'long',day:'numeric',timeZone:'Asia/Tehran'}).format(value);
   if (calendarType === 'gregorian') {
-    // Preserve the original Gregorian accounting period, represent its dates in Jalali.
+    // The period is Tehran Jalali; only its displayed dates use Gregorian formatting.
     const begin = new Date(bounds.start);
     const end = new Date(new Date(bounds.end).getTime() - 1);
     return `${label(begin)} ${fa?'تا':'to'} ${label(end)}`;
@@ -53,10 +54,7 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   const earnedBlocks = rewardMath.earnedBlocks;
   // Existing Gregorian payout entries cannot safely be re-attributed to individual sessions.
   // Conservatively reserve them in every overlapping Jalali month; never pay twice automatically.
-  const oldGregorianKeys = [bounds.start, new Date(Date.parse(bounds.end) - 1).toISOString()]
-    .map(instant => instant.slice(0, 7));
-  const priorPaid = [...new Set(oldGregorianKeys)].reduce((sum, oldKey) => sum + Math.max(0, ledger[oldKey] ?? 0), 0);
-  const paidBlocks = Math.min(earnedBlocks, Math.max(0, ledger[key] ?? 0) + priorPaid);
+  const { legacy: priorPaid, paid: paidBlocks } = reservedPaidBlocks(ledger, key, bounds.start, bounds.end, earnedBlocks);
   const unpaidBlocks = Math.max(0, earnedBlocks - paidBlocks);
   const progress = rewardMath.progress;
   const nextMilestoneSeconds = rewardMath.nextMilestoneSeconds;

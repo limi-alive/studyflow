@@ -11,16 +11,35 @@ create or replace function public.studyflow_validate_segments() returns trigger
 language plpgsql set search_path = public, pg_temp as $$
 declare segment jsonb; first_at timestamptz; last_at timestamptz; previous_end timestamptz; total_ms numeric := 0;
 begin
-  if new.study_seconds < 0 or new.study_seconds > 86400 or new.end_time < new.start_time then
+  if new.study_seconds < 0 or new.end_time < new.start_time then
     raise exception 'Invalid study session' using errcode = '23514';
   end if;
+  -- Historic oversized rows remain editable for unrelated metadata; no new oversized credit.
+  if new.study_seconds > 86400 then
+    if tg_op = 'INSERT' or new.active_segments is not null then
+      raise exception 'Excessive study duration' using errcode = '23514';
+    end if;
+    if new.study_seconds is distinct from old.study_seconds then
+      raise exception 'Excessive study duration' using errcode = '23514';
+    end if;
+  end if;
   if new.active_segments is null then return new; end if;
-  if jsonb_typeof(new.active_segments) <> 'array' or jsonb_array_length(new.active_segments) > 500 then
+  if new.end_time > now() + interval '5 minutes' then
+    raise exception 'Future active segment' using errcode = '23514';
+  end if;
+  if jsonb_typeof(new.active_segments) <> 'array' then
     raise exception 'Invalid active segments' using errcode = '23514';
+  end if;
+  if jsonb_array_length(new.active_segments) > 500 then
+    raise exception 'Too many active segments' using errcode = '23514';
   end if;
   for segment in select value from jsonb_array_elements(new.active_segments) loop
     if jsonb_typeof(segment) <> 'object' or jsonb_typeof(segment->'start') <> 'string' or jsonb_typeof(segment->'end') <> 'string' then
       raise exception 'Invalid active segment' using errcode = '23514';
+    end if;
+    if (segment->>'start') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$'
+      or (segment->>'end') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$' then
+      raise exception 'Active segments must use UTC ISO timestamps' using errcode = '23514';
     end if;
     first_at := (segment->>'start')::timestamptz;
     last_at := (segment->>'end')::timestamptz;
@@ -30,7 +49,7 @@ begin
     total_ms := total_ms + extract(epoch from last_at-first_at)*1000;
     previous_end := last_at;
   end loop;
-  if total_ms < new.study_seconds*1000 or total_ms >= (new.study_seconds+1)*1000 then
+  if total_ms <> new.study_seconds*1000 then
     raise exception 'Segment duration does not match study time' using errcode = '23514';
   end if;
   return new;

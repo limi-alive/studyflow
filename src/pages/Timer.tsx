@@ -39,7 +39,9 @@ export default function TimerPage() {
   const subjects = useMemo(() => subjectRows ?? [], [subjectRows]);
   const taskRows = useLiveQuery(() => db.tasks.where('userId').equals(userId).toArray(), [userId]);
   const focusTasks = useMemo(() => selectablePlannerTasks(taskRows ?? [], userId), [taskRows, userId]);
-  const { active, start, pause, resume, confirmContinue, enforceCheckpoint, addTime, restart, clear } = useTimerStore();
+  const { active: storedActive, activateUser, start, pause, resume, confirmContinue, enforceCheckpoint, addTime, restart, clear } = useTimerStore();
+  const active = storedActive?.userId === userId ? storedActive : null;
+  useEffect(() => { activateUser(userId); }, [userId, activateUser]);
   const finishing = useRef(false);
   const checkpointDialog = useRef<HTMLDivElement>(null);
   const [tick, setTick] = useState(Date.now());

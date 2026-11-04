@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StudySession } from '../types';
-import { creditedSecondsInPeriod, monthlyPeriodAt } from './monthlyAccounting';
+import { creditedSecondsBySubject, creditedSecondsInPeriod, monthlyPeriodAt } from './monthlyAccounting';
 
 const row = (id: string, userId: string, start: string, end: string, segments?: StudySession['activeSegments']): StudySession => ({
   id,userId,createdAt:start,updatedAt:end,syncStatus:'pending',startTime:start,endTime:end,
@@ -35,5 +35,21 @@ describe('canonical Tehran Jalali monthly accounting', () => {
     expect(creditedSecondsInPeriod([session,overlap,row('other','bob',iso(0),iso(60),[{start:iso(0),end:iso(60)}])],after.start,after.end)).toBe(150);
     expect(creditedSecondsInPeriod([row('old','alice',iso(-120),iso(60))],before.start,before.end)).toBe(0);
     expect(creditedSecondsInPeriod([row('old','alice',iso(-120),iso(60))],after.start,after.end)).toBe(3600);
+  });
+  it('unions identical, partial and adjacent sessions per user with deterministic subject attribution',()=>{
+    const bounds=monthlyPeriodAt(new Date('2026-11-01T12:00:00Z'));
+    const base=Date.parse('2026-11-01T10:00:00Z');
+    const iso=(s:number)=>new Date(base+s*1000).toISOString();
+    const first={...row('a','alice',iso(0),iso(120),[{start:iso(0),end:iso(120)}]),subjectId:'math'};
+    const duplicate={...row('b','alice',iso(0),iso(120),[{start:iso(0),end:iso(120)}]),subjectId:'science'};
+    const partial={...row('c','alice',iso(60),iso(180),[{start:iso(60),end:iso(180)}]),subjectId:'science'};
+    const adjacent={...row('d','alice',iso(180),iso(240),[{start:iso(180),end:iso(240)}]),subjectId:'math'};
+    const other={...row('e','bob',iso(0),iso(120),[{start:iso(0),end:iso(120)}]),subjectId:'science'};
+    const all=[first,duplicate,partial,adjacent,other];
+    expect(creditedSecondsInPeriod(all,bounds.start,bounds.end)).toBe(360);
+    const subjects=creditedSecondsBySubject(all,bounds.start,bounds.end);
+    expect(subjects.get('math')).toBe(180);
+    expect(subjects.get('science')).toBe(180);
+    expect([...subjects.values()].reduce((a,b)=>a+b,0)).toBe(360);
   });
 });
