@@ -42,6 +42,8 @@ export function DashboardRewardCard({ userId, calendarType, onOpenDetails }: Pro
       </div>
     </div>
 
+    {reward.provisional && <small role="status">{uiText('Local time is provisional until cloud sync verifies it.')}</small>}
+    {reward.attributionConflictSeconds > 0 && <small role="status">{uiText('Attribution Conflict')}: {Math.floor(reward.attributionConflictSeconds / 60)} {uiText('minutes require subject review; global time is counted once.')}</small>}
     <div className="dashboard-reward-rate"><span><b>{new Intl.NumberFormat('en-US').format(Math.round(reward.tomanPerHour))}</b> {uiText("Toman / study hour")}</span><span>{uiText("Live study value")} <b>{new Intl.NumberFormat('en-US').format(reward.studyValueToman)} {uiText("Toman")}</b></span></div>
 
     <div className="dashboard-reward-progress-row">

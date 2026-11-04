@@ -4,35 +4,30 @@ import { useTimePulse } from './useTimePulse';
 import { db } from '../lib/db';
 import { markAccountPreferencesDirty } from '../lib/accountPreferences';
 import { getUiLanguage } from '../lib/uiLanguage';
-import { calculateMonthlyReward, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
+import { calculateMonthlyReward, reservedPaidBlocks, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
+import { monthlyPeriodAt, accountedAttribution } from '../utils/monthlyAccounting';
 
 type RewardLedger = Record<string, number>;
 
 function ledgerKey(userId: string) { return `studyflow.rewardLedger.${userId}`; }
 
 function readLedger(userId: string): RewardLedger {
-  try { return JSON.parse(localStorage.getItem(ledgerKey(userId)) || '{}') as RewardLedger; }
+  try { const value: unknown = JSON.parse(localStorage.getItem(ledgerKey(userId)) || '{}');
+    return value && typeof value === 'object' && !Array.isArray(value) ? value as RewardLedger : {}; }
   catch { return {}; }
-}
-
-function monthKey(date: Date, calendarType: 'gregorian' | 'jalali') {
-  const locale = calendarType === 'jalali' ? 'en-US-u-ca-persian-nu-latn' : 'en-CA';
-  const parts = new Intl.DateTimeFormat(locale, { year: 'numeric', month: '2-digit' }).formatToParts(date);
-  const year = parts.find(part => part.type === 'year')?.value ?? String(date.getFullYear());
-  const month = parts.find(part => part.type === 'month')?.value ?? String(date.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}`;
 }
 
 function monthLabel(date: Date, calendarType: 'gregorian' | 'jalali') {
   const fa=getUiLanguage()==='fa';
-  const label = (value: Date) => new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-gregory', {year:'numeric',month:'long',day:'numeric'}).format(value);
+  const bounds = monthlyPeriodAt(date);
+  const label = (value: Date) => new Intl.DateTimeFormat(calendarType==='gregorian' ? (fa?'fa-IR-u-ca-gregory':'en-US-u-ca-gregory') : (fa?'fa-IR-u-ca-persian':'en-US-u-ca-persian'), {year:'numeric',month:'long',day:'numeric',timeZone:'Asia/Tehran'}).format(value);
   if (calendarType === 'gregorian') {
-    // Preserve the original Gregorian accounting period, represent its dates in Jalali.
-    const begin = new Date(date.getFullYear(), date.getMonth(), 1, 12);
-    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 12);
+    // The period is Tehran Jalali; only its displayed dates use Gregorian formatting.
+    const begin = new Date(bounds.start);
+    const end = new Date(new Date(bounds.end).getTime() - 1);
     return `${label(begin)} ${fa?'تا':'to'} ${label(end)}`;
   }
-  return new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-persian-nu-latn',{year:'numeric',month:'long'}).format(date);
+  return new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-persian-nu-latn',{year:'numeric',month:'long',timeZone:'Asia/Tehran'}).format(date);
 }
 
 export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'jalali' = 'gregorian') {
@@ -40,7 +35,8 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   const sessions = useMemo(() => sessionsQuery ?? [], [sessionsQuery]);
   const [ledger, setLedger] = useState<RewardLedger>(() => readLedger(userId));
   const now = new Date(useTimePulse());
-  const key = monthKey(now, calendarType);
+  const bounds = monthlyPeriodAt(now);
+  const key = bounds.monthKey;
 
   useEffect(() => setLedger(readLedger(userId)), [userId]);
   useEffect(() => {
@@ -52,14 +48,14 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
     return () => window.removeEventListener('studyflow:account-preferences-applied', refresh);
   }, [userId]);
 
-  const monthlySeconds = useMemo(() => sessions.reduce((sum, session) => {
-    const ended = new Date(session.endTime || session.startTime);
-    return monthKey(ended, calendarType) === key ? sum + Math.max(0, session.studySeconds || 0) : sum;
-  }, 0), [sessions, calendarType, key]);
+  const attribution = useMemo(() => accountedAttribution(sessions, bounds.start, bounds.end), [sessions, bounds.start, bounds.end]);
+  const monthlySeconds = attribution.totalSeconds;
 
   const rewardMath = calculateMonthlyReward(monthlySeconds);
   const earnedBlocks = rewardMath.earnedBlocks;
-  const paidBlocks = Math.min(earnedBlocks, Math.max(0, ledger[key] ?? 0));
+  // Existing Gregorian payout entries cannot safely be re-attributed to individual sessions.
+  // Conservatively reserve them in every overlapping Jalali month; never pay twice automatically.
+  const { legacy: priorPaid, paid: paidBlocks } = reservedPaidBlocks(ledger, key, bounds.start, bounds.end, earnedBlocks);
   const unpaidBlocks = Math.max(0, earnedBlocks - paidBlocks);
   const progress = rewardMath.progress;
   const nextMilestoneSeconds = rewardMath.nextMilestoneSeconds;
@@ -71,7 +67,7 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   const outstandingToman = unpaidBlocks * REWARD_TOMAN;
 
   const setPaidBlocks = (count: number) => {
-    const next = { ...readLedger(userId), [key]: Math.max(0, Math.min(earnedBlocks, count)) };
+    const next = { ...readLedger(userId), [key]: Math.max(0, Math.min(earnedBlocks, count - priorPaid)) };
     localStorage.setItem(ledgerKey(userId), JSON.stringify(next));
     markAccountPreferencesDirty(userId);
     setLedger(next);
@@ -85,6 +81,8 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
     tomanPerHour,
     studyValueToman,
     monthlySeconds,
+    provisional: attribution.provisional,
+    attributionConflictSeconds: attribution.conflictSeconds,
     monthlyHours: monthlySeconds / 3600,
     earnedBlocks,
     paidBlocks,

@@ -3,7 +3,7 @@ import { db } from './db';
 import { cloudEnabled, supabase } from './supabase';
 import { syncAccountPreferences } from './accountPreferences';
 import type { BaseRecord, UserSettings } from '../types';
-import { localIsNewer, remoteShouldReplaceLocal, updatedAtMs } from '../utils/syncConflict';
+import { localIsNewer, remoteShouldReplaceLocal, sameSessionContent, updatedAtMs } from '../utils/syncConflict';
 
 const snake = (key: string) => key.replace(/[A-Z]/g, c => `_${c.toLowerCase()}`);
 const camel = (key: string) => key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
@@ -37,6 +37,9 @@ async function syncTable<T extends BaseRecord>(cloudName: string, table: Table<T
       count++;
       continue;
     }
+    if (cloudName === 'study_sessions' && local.syncStatus !== 'synced' &&
+        !sameSessionContent(local as unknown as Record<string, unknown>, incoming as unknown as Record<string, unknown>))
+      return { ok: false as const, count, error: 'session-conflict-needs-review' };
     if (remoteShouldReplaceLocal(local.updatedAt, incoming.updatedAt, local.syncStatus)) {
       await table.put(incoming);
       count++;
@@ -47,21 +50,38 @@ async function syncTable<T extends BaseRecord>(cloudName: string, table: Table<T
   const dirty = await table.where('userId').equals(userId).filter(row => row.syncStatus !== 'synced').toArray();
   for (const row of dirty) {
     const remote = remoteById.get(row.id);
+    if (cloudName === 'study_sessions' && remote) {
+      if (!sameSessionContent(row as unknown as Record<string, unknown>, remote as unknown as Record<string, unknown>))
+        return { ok: false as const, count, error: 'session-conflict-needs-review' };
+      await db.transaction('rw', table, async () => {
+        const latest = await table.get(row.id);
+        if (latest?.updatedAt === row.updatedAt) await table.put({ ...latest, syncStatus: 'synced' });
+      });
+      count++;
+      continue;
+    }
     if (remote && updatedAtMs(remote.updatedAt) > updatedAtMs(row.updatedAt)) {
       await table.put({ ...remote, syncStatus: 'synced' });
       count++;
       continue;
     }
-    const { error: upsertError } = await supabase
-      .from(cloudName)
-      .upsert(toCloud(row as unknown as Record<string, unknown>), { onConflict: 'id' });
+    const query = supabase.from(cloudName);
+    const { error: upsertError } = cloudName === 'study_sessions'
+      ? await query.insert(toCloud(row as unknown as Record<string, unknown>))
+      : await query.upsert(toCloud(row as unknown as Record<string, unknown>), { onConflict: 'id' });
     if (upsertError) {
-      row.syncStatus = 'failed';
-      await table.put(row);
+      if (cloudName === 'study_sessions' && upsertError.code === '23505')
+        return { ok: false as const, count, error: 'session-conflict-needs-review' };
+      await db.transaction('rw', table, async () => {
+        const latest = await table.get(row.id);
+        if (latest?.updatedAt === row.updatedAt) await table.put({ ...latest, syncStatus: 'failed' });
+      });
       return { ok: false as const, count, error: upsertError.message };
     }
-    row.syncStatus = 'synced';
-    await table.put(row);
+    await db.transaction('rw', table, async () => {
+      const latest = await table.get(row.id);
+      if (latest?.updatedAt === row.updatedAt) await table.put({ ...latest, syncStatus: 'synced' });
+    });
     count++;
   }
 
@@ -80,6 +100,7 @@ function cloudSettings(row: UserSettings) {
     pomodoro_focus: row.pomodoroFocus,
     pomodoro_short_break: row.pomodoroShortBreak,
     pomodoro_long_break: row.pomodoroLongBreak,
+    checkpoint_minutes: row.checkpointMinutes ?? 120,
     notifications: row.notifications,
     haptics: row.haptics,
     sounds: row.sounds,
@@ -90,7 +111,7 @@ function cloudSettings(row: UserSettings) {
 
 function localSettings(raw: Record<string, unknown>): UserSettings {
   const row = fromCloud(raw) as unknown as UserSettings;
-  return { ...row, syncStatus: 'synced' };
+  return { ...row, checkpointMinutes: Number.isInteger(row.checkpointMinutes) && (row.checkpointMinutes ?? 0) >= 1 && (row.checkpointMinutes ?? 0) <= 240 ? row.checkpointMinutes : 120, syncStatus: 'synced' };
 }
 
 async function syncSettings(userId: string) {

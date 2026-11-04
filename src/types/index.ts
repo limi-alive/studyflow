@@ -50,6 +50,7 @@ export interface StudySession extends BaseRecord {
   startTime: string;
   endTime: string;
   studySeconds: number;
+  activeSegments?: Array<{start: string; end: string}>;
   breakSeconds: number;
   pauseSeconds: number;
   timerType: TimerType | 'manual';
@@ -88,6 +89,7 @@ export interface UserSettings {
   pomodoroFocus: number;
   pomodoroShortBreak: number;
   pomodoroLongBreak: number;
+  checkpointMinutes?: number;
   notifications: boolean;
   haptics: boolean;
   sounds: boolean;
@@ -108,4 +110,9 @@ export interface ActiveTimer {
   totalPausedMs: number;
   durationSeconds?: number | null;
   state: 'running' | 'paused';
+  checkpointSeconds?: number;
+  nextCheckpointSeconds?: number;
+  awaitingConfirmation?: boolean;
+  activeSegments?: Array<{start: string; end: string}>;
+  segmentStartedAt?: string | null;
 }

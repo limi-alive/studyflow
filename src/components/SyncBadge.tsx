@@ -13,8 +13,10 @@ export function SyncBadge({ userId, enabled = true }: { userId: string; enabled?
 
   useEffect(() => {
     let alive = true;
-    const run = async () => {
-      if (running.current) return;
+    let failures = 0;
+    let nextAttemptAt = 0;
+    const run = async (manual = false) => {
+      if (running.current || (!manual && Date.now() < nextAttemptAt)) return;
       if (!enabled || !navigator.onLine || !cloudEnabled) { if (alive) setState('offline'); return; }
       running.current = true;
       if (alive) setState('syncing');
@@ -22,14 +24,20 @@ export function SyncBadge({ userId, enabled = true }: { userId: string; enabled?
       running.current = false;
       if (!alive) return;
       const nextState = result.ok ? 'synced' : result.error === 'offline-or-cloud-disabled' || result.error === 'auth-mismatch' ? 'offline' : 'failed';
+      if (result.ok) { failures = 0; nextAttemptAt = 0; }
+      else if (nextState === 'failed') {
+        failures++;
+        nextAttemptAt = result.error === 'session-conflict-needs-review' || failures >= 5
+          ? Infinity : Date.now() + Math.min(300_000, 15_000 * 2 ** (failures - 1));
+      }
       setState(nextState);
     };
-    const online = () => void run();
+    const online = () => { failures = 0; nextAttemptAt = 0; void run(); };
     const offline = () => setState('offline');
     const foreground = () => { if (document.visibilityState === 'visible') void run(); };
     const syncNeeded = (event: Event) => {
       const detail = (event as CustomEvent<{userId?: string}>).detail;
-      if (!detail?.userId || detail.userId === userId) window.setTimeout(() => void run(), 250);
+      if (!detail?.userId || detail.userId === userId) { failures = 0; nextAttemptAt = 0; window.setTimeout(() => void run(), 250); }
     };
     const syncState = (event: Event) => {
       const detail = (event as CustomEvent<{userId?: string; state?: SyncState}>).detail;
