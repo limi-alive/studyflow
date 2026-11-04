@@ -53,6 +53,10 @@ function tehranMidnight(gregorian: {year: number; month: number; day: number}): 
   return new Date(candidate);
 }
 
+export function monthlyBoundsAt(time: number | Date, calendar: 'gregorian' | 'jalali') {
+  return calendar === 'jalali' ? jalaliLeaderboardBoundsAt(time) : utcMonthBoundsAt(time);
+}
+
 export function jalaliLeaderboardBoundsAt(time: number | Date) {
   const now = new Date(time);
   if (!Number.isFinite(now.getTime())) throw new RangeError('Invalid leaderboard date');

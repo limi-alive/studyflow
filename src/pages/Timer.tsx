@@ -11,7 +11,7 @@ import { db, getDeviceId, nowIso } from '../lib/db';
 import { requestSync } from '../lib/sync';
 import { useTimerStore } from '../stores/timerStore';
 import type { TimerType } from '../types';
-import { formatDuration, timerElapsedSeconds } from '../utils/time';
+import { checkpointLimit, checkpointPauseAt, creditableTimerSeconds, formatDuration, timerElapsedSeconds } from '../utils/time';
 import { focusTaskDefaults, selectablePlannerTasks } from '../utils/focusPlan';
 import { FocusCompanion } from '../components/FocusCompanion';
 import { SessionSummary } from '../components/SessionSummary';
@@ -39,12 +39,15 @@ export default function TimerPage() {
   const subjects = useMemo(() => subjectRows ?? [], [subjectRows]);
   const taskRows = useLiveQuery(() => db.tasks.where('userId').equals(userId).toArray(), [userId]);
   const focusTasks = useMemo(() => selectablePlannerTasks(taskRows ?? [], userId), [taskRows, userId]);
-  const { active, start, pause, resume, addTime, restart, clear } = useTimerStore();
+  const { active, start, pause, resume, confirmContinue, enforceCheckpoint, addTime, restart, clear } = useTimerStore();
+  const finishing = useRef(false);
   const [tick, setTick] = useState(Date.now());
   const [mode, setMode] = useState<TimerType>('stopwatch');
   const [subjectId, setSubjectId] = useState<string>('');
   const [taskId, setTaskId] = useState<string>('');
   const [duration, setDuration] = useState(25);
+  const [checkpointMinutes, setCheckpointMinutes] = useState(120);
+  const [adjustMinutes, setAdjustMinutes] = useState<number | null>(null);
   const [intent, setIntent] = useState('');
   const [startBurst, setStartBurst] = useState(false);
   const [distractions, setDistractions] = useState(0);
@@ -60,7 +63,8 @@ export default function TimerPage() {
     return () => document.body.classList.remove('focus-zen');
   }, [active, zen]);
 
-  const elapsed = active ? timerElapsedSeconds(active.startedAt, active.totalPausedMs, active.pausedAt, tick) : 0;
+  useEffect(() => { if (active?.state === 'running') enforceCheckpoint(); }, [active, tick, enforceCheckpoint]);
+  const elapsed = active ? creditableTimerSeconds(active, tick) : 0;
   const display = active?.durationSeconds ? Math.max(0, active.durationSeconds - elapsed) : elapsed;
 
   useEffect(() => {
@@ -114,24 +118,33 @@ export default function TimerPage() {
     window.setTimeout(() => setStartBurst(false), 1250);
     const task = focusTasks.find(item => item.id === taskId);
     start({ userId, subjectId: task?.subjectId ?? (subjectId || null), taskId: task?.id ?? null,
-      timerType: mode, durationSeconds: mode==='stopwatch'||mode==='deep-focus' ? null : duration*60 });
+      timerType: mode, checkpointSeconds: Math.max(60, Math.min(240, checkpointMinutes))*60,
+      durationSeconds: mode==='stopwatch'||mode==='deep-focus' ? null : duration*60 });
   };
 
-  const finish = async () => {
-    if (!active) return;
-    const end = nowIso();
-    const rawSeconds = timerElapsedSeconds(active.startedAt, active.totalPausedMs, active.pausedAt);
-    const seconds = active.durationSeconds ? Math.min(rawSeconds, active.durationSeconds) : rawSeconds;
-    const currentPauseMs = active.pausedAt ? Math.max(0, Date.now() - new Date(active.pausedAt).getTime()) : 0;
+  const finish = async (adjusted?: number) => {
+    if (!active || finishing.current) return;
+    finishing.current = true;
+    try {
+    const overdue = !active.pausedAt && timerElapsedSeconds(active.startedAt, active.totalPausedMs) >= checkpointLimit(active);
+    const end = active.pausedAt ?? (overdue ? checkpointPauseAt(active) : nowIso());
+    const rawSeconds = creditableTimerSeconds(active);
+    const seconds = Math.min(adjusted ?? rawSeconds, active.durationSeconds ?? Infinity);
+    const currentPauseMs = active.pausedAt ? Math.max(0, Date.parse(end) - new Date(active.pausedAt).getTime()) : 0;
     const pauseSeconds = Math.round((active.totalPausedMs + currentPauseMs)/1000);
-    const completedTarget = !active.durationSeconds || rawSeconds >= active.durationSeconds;
+    const completedTarget = !active.durationSeconds || seconds >= active.durationSeconds;
     if (seconds <= 0) { clear(); setZen(false); return; }
 
-    await db.sessions.put({
+    const inserted = await db.transaction('rw', db.sessions, async () => {
+      if (await db.sessions.get(active.id)) return false;
+      await db.sessions.add({
       id: active.id, userId: active.userId, subjectId: active.subjectId, topicId: active.topicId, taskId: active.taskId,
       startTime: active.startedAt, endTime: end, studySeconds: seconds, breakSeconds: 0, pauseSeconds,
-      timerType: active.timerType, deviceId: getDeviceId(), createdAt: active.startedAt, updatedAt: end, syncStatus: 'pending'
+      timerType: active.timerType, deviceId: getDeviceId(), createdAt: active.startedAt, updatedAt: nowIso(), syncStatus: 'pending'
+      });
+      return true;
     });
+    if (!inserted) { clear(); return; }
 
     const insight = focusProgress.recordSession({
       id: active.id,
@@ -151,6 +164,7 @@ export default function TimerPage() {
     setZen(false);
     setDistractionOpen(false);
     if (preferences.showSessionSummary) setLastSummary(insight);
+    } finally { finishing.current = false; }
   };
 
   const discard = () => {
@@ -200,6 +214,7 @@ export default function TimerPage() {
         <FocusTaskPicker tasks={focusTasks} subjects={subjects} selectedTaskId={taskId} onSelect={chooseTask} fa={fa}/>
         <label><span>{uiText("Subject")}</span><select className="input" value={subjectId} onChange={e=>{setSubjectId(e.target.value);setTaskId('');}}><option value="">{uiText("No subject")}</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
         {(mode==='countdown'||mode==='pomodoro') && <label><span>{uiText("Minutes")}</span><input className="input" type="number" min="1" max="240" value={duration} onChange={e=>setDuration(Number(e.target.value)||25)} aria-label={uiText("Minutes")}/></label>}
+        <label><span>{uiText('Confirmation interval (minutes)')}</span><input className="input" type="number" min="1" max="240" value={checkpointMinutes} onChange={e=>setCheckpointMinutes(Number(e.target.value)||120)}/></label>
         {preferences.promptIntent && <label className="session-intent-field"><span>{uiText("Session intention")}</span><input className="input" value={intent} maxLength={90} onChange={event=>setIntent(event.target.value)} placeholder={uiText("What will make this session a win?")}/></label>}
       </div>
     </div>}
@@ -213,6 +228,13 @@ export default function TimerPage() {
       </div>
     </div>}
 
+    {active?.awaitingConfirmation && <div className="session-safety" role="alertdialog" aria-label={uiText('Are you still studying?')}>
+      <strong>{uiText('Are you still studying?')}</strong> {uiText('Timer paused at the confirmation checkpoint.')}
+      <button className="button primary" onClick={()=>{setAdjustMinutes(null);confirmContinue();}}>{uiText('Continue')}</button>
+      <button className="button" onClick={()=>void finish()}>{uiText('Finish')}</button>
+      <label>{uiText('Adjust duration (minutes)')} <input className="input" type="number" min="0" max={Math.ceil(elapsed/60)} value={adjustMinutes ?? ''} onChange={e=>setAdjustMinutes(e.target.value === '' ? null : Number(e.target.value))}/></label>
+      <button className="button" disabled={adjustMinutes === null || !Number.isFinite(adjustMinutes) || adjustMinutes < 0 || adjustMinutes*60 > elapsed} onClick={()=>void finish(Math.floor((adjustMinutes ?? 0)*60))}>{uiText('Save adjusted duration')}</button>
+    </div>}
     <div className="timer-core">
       <div className="timer-display" role="timer" aria-live="off" aria-label={uiText("Study timer")} dir="ltr">{formatDuration(display)}</div>
       {active?.durationSeconds ? <div className="progress timer-progress"><div style={{width:`${Math.min(100, elapsed/active.durationSeconds*100)}%`}}/></div> : <div className="timer-tickline"><span/><span/><span/><span/><span/></div>}
@@ -220,7 +242,7 @@ export default function TimerPage() {
         <div className="timer-main-actions">
         {!active && <button className="button primary focus-launch" onClick={begin}><Play/> {uiText("Start focus")}</button>}
         {active?.state==='running' && <button className="button pause-button" onClick={pause}><Pause/> {uiText("Pause")}</button>}
-        {active?.state==='paused' && <button className="button primary" onClick={resume}><Play/> {uiText("Resume")}</button>}
+        {active?.state==='paused' && !active.awaitingConfirmation && <button className="button primary" onClick={resume}><Play/> {uiText("Resume")}</button>}
         {active && <button className="button" onClick={()=>void finish()}><Square/> {uiText("Finish")}</button>}
         </div>
         {active && <div className="timer-secondary-actions">

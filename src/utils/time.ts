@@ -12,6 +12,20 @@ export function timerElapsedSeconds(startedAt: string, totalPausedMs: number, pa
   return Math.max(0, Math.floor((now - start - totalPausedMs - currentPause) / 1000));
 }
 
+import type { ActiveTimer } from '../types';
+
+export function checkpointLimit(timer: ActiveTimer) {
+  return timer.nextCheckpointSeconds ?? timer.checkpointSeconds ?? 7200;
+}
+
+export function creditableTimerSeconds(timer: ActiveTimer, now = Date.now()) {
+  return Math.min(timerElapsedSeconds(timer.startedAt, timer.totalPausedMs, timer.pausedAt, now), checkpointLimit(timer));
+}
+
+export function checkpointPauseAt(timer: ActiveTimer) {
+  return new Date(Date.parse(timer.startedAt) + timer.totalPausedMs + checkpointLimit(timer) * 1000).toISOString();
+}
+
 export function startOfLocalDay(d = new Date()) {
   const x = new Date(d); x.setHours(0,0,0,0); return x;
 }

@@ -5,6 +5,7 @@ import { db } from '../lib/db';
 import { markAccountPreferencesDirty } from '../lib/accountPreferences';
 import { getUiLanguage } from '../lib/uiLanguage';
 import { calculateMonthlyReward, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
+import { monthlyBoundsAt } from '../utils/leaderboardPeriod';
 
 type RewardLedger = Record<string, number>;
 
@@ -15,24 +16,17 @@ function readLedger(userId: string): RewardLedger {
   catch { return {}; }
 }
 
-function monthKey(date: Date, calendarType: 'gregorian' | 'jalali') {
-  const locale = calendarType === 'jalali' ? 'en-US-u-ca-persian-nu-latn' : 'en-CA';
-  const parts = new Intl.DateTimeFormat(locale, { year: 'numeric', month: '2-digit' }).formatToParts(date);
-  const year = parts.find(part => part.type === 'year')?.value ?? String(date.getFullYear());
-  const month = parts.find(part => part.type === 'month')?.value ?? String(date.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}`;
-}
-
 function monthLabel(date: Date, calendarType: 'gregorian' | 'jalali') {
   const fa=getUiLanguage()==='fa';
-  const label = (value: Date) => new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-gregory', {year:'numeric',month:'long',day:'numeric'}).format(value);
+  const bounds = monthlyBoundsAt(date, calendarType);
+  const label = (value: Date) => new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-gregory', {year:'numeric',month:'long',day:'numeric',timeZone:'UTC'}).format(value);
   if (calendarType === 'gregorian') {
     // Preserve the original Gregorian accounting period, represent its dates in Jalali.
-    const begin = new Date(date.getFullYear(), date.getMonth(), 1, 12);
-    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 12);
+    const begin = new Date(bounds.start);
+    const end = new Date(new Date(bounds.end).getTime() - 1);
     return `${label(begin)} ${fa?'تا':'to'} ${label(end)}`;
   }
-  return new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-persian-nu-latn',{year:'numeric',month:'long'}).format(date);
+  return new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-persian-nu-latn',{year:'numeric',month:'long',timeZone:'Asia/Tehran'}).format(date);
 }
 
 export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'jalali' = 'gregorian') {
@@ -40,7 +34,8 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   const sessions = useMemo(() => sessionsQuery ?? [], [sessionsQuery]);
   const [ledger, setLedger] = useState<RewardLedger>(() => readLedger(userId));
   const now = new Date(useTimePulse());
-  const key = monthKey(now, calendarType);
+  const bounds = monthlyBoundsAt(now, calendarType);
+  const key = bounds.monthKey;
 
   useEffect(() => setLedger(readLedger(userId)), [userId]);
   useEffect(() => {
@@ -53,9 +48,9 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   }, [userId]);
 
   const monthlySeconds = useMemo(() => sessions.reduce((sum, session) => {
-    const ended = new Date(session.endTime || session.startTime);
-    return monthKey(ended, calendarType) === key ? sum + Math.max(0, session.studySeconds || 0) : sum;
-  }, 0), [sessions, calendarType, key]);
+    const ended = Date.parse(session.endTime || session.startTime);
+    return ended >= Date.parse(bounds.start) && ended < Date.parse(bounds.end) ? sum + Math.max(0, session.studySeconds || 0) : sum;
+  }, 0), [sessions, bounds.start, bounds.end]);
 
   const rewardMath = calculateMonthlyReward(monthlySeconds);
   const earnedBlocks = rewardMath.earnedBlocks;

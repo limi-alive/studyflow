@@ -108,4 +108,7 @@ export interface ActiveTimer {
   totalPausedMs: number;
   durationSeconds?: number | null;
   state: 'running' | 'paused';
+  checkpointSeconds?: number;
+  nextCheckpointSeconds?: number;
+  awaitingConfirmation?: boolean;
 }
