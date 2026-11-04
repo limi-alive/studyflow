@@ -5,15 +5,8 @@ export function totalStudySeconds(sessions: StudySession[]) { return sessions.re
 export function averageSessionSeconds(sessions: StudySession[]) { return sessions.length ? Math.round(totalStudySeconds(sessions) / sessions.length) : 0; }
 
 function allocateSessionByDay(session: StudySession) {
-  const parts = splitSessionByLocalDay(session.startTime, session.endTime);
-  const wall = parts.reduce((a,p)=>a+p.seconds,0);
-  if (!wall || !parts.length) return [] as {date:string;seconds:number}[];
-  let assigned = 0;
-  return parts.map((p,i) => {
-    const seconds = i === parts.length-1 ? Math.max(0,session.studySeconds-assigned) : Math.max(0,Math.round(session.studySeconds * p.seconds / wall));
-    assigned += seconds;
-    return { date:p.date, seconds };
-  });
+  if (!session.activeSegments) return [{date: new Date(session.endTime).toLocaleDateString('en-CA'), seconds: session.studySeconds}];
+  return session.activeSegments.flatMap(segment => splitSessionByLocalDay(segment.start, segment.end));
 }
 
 export function dailySeries(sessions: StudySession[], days = 7) {

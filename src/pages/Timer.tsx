@@ -11,7 +11,7 @@ import { db, getDeviceId, nowIso } from '../lib/db';
 import { requestSync } from '../lib/sync';
 import { useTimerStore } from '../stores/timerStore';
 import type { TimerType } from '../types';
-import { checkpointLimit, checkpointPauseAt, creditableTimerSeconds, formatDuration, timerElapsedSeconds } from '../utils/time';
+import { checkpointLimit, checkpointPauseAt, completedActiveSegments, creditableTimerSeconds, formatDuration, timerElapsedSeconds } from '../utils/time';
 import { focusTaskDefaults, selectablePlannerTasks } from '../utils/focusPlan';
 import { FocusCompanion } from '../components/FocusCompanion';
 import { SessionSummary } from '../components/SessionSummary';
@@ -41,12 +41,12 @@ export default function TimerPage() {
   const focusTasks = useMemo(() => selectablePlannerTasks(taskRows ?? [], userId), [taskRows, userId]);
   const { active, start, pause, resume, confirmContinue, enforceCheckpoint, addTime, restart, clear } = useTimerStore();
   const finishing = useRef(false);
+  const checkpointDialog = useRef<HTMLDivElement>(null);
   const [tick, setTick] = useState(Date.now());
   const [mode, setMode] = useState<TimerType>('stopwatch');
   const [subjectId, setSubjectId] = useState<string>('');
   const [taskId, setTaskId] = useState<string>('');
   const [duration, setDuration] = useState(25);
-  const [checkpointMinutes, setCheckpointMinutes] = useState(120);
   const [adjustMinutes, setAdjustMinutes] = useState<number | null>(null);
   const [intent, setIntent] = useState('');
   const [startBurst, setStartBurst] = useState(false);
@@ -64,6 +64,7 @@ export default function TimerPage() {
   }, [active, zen]);
 
   useEffect(() => { if (active?.state === 'running') enforceCheckpoint(); }, [active, tick, enforceCheckpoint]);
+  useEffect(() => { if (active?.awaitingConfirmation) checkpointDialog.current?.focus(); }, [active?.awaitingConfirmation]);
   const elapsed = active ? creditableTimerSeconds(active, tick) : 0;
   const display = active?.durationSeconds ? Math.max(0, active.durationSeconds - elapsed) : elapsed;
 
@@ -118,12 +119,12 @@ export default function TimerPage() {
     window.setTimeout(() => setStartBurst(false), 1250);
     const task = focusTasks.find(item => item.id === taskId);
     start({ userId, subjectId: task?.subjectId ?? (subjectId || null), taskId: task?.id ?? null,
-      timerType: mode, checkpointSeconds: Math.max(60, Math.min(240, checkpointMinutes))*60,
+      timerType: mode, checkpointSeconds: (settings?.checkpointMinutes ?? 120)*60,
       durationSeconds: mode==='stopwatch'||mode==='deep-focus' ? null : duration*60 });
   };
 
   const finish = async (adjusted?: number) => {
-    if (!active || finishing.current) return;
+    if (!active || active.userId !== userId || finishing.current) return;
     finishing.current = true;
     try {
     const overdue = !active.pausedAt && timerElapsedSeconds(active.startedAt, active.totalPausedMs) >= checkpointLimit(active);
@@ -139,11 +140,13 @@ export default function TimerPage() {
       if (await db.sessions.get(active.id)) return false;
       await db.sessions.add({
       id: active.id, userId: active.userId, subjectId: active.subjectId, topicId: active.topicId, taskId: active.taskId,
-      startTime: active.startedAt, endTime: end, studySeconds: seconds, breakSeconds: 0, pauseSeconds,
+      startTime: active.startedAt, endTime: end, studySeconds: seconds, activeSegments: completedActiveSegments(active, end, seconds), breakSeconds: 0, pauseSeconds,
       timerType: active.timerType, deviceId: getDeviceId(), createdAt: active.startedAt, updatedAt: nowIso(), syncStatus: 'pending'
       });
       return true;
     });
+    // Even when a crash left this ID in Dexie, a pending/failed row must sync.
+    requestSync(userId);
     if (!inserted) { clear(); return; }
 
     const insight = focusProgress.recordSession({
@@ -159,7 +162,6 @@ export default function TimerPage() {
       timerType: active.timerType,
       intent: intent.trim() || undefined
     });
-    requestSync(userId);
     clear();
     setZen(false);
     setDistractionOpen(false);
@@ -214,7 +216,7 @@ export default function TimerPage() {
         <FocusTaskPicker tasks={focusTasks} subjects={subjects} selectedTaskId={taskId} onSelect={chooseTask} fa={fa}/>
         <label><span>{uiText("Subject")}</span><select className="input" value={subjectId} onChange={e=>{setSubjectId(e.target.value);setTaskId('');}}><option value="">{uiText("No subject")}</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
         {(mode==='countdown'||mode==='pomodoro') && <label><span>{uiText("Minutes")}</span><input className="input" type="number" min="1" max="240" value={duration} onChange={e=>setDuration(Number(e.target.value)||25)} aria-label={uiText("Minutes")}/></label>}
-        <label><span>{uiText('Confirmation interval (minutes)')}</span><input className="input" type="number" min="1" max="240" value={checkpointMinutes} onChange={e=>setCheckpointMinutes(Number(e.target.value)||120)}/></label>
+        <label><span>{uiText('Confirmation interval (minutes)')}</span><input className="input" type="number" min="1" max="240" value={settings?.checkpointMinutes ?? 120} onChange={e=>{const minutes=Number(e.target.value);if(Number.isInteger(minutes)&&minutes>=1&&minutes<=240) void db.settings.update(userId,{checkpointMinutes:minutes,updatedAt:nowIso(),syncStatus:'pending'}).then(()=>requestSync(userId));}}/></label>
         {preferences.promptIntent && <label className="session-intent-field"><span>{uiText("Session intention")}</span><input className="input" value={intent} maxLength={90} onChange={event=>setIntent(event.target.value)} placeholder={uiText("What will make this session a win?")}/></label>}
       </div>
     </div>}
@@ -228,7 +230,7 @@ export default function TimerPage() {
       </div>
     </div>}
 
-    {active?.awaitingConfirmation && <div className="session-safety" role="alertdialog" aria-label={uiText('Are you still studying?')}>
+    {active?.awaitingConfirmation && <div ref={checkpointDialog} tabIndex={-1} className="session-safety" role="alertdialog" aria-label={uiText('Are you still studying?')}>
       <strong>{uiText('Are you still studying?')}</strong> {uiText('Timer paused at the confirmation checkpoint.')}
       <button className="button primary" onClick={()=>{setAdjustMinutes(null);confirmContinue();}}>{uiText('Continue')}</button>
       <button className="button" onClick={()=>void finish()}>{uiText('Finish')}</button>

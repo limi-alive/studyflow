@@ -19,11 +19,27 @@ export function checkpointLimit(timer: ActiveTimer) {
 }
 
 export function creditableTimerSeconds(timer: ActiveTimer, now = Date.now()) {
-  return Math.min(timerElapsedSeconds(timer.startedAt, timer.totalPausedMs, timer.pausedAt, now), checkpointLimit(timer));
+  const confirmed = timer.activeSegments?.reduce((sum, segment) => sum + Math.max(0, (Date.parse(segment.end) - Date.parse(segment.start)) / 1000), 0) ?? 0;
+  return Math.min(Math.max(timerElapsedSeconds(timer.startedAt, timer.totalPausedMs, timer.pausedAt, now), Math.floor(confirmed)), checkpointLimit(timer));
 }
 
 export function checkpointPauseAt(timer: ActiveTimer) {
   return new Date(Date.parse(timer.startedAt) + timer.totalPausedMs + checkpointLimit(timer) * 1000).toISOString();
+}
+
+export function completedActiveSegments(timer: ActiveTimer, end: string, maxSeconds: number) {
+  if (!timer.activeSegments) return undefined; // In-progress legacy timers lack a pause timeline.
+  const segments = [...timer.activeSegments];
+  if (timer.state === 'running' && timer.segmentStartedAt && Date.parse(end) > Date.parse(timer.segmentStartedAt))
+    segments.push({start: timer.segmentStartedAt, end});
+  let remaining = Math.max(0, maxSeconds) * 1000;
+  return segments.flatMap(segment => {
+    const start = Date.parse(segment.start), stop = Date.parse(segment.end);
+    if (!Number.isFinite(start) || !Number.isFinite(stop) || stop <= start || remaining <= 0) return [];
+    const until = Math.min(stop, start + remaining);
+    remaining -= until - start;
+    return [{start: segment.start, end: new Date(until).toISOString()}];
+  });
 }
 
 export function startOfLocalDay(d = new Date()) {

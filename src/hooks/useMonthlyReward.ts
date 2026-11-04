@@ -5,7 +5,7 @@ import { db } from '../lib/db';
 import { markAccountPreferencesDirty } from '../lib/accountPreferences';
 import { getUiLanguage } from '../lib/uiLanguage';
 import { calculateMonthlyReward, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
-import { monthlyBoundsAt } from '../utils/leaderboardPeriod';
+import { monthlyPeriodAt, creditedSecondsInPeriod } from '../utils/monthlyAccounting';
 
 type RewardLedger = Record<string, number>;
 
@@ -18,8 +18,8 @@ function readLedger(userId: string): RewardLedger {
 
 function monthLabel(date: Date, calendarType: 'gregorian' | 'jalali') {
   const fa=getUiLanguage()==='fa';
-  const bounds = monthlyBoundsAt(date, calendarType);
-  const label = (value: Date) => new Intl.DateTimeFormat(fa?'fa-IR-u-ca-persian':'en-US-u-ca-gregory', {year:'numeric',month:'long',day:'numeric',timeZone:'UTC'}).format(value);
+  const bounds = monthlyPeriodAt(date);
+  const label = (value: Date) => new Intl.DateTimeFormat(calendarType==='gregorian' ? (fa?'fa-IR-u-ca-gregory':'en-US-u-ca-gregory') : (fa?'fa-IR-u-ca-persian':'en-US-u-ca-persian'), {year:'numeric',month:'long',day:'numeric',timeZone:'Asia/Tehran'}).format(value);
   if (calendarType === 'gregorian') {
     // Preserve the original Gregorian accounting period, represent its dates in Jalali.
     const begin = new Date(bounds.start);
@@ -34,7 +34,7 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   const sessions = useMemo(() => sessionsQuery ?? [], [sessionsQuery]);
   const [ledger, setLedger] = useState<RewardLedger>(() => readLedger(userId));
   const now = new Date(useTimePulse());
-  const bounds = monthlyBoundsAt(now, calendarType);
+  const bounds = monthlyPeriodAt(now);
   const key = bounds.monthKey;
 
   useEffect(() => setLedger(readLedger(userId)), [userId]);
@@ -47,14 +47,16 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
     return () => window.removeEventListener('studyflow:account-preferences-applied', refresh);
   }, [userId]);
 
-  const monthlySeconds = useMemo(() => sessions.reduce((sum, session) => {
-    const ended = Date.parse(session.endTime || session.startTime);
-    return ended >= Date.parse(bounds.start) && ended < Date.parse(bounds.end) ? sum + Math.max(0, session.studySeconds || 0) : sum;
-  }, 0), [sessions, bounds.start, bounds.end]);
+  const monthlySeconds = useMemo(() => creditedSecondsInPeriod(sessions, bounds.start, bounds.end), [sessions, bounds.start, bounds.end]);
 
   const rewardMath = calculateMonthlyReward(monthlySeconds);
   const earnedBlocks = rewardMath.earnedBlocks;
-  const paidBlocks = Math.min(earnedBlocks, Math.max(0, ledger[key] ?? 0));
+  // Existing Gregorian payout entries cannot safely be re-attributed to individual sessions.
+  // Conservatively reserve them in every overlapping Jalali month; never pay twice automatically.
+  const oldGregorianKeys = [bounds.start, new Date(Date.parse(bounds.end) - 1).toISOString()]
+    .map(instant => instant.slice(0, 7));
+  const priorPaid = [...new Set(oldGregorianKeys)].reduce((sum, oldKey) => sum + Math.max(0, ledger[oldKey] ?? 0), 0);
+  const paidBlocks = Math.min(earnedBlocks, Math.max(0, ledger[key] ?? 0) + priorPaid);
   const unpaidBlocks = Math.max(0, earnedBlocks - paidBlocks);
   const progress = rewardMath.progress;
   const nextMilestoneSeconds = rewardMath.nextMilestoneSeconds;
@@ -66,7 +68,7 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
   const outstandingToman = unpaidBlocks * REWARD_TOMAN;
 
   const setPaidBlocks = (count: number) => {
-    const next = { ...readLedger(userId), [key]: Math.max(0, Math.min(earnedBlocks, count)) };
+    const next = { ...readLedger(userId), [key]: Math.max(0, Math.min(earnedBlocks, count - priorPaid)) };
     localStorage.setItem(ledgerKey(userId), JSON.stringify(next));
     markAccountPreferencesDirty(userId);
     setLedger(next);

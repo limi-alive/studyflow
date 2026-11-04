@@ -63,7 +63,7 @@ export async function ensureSettings(userId: string) {
   if (existing) return existing;
   const settings: UserSettings = {
     userId, language: 'fa', calendarType: 'jalali', numberFormat: 'persian', weekStart: 'saturday', themeId: 'studio',
-    defaultTimer: 'stopwatch', pomodoroFocus: 25, pomodoroShortBreak: 5, pomodoroLongBreak: 15,
+    defaultTimer: 'stopwatch', pomodoroFocus: 25, pomodoroShortBreak: 5, pomodoroLongBreak: 15, checkpointMinutes: 120,
     notifications: true, haptics: true, sounds: false, reduceMotion: false, updatedAt: nowIso(), syncStatus: 'pending'
   };
   await db.settings.put(settings);

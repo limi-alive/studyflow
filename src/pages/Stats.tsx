@@ -7,14 +7,15 @@ import { TrendChart } from '../components/TrendChart';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
 import { formatAppDate } from '../lib/locale';
-import { startOfPersianMonth, startOfPersianYear } from '../utils/persianCalendar';
+import { startOfPersianYear } from '../utils/persianCalendar';
+import { creditedSecondsBySubject, creditedSecondsInPeriod, monthlyPeriodAt } from '../utils/monthlyAccounting';
 import { useTimePulse } from '../hooks/useTimePulse';
 import { db } from '../lib/db';
 import { averageSessionSeconds, dailySeries, longestStreak, totalStudySeconds } from '../utils/stats';
 import { formatDuration } from '../utils/time';
 
 type Range='today'|'week'|'month'|'year'|'all';
-function cutoffFor(range:Range, nowMs:number){const d=new Date(nowMs);if(range==='today')d.setHours(0,0,0,0);else if(range==='week')d.setDate(d.getDate()-6);else if(range==='month')return startOfPersianMonth(d).getTime();else if(range==='year')return startOfPersianYear(d).getTime();else return 0;return d.getTime();}
+function cutoffFor(range:Range, nowMs:number){const d=new Date(nowMs);if(range==='today')d.setHours(0,0,0,0);else if(range==='week')d.setDate(d.getDate()-6);else if(range==='month')return Date.parse(monthlyPeriodAt(nowMs).start);else if(range==='year')return startOfPersianYear(d).getTime();else return 0;return d.getTime();}
 
 export default function StatsPage(){
  const uiText=useUiText();
@@ -25,17 +26,19 @@ export default function StatsPage(){
   const all=useMemo(()=>allQuery??[],[allQuery]);
   const subjects=useLiveQuery(()=>db.subjects.where('userId').equals(userId).toArray(),[userId])??[];
   const [range,setRange]=useState<Range>('month');
-  const sessions=useMemo(()=>{const c=cutoffFor(range,nowMs);return all.filter(s=>new Date(s.endTime).getTime()>=c);},[all,range,nowMs]);
+  const sessions=useMemo(()=>{const c=cutoffFor(range,nowMs);return all.filter(s=>s.activeSegments ? s.activeSegments.some(segment=>Date.parse(segment.end)>c) : Date.parse(s.endTime)>=c);},[all,range,nowMs]);
   const days=range==='today'?1:range==='week'?7:range==='month'?30:range==='year'?90:30;
   const series=dailySeries(sessions,days);
-  const total=totalStudySeconds(sessions);
+  const monthBounds=monthlyPeriodAt(nowMs);
+  const total=range==='month' ? creditedSecondsInPeriod(sessions,monthBounds.start,monthBounds.end) : totalStudySeconds(sessions);
   const average=averageSessionSeconds(sessions);
   const best=series.reduce((a,b)=>b.seconds>a.seconds?b:a,series[0]??{date:'—',seconds:0});
   const activeDays=new Set(sessions.map(s=>new Date(s.startTime).toLocaleDateString('en-CA'))).size;
   const streak=longestStreak(sessions);
   const previous=series.map((item,index)=>Math.max(0,Math.round((series[Math.max(0,index-1)]?.seconds ?? item.seconds)*.82)));
   const chartPoints=series.map((item,index)=>({label:formatAppDate(new Date(`${item.date}T12:00:00`),settings,{month:'short',day:'numeric'}),value:item.seconds,compare:previous[index]}));
-  const bySubject=new Map<string,number>(); sessions.forEach(s=>bySubject.set(s.subjectId??'none',(bySubject.get(s.subjectId??'none')??0)+s.studySeconds));
+  const bySubject=range==='month' ? creditedSecondsBySubject(sessions,monthBounds.start,monthBounds.end) : new Map<string,number>();
+  if(range!=='month') sessions.forEach(s=>bySubject.set(s.subjectId??'none',(bySubject.get(s.subjectId??'none')??0)+s.studySeconds));
   const subjectRows=subjects.map(subject=>({...subject,seconds:bySubject.get(subject.id)??0})).sort((a,b)=>b.seconds-a.seconds).slice(0,6);
   const subjectMax=Math.max(...subjectRows.map(row=>row.seconds),1);
 

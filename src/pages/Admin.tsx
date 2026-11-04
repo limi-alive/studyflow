@@ -6,6 +6,7 @@ import { useAdminAccess } from '../hooks/useAdminAccess';
 import { supabase } from '../lib/supabase';
 import { formatDuration } from '../utils/time';
 import { formatAppDate } from '../lib/locale';
+import { monthlyPeriodAt } from '../utils/monthlyAccounting';
 
 type Period = 'today' | 'week' | 'month' | 'all';
 type OverviewRow = {
@@ -23,6 +24,7 @@ type RecentRow = { session_id: string; subject_name: string; start_time: string;
 
 function rangeFor(period: Period) {
   if (period === 'all') return { start: null, end: null };
+  if (period === 'month') { const {start,end}=monthlyPeriodAt(Date.now()); return {start,end}; }
   const now = new Date();
   const end = new Date(now);
   end.setHours(23, 59, 59, 999);
@@ -33,10 +35,6 @@ function rangeFor(period: Period) {
     const day = start.getDay();
     const mondayOffset = day === 0 ? -6 : 1 - day;
     start.setDate(start.getDate() + mondayOffset);
-  }
-  if (period === 'month') {
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
   }
   return { start: start.toISOString(), end: new Date(end.getTime() + 1).toISOString() };
 }
