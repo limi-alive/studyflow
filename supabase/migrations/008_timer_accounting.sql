@@ -60,12 +60,13 @@ for each row execute function public.studyflow_validate_segments();
 revoke all on function public.studyflow_validate_segments() from public, anon, authenticated;
 
 -- Private helper; only owner-executed SECURITY DEFINER analytics RPCs call it.
--- Ordered union counts concurrent overlapping segments once per user, retaining every history row.
+-- Atomic interval sweep: conflicting subjects have no verified subject attribution.
+-- Global time is still counted once; all source session rows remain unchanged.
 create or replace function public.studyflow_counted_intervals(period_start timestamptz, period_end timestamptz)
-returns table(user_id uuid, subject_id uuid, session_id uuid, seconds numeric)
+returns table(user_id uuid, subject_id uuid, session_id uuid, seconds numeric, attribution_conflict boolean)
 language sql stable security definer set search_path = public, pg_temp as $$
 with legacy as (
-  select s.user_id, s.subject_id, s.id as session_id, s.study_seconds::numeric as seconds
+  select s.user_id, s.subject_id, s.id as session_id, s.study_seconds::numeric as seconds, false as attribution_conflict
   from public.study_sessions s where s.deleted_at is null and s.active_segments is null
     and (period_start is null or s.end_time >= period_start)
     and (period_end is null or s.end_time < period_end)
@@ -77,19 +78,24 @@ with legacy as (
   where s.deleted_at is null and s.active_segments is not null
     and (period_start is null or s.end_time > period_start)
     and (period_end is null or s.start_time < period_end)
-), ordered as (
-  select seg.*,
-         max(seg.finishes) over (partition by seg.user_id order by seg.begins, seg.finishes, seg.session_id
-           rows between unbounded preceding and 1 preceding) as already_covered
-  from segments seg where seg.finishes > seg.begins
+), points as (
+  select user_id, begins as point from segments where finishes > begins
+  union select user_id, finishes as point from segments where finishes > begins
+), atomic as (
+  select user_id, point as begins, lead(point) over (partition by user_id order by point) as finishes from points
 ), credited as (
-  select o.user_id, o.subject_id, o.session_id,
-         greatest(0, extract(epoch from (o.finishes - greatest(o.begins, coalesce(o.already_covered, o.begins))))) as seconds
-  from ordered o
+  select a.user_id,
+         case when count(distinct coalesce(s.subject_id::text,'none')) = 1 then (array_agg(s.subject_id order by s.session_id))[1] else null end as subject_id,
+         (array_agg(s.session_id order by s.session_id))[1] as session_id,
+         extract(epoch from (a.finishes-a.begins)) as seconds,
+         count(distinct coalesce(s.subject_id::text,'none')) > 1 as attribution_conflict
+  from atomic a join segments s on s.user_id=a.user_id and s.begins < a.finishes and s.finishes > a.begins
+  where a.finishes is not null and a.finishes > a.begins
+  group by a.user_id,a.begins,a.finishes
 )
-select l.user_id, l.subject_id, l.session_id, l.seconds from legacy l
+select l.user_id,l.subject_id,l.session_id,l.seconds,l.attribution_conflict from legacy l
 union all
-select c.user_id, c.subject_id, c.session_id, c.seconds from credited c where c.seconds > 0;
+select c.user_id,c.subject_id,c.session_id,c.seconds,c.attribution_conflict from credited c;
 $$;
 revoke all on function public.studyflow_counted_intervals(timestamptz,timestamptz) from public, anon, authenticated;
 
@@ -100,7 +106,10 @@ language plpgsql security definer set search_path = public, pg_temp as $$
 begin
   if auth.uid() is null then raise exception 'Authentication required' using errcode = '42501'; end if;
   return query with totals as (
-    select x.user_id, floor(sum(x.seconds))::bigint as seconds, count(distinct x.session_id)::bigint as sessions
+    select x.user_id, floor(sum(x.seconds))::bigint as seconds,
+      (select count(*) from public.study_sessions s where s.user_id=x.user_id and s.deleted_at is null
+         and (period_start is null or (s.active_segments is not null and s.end_time > period_start) or s.end_time >= period_start)
+         and (period_end is null or (s.active_segments is not null and s.start_time < period_end) or s.end_time < period_end))::bigint as sessions
     from public.studyflow_counted_intervals(period_start,period_end) x group by x.user_id
   ), ranked as (
     select p.id,p.username,p.display_name,coalesce(t.seconds,0)::bigint as seconds,
@@ -120,7 +129,10 @@ language plpgsql security definer set search_path=public,pg_temp as $$
 begin
   if not public.is_studyflow_admin() then raise exception 'Admin access required' using errcode='42501'; end if;
   return query with ps as (
-    select x.user_id,floor(sum(x.seconds))::bigint as seconds,count(distinct x.session_id)::bigint as sessions
+    select x.user_id,floor(sum(x.seconds))::bigint as seconds,
+      (select count(*) from public.study_sessions s where s.user_id=x.user_id and s.deleted_at is null
+         and (period_start is null or s.end_time >= period_start)
+         and (period_end is null or s.end_time < period_end))::bigint as sessions
     from public.studyflow_counted_intervals(period_start,period_end) x group by x.user_id
   ), a as (
     select x.user_id,floor(sum(x.seconds))::bigint as seconds,max(s.end_time) as last_study
@@ -145,12 +157,13 @@ language plpgsql security definer set search_path=public,pg_temp as $$
 begin
   if not public.is_studyflow_admin() then raise exception 'Admin access required' using errcode='42501'; end if;
   return query
-  select x.subject_id,coalesce(sub.name,'Unassigned')::text,floor(sum(x.seconds))::bigint,
-    count(distinct x.session_id)::bigint,max(s.end_time)
+  select x.subject_id,
+    (case when x.attribution_conflict then 'Attribution Conflict' else coalesce(sub.name,'Unassigned') end)::text,
+    floor(sum(x.seconds))::bigint,count(distinct x.session_id)::bigint,max(s.end_time)
   from public.studyflow_counted_intervals(period_start,period_end) x
   join public.study_sessions s on s.id=x.session_id
   left join public.subjects sub on sub.id=x.subject_id and sub.user_id=x.user_id
-  where x.user_id=target_user group by x.subject_id,sub.name order by sum(x.seconds) desc;
+  where x.user_id=target_user group by x.subject_id,sub.name,x.attribution_conflict order by sum(x.seconds) desc;
 end; $$;
 revoke all on function public.studyflow_admin_user_subjects(uuid,timestamptz,timestamptz) from public;
 grant execute on function public.studyflow_admin_user_subjects(uuid,timestamptz,timestamptz) to authenticated;

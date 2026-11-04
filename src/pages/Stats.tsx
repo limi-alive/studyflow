@@ -8,7 +8,7 @@ import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useSettings } from '../hooks/useSettings';
 import { formatAppDate } from '../lib/locale';
 import { startOfPersianYear } from '../utils/persianCalendar';
-import { creditedSecondsBySubject, creditedSecondsInPeriod, monthlyPeriodAt } from '../utils/monthlyAccounting';
+import { accountedAttribution, monthlyPeriodAt } from '../utils/monthlyAccounting';
 import { useTimePulse } from '../hooks/useTimePulse';
 import { db } from '../lib/db';
 import { averageSessionSeconds, dailySeries, longestStreak, totalStudySeconds } from '../utils/stats';
@@ -30,20 +30,25 @@ export default function StatsPage(){
   const days=range==='today'?1:range==='week'?7:range==='month'?30:range==='year'?90:30;
   const series=dailySeries(sessions,days);
   const monthBounds=monthlyPeriodAt(nowMs);
-  const total=range==='month' ? creditedSecondsInPeriod(sessions,monthBounds.start,monthBounds.end) : totalStudySeconds(sessions);
+  const attribution=range==='month' ? accountedAttribution(sessions,monthBounds.start,monthBounds.end) : null;
+  const total=attribution?.totalSeconds ?? totalStudySeconds(sessions);
   const average=averageSessionSeconds(sessions);
   const best=series.reduce((a,b)=>b.seconds>a.seconds?b:a,series[0]??{date:'—',seconds:0});
   const activeDays=new Set(sessions.map(s=>new Date(s.startTime).toLocaleDateString('en-CA'))).size;
   const streak=longestStreak(sessions);
   const previous=series.map((item,index)=>Math.max(0,Math.round((series[Math.max(0,index-1)]?.seconds ?? item.seconds)*.82)));
   const chartPoints=series.map((item,index)=>({label:formatAppDate(new Date(`${item.date}T12:00:00`),settings,{month:'short',day:'numeric'}),value:item.seconds,compare:previous[index]}));
-  const bySubject=range==='month' ? creditedSecondsBySubject(sessions,monthBounds.start,monthBounds.end) : new Map<string,number>();
+  const bySubject=attribution?.bySubject ?? new Map<string,number>();
   if(range!=='month') sessions.forEach(s=>bySubject.set(s.subjectId??'none',(bySubject.get(s.subjectId??'none')??0)+s.studySeconds));
   const subjectRows=subjects.map(subject=>({...subject,seconds:bySubject.get(subject.id)??0})).sort((a,b)=>b.seconds-a.seconds).slice(0,6);
   const subjectMax=Math.max(...subjectRows.map(row=>row.seconds),1);
 
   return <div className="page stats-dashboard">
     <header className="dashboard-topbar"><div><div className="eyebrow">{uiText("Deep analytics")}</div><h1>{uiText("Statistics")}</h1></div><div className="range-tabs range-tabs-large">{(['today','week','month','year','all'] as Range[]).map(r=><button key={r} className={range===r?'active':''} onClick={()=>setRange(r)}>{r}</button>)}</div></header>
+    {attribution && <div className="session-safety" role="status">
+      {attribution.provisional && <span>{uiText('Local study time is provisional until cloud sync verifies it.')} </span>}
+      {attribution.conflictSeconds > 0 && <strong>{uiText('Attribution Conflict')}: {formatDuration(attribution.conflictSeconds)} — {uiText('Included once in total time; excluded from subject totals. Review your session history and contact support for a private source-record correction.')}</strong>}
+    </div>}
     <div className="stats-layout">
       <section className="stats-main">
         <Card className="analytics-hero stats-chart-card"><div className="analytics-heading"><div><div className="eyebrow">{uiText("Study activity")}</div><h2>{formatDuration(total)} {uiText("focused")}</h2></div><span className="live-chip"><Activity size={15}/> {uiText("live from your sessions")}</span></div><TrendChart points={chartPoints}/><div className="chart-legend"><span><i className="legend-solid"/> {uiText("Focus time")}</span><span><i className="legend-dashed"/> {uiText("Rolling baseline")}</span></div></Card>

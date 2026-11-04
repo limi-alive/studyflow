@@ -5,7 +5,7 @@ import { db } from '../lib/db';
 import { markAccountPreferencesDirty } from '../lib/accountPreferences';
 import { getUiLanguage } from '../lib/uiLanguage';
 import { calculateMonthlyReward, reservedPaidBlocks, HOURS_PER_REWARD, REWARD_TOMAN } from '../utils/reward';
-import { monthlyPeriodAt, creditedSecondsInPeriod } from '../utils/monthlyAccounting';
+import { monthlyPeriodAt, accountedAttribution } from '../utils/monthlyAccounting';
 
 type RewardLedger = Record<string, number>;
 
@@ -48,7 +48,8 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
     return () => window.removeEventListener('studyflow:account-preferences-applied', refresh);
   }, [userId]);
 
-  const monthlySeconds = useMemo(() => creditedSecondsInPeriod(sessions, bounds.start, bounds.end), [sessions, bounds.start, bounds.end]);
+  const attribution = useMemo(() => accountedAttribution(sessions, bounds.start, bounds.end), [sessions, bounds.start, bounds.end]);
+  const monthlySeconds = attribution.totalSeconds;
 
   const rewardMath = calculateMonthlyReward(monthlySeconds);
   const earnedBlocks = rewardMath.earnedBlocks;
@@ -80,6 +81,8 @@ export function useMonthlyReward(userId: string, calendarType: 'gregorian' | 'ja
     tomanPerHour,
     studyValueToman,
     monthlySeconds,
+    provisional: attribution.provisional,
+    attributionConflictSeconds: attribution.conflictSeconds,
     monthlyHours: monthlySeconds / 3600,
     earnedBlocks,
     paidBlocks,

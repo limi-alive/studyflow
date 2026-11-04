@@ -16,5 +16,7 @@ describe('migration 008 static security contract',()=>{
     expect(migration).toMatch(/last_at <= first_at/i);
     expect(migration).toMatch(/first_at < previous_end/i);
     expect(migration).toMatch(/total_ms <> new\.study_seconds\*1000/i);
+    expect(migration).toMatch(/count\(distinct coalesce\(s\.subject_id::text,'none'\)\) > 1 as attribution_conflict/i);
+    expect(migration).toMatch(/case when x\.attribution_conflict then 'Attribution Conflict'/i);
   });
 });

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { StudySession } from '../types';
-import { creditedSecondsBySubject, creditedSecondsInPeriod, monthlyPeriodAt } from './monthlyAccounting';
+import { accountedAttribution, creditedSecondsBySubject, creditedSecondsInPeriod, monthlyPeriodAt } from './monthlyAccounting';
 
 const row = (id: string, userId: string, start: string, end: string, segments?: StudySession['activeSegments']): StudySession => ({
   id,userId,createdAt:start,updatedAt:end,syncStatus:'pending',startTime:start,endTime:end,
@@ -9,6 +9,8 @@ const row = (id: string, userId: string, start: string, end: string, segments?: 
 });
 
 describe('canonical Tehran Jalali monthly accounting', () => {
+  beforeEach(()=>{vi.useFakeTimers();vi.setSystemTime(new Date('2027-01-01T12:00:00Z'));});
+  afterEach(()=>vi.useRealTimers());
   it('has contiguous exclusive bounds for every month including Nowruz and leap-year Esfand', () => {
     let instant = new Date('2024-03-20T20:30:00Z');
     for (let i=0;i<36;i++) {
@@ -36,7 +38,31 @@ describe('canonical Tehran Jalali monthly accounting', () => {
     expect(creditedSecondsInPeriod([row('old','alice',iso(-120),iso(60))],before.start,before.end)).toBe(0);
     expect(creditedSecondsInPeriod([row('old','alice',iso(-120),iso(60))],after.start,after.end)).toBe(3600);
   });
-  it('unions identical, partial and adjacent sessions per user with deterministic subject attribution',()=>{
+  it('converges after two offline devices reconnect without deleting either history row',()=>{
+    const period=monthlyPeriodAt(new Date('2026-11-01T12:00:00Z'));
+    const first={...row('device-a','alice','2026-11-01T10:00:00Z','2026-11-01T11:00:00Z',
+      [{start:'2026-11-01T10:00:00Z',end:'2026-11-01T11:00:00Z'}]),subjectId:'math'};
+    const second={...row('device-b','alice','2026-11-01T10:30:00Z','2026-11-01T11:30:00Z',
+      [{start:'2026-11-01T10:30:00Z',end:'2026-11-01T11:30:00Z'}]),subjectId:'math'};
+    expect(creditedSecondsInPeriod([first],period.start,period.end)).toBe(3600);
+    expect(creditedSecondsInPeriod([first,second],period.start,period.end)).toBe(5400);
+    expect(creditedSecondsInPeriod([first,second,first],period.start,period.end)).toBe(5400);
+    expect([first,second].map(item=>item.id)).toHaveLength(2);
+    expect(accountedAttribution([first,second],period.start,period.end).conflictSeconds).toBe(0);
+  });
+  it('retains suspicious source rows but excludes invalid/future/duplicated segments from local accounting',()=>{
+    const bounds=monthlyPeriodAt(new Date('2026-11-01T12:00:00Z'));
+    const base='2026-11-01T10:00:00Z', end='2026-11-01T10:01:00Z';
+    const valid=row('ok','alice',base,end,[{start:base,end}]);
+    const duplicate={...row('duplicate','alice',base,end,[{start:base,end},{start:base,end}]),studySeconds:120};
+    const negative={...row('negative','alice',base,end,[{start:end,end:base}]),studySeconds:-60};
+    const inflated={...valid,id:'inflated',studySeconds:86400};
+    const future={...row('future','alice','2028-11-01T10:00:00Z','2028-11-01T11:00:00Z',
+      [{start:'2028-11-01T10:00:00Z',end:'2028-11-01T11:00:00Z'}])};
+    expect(creditedSecondsInPeriod([valid,duplicate,negative,inflated,future],bounds.start,bounds.end)).toBe(60);
+    expect(creditedSecondsInPeriod([duplicate,negative,inflated,future],bounds.start,bounds.end)).toBe(0);
+  });
+  it('unions identical, partial and adjacent sessions per user and flags different-subject overlap',()=>{
     const bounds=monthlyPeriodAt(new Date('2026-11-01T12:00:00Z'));
     const base=Date.parse('2026-11-01T10:00:00Z');
     const iso=(s:number)=>new Date(base+s*1000).toISOString();
@@ -48,8 +74,10 @@ describe('canonical Tehran Jalali monthly accounting', () => {
     const all=[first,duplicate,partial,adjacent,other];
     expect(creditedSecondsInPeriod(all,bounds.start,bounds.end)).toBe(360);
     const subjects=creditedSecondsBySubject(all,bounds.start,bounds.end);
-    expect(subjects.get('math')).toBe(180);
+    expect(subjects.get('math')).toBe(60);
     expect(subjects.get('science')).toBe(180);
-    expect([...subjects.values()].reduce((a,b)=>a+b,0)).toBe(360);
+    const attribution=accountedAttribution(all,bounds.start,bounds.end);
+    expect(attribution.conflictSeconds).toBe(120);
+    expect([...subjects.values()].reduce((a,b)=>a+b,0)+attribution.conflictSeconds).toBe(360);
   });
 });
